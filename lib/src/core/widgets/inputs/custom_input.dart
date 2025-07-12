@@ -1,100 +1,90 @@
-import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:flutter/material.dart';
 
 class CustomInput extends StatefulWidget {
   final TextInputType textInputType;
-  final double fontSize;
-  final String labelText;
   final String hintText;
   final bool? filled;
-  final bool readOnly;
   final bool obscured;
   final Color? filledColor;
   final TextEditingController? textEditingController;
   final TextCapitalization textCapitalization;
-  final dynamic validator;
+  final String? Function(String?)? validator;
+  final Function? onEditingComplete;
+  final int? maxLines;
 
   const CustomInput({
-    Key? key,
+    super.key,
     required this.hintText,
-    required this.validator,
-    this.labelText = '',
     this.textEditingController,
+    required this.validator,
     this.textCapitalization = TextCapitalization.none,
     this.obscured = false,
-    this.readOnly = false,
-    this.filled = true,
-    this.filledColor = Colors.white,
     this.textInputType = TextInputType.text,
-    this.fontSize = 14,
-  }) : super(key: key);
+    this.filled = true,
+    this.filledColor = const Color.fromARGB(255, 130, 130, 130),
+    this.onEditingComplete,
+    this.maxLines,
+  });
 
   @override
-  State<CustomInput> createState() => _InputState();
+  State<CustomInput> createState() => _CustomInputState();
 }
 
-class _InputState extends State<CustomInput> {
-  bool _obscured = false;
+class _CustomInputState extends State<CustomInput> {
+  late bool _obscured;
+
+  @override
+  void initState() {
+    super.initState();
+    _obscured = widget.obscured;
+  }
+
+  void _toggleVisibility() {
+    setState(() {
+      _obscured = !_obscured;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(
-        // 20px
-        left: sizeWidth(context) * 3 / 100,
-        right: sizeWidth(context) * 3 / 100,
-        top: sizeHeight(context) * 3 / 100,
+    return TextFormField(
+      maxLines: widget.maxLines ?? 1,
+      onTapOutside: (_) => FocusScope.of(context).unfocus(),
+      validator: widget.validator,
+      onEditingComplete: () => widget.onEditingComplete?.call(),
+      controller: widget.textEditingController,
+      autofocus: false,
+      obscureText: widget.obscured ? _obscured : false,
+      cursorColor: accentColor(),
+      keyboardType: widget.textInputType,
+      textCapitalization: widget.textCapitalization,
+      style: TextStyle(
+        color: whiteColor(),
+        fontSize: 14,
+        fontWeight: FontWeight.w300,
       ),
-      child: TextFormField(
-        validator: widget.validator,
-        controller: widget.textEditingController,
-        autofocus: false,
-        obscureText: _obscured,
-        cursorColor: primaryColor(),
-        keyboardType: widget.textInputType,
-        textCapitalization: widget.textCapitalization,
-        readOnly: widget.readOnly,
-        style: TextStyle(
-          color: primaryColor(),
-          // 12px
-          fontSize: widget.fontSize,
-          fontWeight: FontWeight.w300,
+      decoration: InputDecoration(
+        fillColor: widget.filledColor,
+        border: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
         ),
-        decoration: InputDecoration(
-          fillColor: widget.filledColor,
-
-          filled: widget.filled,
-          hintText: widget.hintText,
-          hintStyle: TextStyle(
-            fontSize: widget.fontSize,
-            color: grayInputColor(),
-          ),
-          //! LINEAL INPUT
-          labelText: widget.labelText,
-          labelStyle: TextStyle(
-            color: grayInputColor(),
-            fontWeight: FontWeight.bold,
-          ),
-          enabledBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.grey),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: accentColor()),
-          ),
-          //! LINEAL INPUT
-          suffixIcon: Visibility(
-            visible: widget.obscured,
-            child: IconButton(
-              icon: Icon(
-                _obscured ? Icons.visibility : Icons.visibility_off,
-                color: grayInputColor(),
-                size: widget.fontSize * 1.8,
-              ),
-              onPressed: () => setState(() => _obscured = !_obscured),
-            ),
-          ),
+        enabledBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+          borderSide: BorderSide(color: Colors.transparent),
         ),
+        filled: widget.filled,
+        hintText: widget.hintText,
+        suffixIcon:
+            widget.obscured
+                ? IconButton(
+                  icon: Icon(
+                    _obscured ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.grey,
+                  ),
+                  onPressed: _toggleVisibility,
+                )
+                : null,
       ),
     );
   }

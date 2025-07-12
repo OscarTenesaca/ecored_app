@@ -3,8 +3,8 @@ class RouteNames {
   static const String pageLogin = 'routeLogin';
   // static const String initforgot = 'routeInitForgot';
 
-  // //HOME
-  // static const String homePage = 'routeHome';
+  //HOME
+  static const String pageHome = 'routeHome';
 
   // //PROFILE
   // static const String profilePage = 'routeProfile';
