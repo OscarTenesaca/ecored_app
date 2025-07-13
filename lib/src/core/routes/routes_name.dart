@@ -3,12 +3,18 @@ class RouteNames {
   static const String pageLogin = 'routeLogin';
   // static const String initforgot = 'routeInitForgot';
 
+  //INIT PAGES CONTAINER
+  static const String pageAccess = 'routeAccess';
+
   //HOME
   static const String pageHome = 'routeHome';
 
-  // //PROFILE
-  // static const String profilePage = 'routeProfile';
+  //MAPS
+  static const String pageMap = 'routeMap';
 
-  // //ORDER
-  // static const String orderPage = 'routeOrder';
+  //FINANCE
+  static const String pageFinance = 'routeFinance';
+
+  //PROFILE
+  static const String pageProfile = 'routeProfile';
 }

@@ -1,7 +1,9 @@
 export 'alerts/popup.dart';
 export 'blur/blur.dart';
+export 'button_bar/custom_bottom_bar.dart';
 export 'buttons/custom_button.dart';
 export 'inputs/custom_input.dart';
 export 'labels/label_title.dart';
 export 'labels/label_icon_title.dart';
+export 'scale/scaler.dart';
 export 'maps/map.dart';
