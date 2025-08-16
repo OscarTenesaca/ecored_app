@@ -24,4 +24,6 @@ class UtilSize {
     final view = PlatformDispatcher.instance.views.first;
     return view.padding.bottom / view.devicePixelRatio;
   }
+
+  static paddingMain() => EdgeInsets.symmetric(horizontal: 35.0);
 }

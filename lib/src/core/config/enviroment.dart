@@ -14,6 +14,6 @@ class Environment {
 
   static String url =
       kDebugMode || kProfileMode
-          ? 'https://getbeeapp.com'
+          ? 'http://localhost:3000'
           : 'https://bee.com.ec';
 }

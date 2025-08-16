@@ -1,3 +1,5 @@
+import 'package:ecored_app/src/core/utils/utils_preferences.dart';
+import 'package:ecored_app/src/features/login/data/models/model_user.dart';
 import 'package:flutter/material.dart';
 
 class PageHome extends StatelessWidget {
@@ -5,11 +7,21 @@ class PageHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // final ModelUser pref = Preferences();
+    final Preferences pref = Preferences();
+    final ModelUser? user = pref.getUser();
+
     return Scaffold(
       body: Center(
-        child: Text(
-          'Welcome to the Home Page',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Welcome to the Home Page',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            Text('User : ${user?.token}', style: TextStyle(fontSize: 18)),
+          ],
         ),
       ),
     );

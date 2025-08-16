@@ -1,8 +1,9 @@
 import 'package:ecored_app/src/core/routes/routes_name.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
-import 'package:ecored_app/src/core/widgets/images/custom_asset_img.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
+import 'package:ecored_app/src/features/login/presentation/provider/login_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class PageLogin extends StatelessWidget {
   const PageLogin({super.key});
@@ -85,11 +86,13 @@ class _FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<LoginProvider>();
+
     return Form(
+      key: _formKey,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 35.0),
         child: Column(
-          key: _formKey,
           children: <Widget>[
             CustomInput(
               validator: (value) {
@@ -115,7 +118,7 @@ class _FormState extends State<_Form> {
               obscured: true,
               hintText: 'Contraseña',
               textEditingController: _passwordController,
-              onEditingComplete: submit,
+              onEditingComplete: () => submit(context),
             ),
 
             TextButton(
@@ -130,7 +133,7 @@ class _FormState extends State<_Form> {
               textButton: 'Iniciar Sesión',
               buttonColor: accentColor(),
               textButtonColor: primaryColor(),
-              onPressed: submit,
+              onPressed: () => submit(context),
             ),
           ],
         ),
@@ -139,9 +142,22 @@ class _FormState extends State<_Form> {
   }
 
   //* METHODS
-  submit() async {
-    // if (_formKey.currentState!.validate()) {
-    Navigator.pushNamed(context, RouteNames.pageAccess);
-    // }
+  Future<void> submit(BuildContext context) async {
+    if (_formKey.currentState!.validate()) {
+      final provider = context.read<LoginProvider>(); // ✅ usa read aquí
+
+      await provider.login(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+
+      if (provider.user != null) {
+        Navigator.pushNamed(context, RouteNames.pageAccess);
+      } else if (provider.errorMessage != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(provider.errorMessage!)));
+      }
+    }
   }
 }
