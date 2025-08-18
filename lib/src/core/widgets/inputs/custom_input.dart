@@ -12,6 +12,7 @@ class CustomInput extends StatefulWidget {
   final String? Function(String?)? validator;
   final Function? onEditingComplete;
   final int? maxLines;
+  final bool enabled;
 
   const CustomInput({
     super.key,
@@ -25,6 +26,7 @@ class CustomInput extends StatefulWidget {
     this.filledColor = const Color.fromARGB(255, 130, 130, 130),
     this.onEditingComplete,
     this.maxLines,
+    this.enabled = true,
   });
 
   @override
@@ -49,6 +51,7 @@ class _CustomInputState extends State<CustomInput> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      enabled: widget.enabled,
       maxLines: widget.maxLines ?? 1,
       onTapOutside: (_) => FocusScope.of(context).unfocus(),
       validator: widget.validator,

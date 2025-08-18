@@ -1,10 +1,14 @@
 export 'alerts/popup.dart';
+export 'background/background.dart';
 export 'blur/blur.dart';
 export 'button_bar/custom_bottom_bar.dart';
 export 'buttons/custom_button.dart';
 export 'images/custom_asset_img.dart';
 export 'images/custom_hive_img.dart';
 export 'inputs/custom_input.dart';
+export 'inputs/custom_input_phone.dart';
+export 'inputs/custom_input_location.dart';
+export 'inputs/custom_input_date.dart';
 export 'labels/label_title.dart';
 export 'labels/label_icon_title.dart';
 export 'maps/map.dart';

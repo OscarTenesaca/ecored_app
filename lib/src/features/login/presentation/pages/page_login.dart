@@ -50,7 +50,9 @@ class _LoginBody extends StatelessWidget {
             LabelTitle(title: '¿No tienes una cuenta?', fontSize: 14),
 
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pushNamed(context, RouteNames.pageRegister);
+              },
               child: LabelTitle(
                 title: 'Regístrate',
                 fontSize: 14,
