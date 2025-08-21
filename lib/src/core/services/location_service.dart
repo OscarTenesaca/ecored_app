@@ -4,7 +4,7 @@ import 'package:ecored_app/src/core/models/location_model.dart';
 
 abstract class LocationRemoteDataSource {
   Future<List<LocationModel>> countries();
-  Future<List<LocationModel>> province(Map<String, dynamic>? query);
+  Future<List<LocationModel>> provinces(Map<String, dynamic>? query);
 }
 
 class LocationServiceImpl implements LocationRemoteDataSource {
@@ -27,14 +27,15 @@ class LocationServiceImpl implements LocationRemoteDataSource {
   }
 
   @override
-  Future<List<LocationModel>> province(Map<String, dynamic>? query) async {
+  Future<List<LocationModel>> provinces(Map<String, dynamic>? query) async {
     final response = await httpAdapter.get(
       '$url/api/v1/province',
       queryParams: query,
     );
 
     if (response.statusCode != 200) {
-      throw 'Provincias no disponibles';
+      // throw 'Provincias no disponibles';
+      return []; // Retorna una lista vacía si no hay provincias disponibles
     }
     final List<LocationModel> respModelLocation =
         (response.data['data'] as List)

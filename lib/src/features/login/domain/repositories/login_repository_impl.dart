@@ -10,6 +10,11 @@ class LoginRepositoryImpl implements LoginRepository {
   LoginRepositoryImpl(this.remoteDataSource);
 
   @override
+  Future<ModelUser> registerUser(Map<String, dynamic> userData) {
+    return remoteDataSource.registerUser(userData);
+  }
+
+  @override
   Future<ModelUser> login(String email, String password) {
     return remoteDataSource.login(email, password);
   }

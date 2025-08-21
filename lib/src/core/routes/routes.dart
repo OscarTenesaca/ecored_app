@@ -1,4 +1,4 @@
-import 'package:ecored_app/src/features/register/presentation/page_register.dart';
+import 'package:ecored_app/src/features/login/presentation/pages/page_register.dart';
 import 'package:flutter/material.dart';
 import 'package:ecored_app/src/core/routes/routes_name.dart';
 

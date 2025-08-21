@@ -4,6 +4,7 @@ import 'package:ecored_app/src/features/login/data/models/model_user.dart';
 
 // CLASE FOUR
 abstract class LoginRemoteDataSource {
+  Future<ModelUser> registerUser(Map<String, dynamic> userData);
   Future<ModelUser> login(String name, String email);
   Future<int> logout();
   Future<int> saveFCM(Map<String, dynamic> body);
@@ -16,6 +17,26 @@ class LoginRemoteDataSourceImpl implements LoginRemoteDataSource {
   final HttpAdapter httpAdapter = HttpAdapter();
 
   LoginRemoteDataSourceImpl(this.url) {}
+
+  @override
+  Future<ModelUser> registerUser(Map<String, dynamic> userData) {
+    final String endpoint = '$url/api/v1/user';
+
+    return httpAdapter.post(endpoint, data: userData).then((response) {
+      if (response.statusCode == 409) {
+        throw ('El usuario que intenta registrar ya existe');
+      }
+      if (response.statusCode != 201) {
+        throw ('Ocurrió un problema, intente más tarde');
+      }
+
+      response.data['data'].remove('province');
+      response.data['data'].remove('country');
+
+      final respModelUser = ModelUser.fromJson(response.data['data']);
+      return respModelUser;
+    });
+  }
 
   @override
   Future<ModelUser> login(String email, String password) async {

@@ -22,7 +22,7 @@ class ModelUser {
   String phone;
   String status;
   DateTime birthdate;
-  LocationModel? canton;
+  LocationModel? province;
   LocationModel? country;
   String token;
 
@@ -36,7 +36,7 @@ class ModelUser {
     required this.phone,
     required this.status,
     required this.birthdate,
-    required this.canton,
+    required this.province,
     required this.country,
     required this.token,
   });
@@ -52,8 +52,10 @@ class ModelUser {
     status: json["status"] ?? '',
     birthdate: DateTime.parse(json["birthdate"]),
     token: json["token"] ?? '',
-    canton:
-        json["canton"] != null ? LocationModel.fromJson(json["canton"]) : null,
+    province:
+        json["province"] != null
+            ? LocationModel.fromJson(json["province"])
+            : null,
     country:
         json["country"] != null
             ? LocationModel.fromJson(json["country"])
@@ -70,7 +72,7 @@ class ModelUser {
     "phone": phone,
     "status": status,
     "birthdate": birthdate.toIso8601String(),
-    "canton": canton,
+    "province": province,
     "country": country,
     "token": token,
   };

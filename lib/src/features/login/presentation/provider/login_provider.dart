@@ -11,6 +11,22 @@ class LoginProvider extends ChangeNotifier {
 
   LoginProvider(this.loginServices);
 
+  Future<void> registerUser(Map<String, dynamic> userData) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      user = await loginServices.registerUser(userData);
+    } catch (e) {
+      print('Error during registration: $e');
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> login(String email, String password) async {
     try {
       isLoading = true;

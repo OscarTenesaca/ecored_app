@@ -8,6 +8,11 @@ class LoginServices {
 
   LoginServices(this.repositoryLogin);
 
+  // Register user callback the repository
+  Future<ModelUser> registerUser(Map<String, dynamic> userData) async {
+    return repositoryLogin.registerUser(userData);
+  }
+
   // Login user callback the repository
   Future<ModelUser> login(String email, String password) async {
     return repositoryLogin.login(email, password);
