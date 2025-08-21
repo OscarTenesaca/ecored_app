@@ -65,12 +65,12 @@ class __FormState extends State<_Form> {
 
   @override
   void initState() {
-    _ciController.text = '0302618251';
-    _nameController.text = 'John Doe';
-    _emailController.text = 'johndoe@example.com';
-    _passwordController.text = 'password123';
-    _confirmPasswordController.text = 'password123';
-    _phoneController.text = '999999999';
+    // _ciController.text = '0302618251';
+    // _nameController.text = 'John Doe';
+    // _emailController.text = 'johndoe@example.com';
+    // _passwordController.text = 'password123';
+    // _confirmPasswordController.text = 'password123';
+    // _phoneController.text = '999999999';
 
     super.initState();
     _loadCountries();
