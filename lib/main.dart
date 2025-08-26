@@ -4,6 +4,7 @@ import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 import 'package:ecored_app/src/features/login/data/models/model_user.dart';
 import 'package:ecored_app/src/features/login/login_injection.dart';
+import 'package:ecored_app/src/features/maps/station_injection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,7 +12,12 @@ import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Preferences().init();
-  runApp(MultiProvider(providers: [...loginProviders], child: MyApp()));
+  runApp(
+    MultiProvider(
+      providers: [...loginProviders, ...stationProvider],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

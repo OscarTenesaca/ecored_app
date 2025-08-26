@@ -12,4 +12,5 @@ export 'inputs/custom_input_date.dart';
 export 'labels/label_title.dart';
 export 'labels/label_icon_title.dart';
 export 'maps/map.dart';
+export 'maps/map_card_info.dart';
 export 'scale/scaler.dart';
