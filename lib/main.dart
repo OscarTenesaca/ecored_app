@@ -2,6 +2,7 @@ import 'package:ecored_app/src/core/routes/routes.dart';
 import 'package:ecored_app/src/core/routes/routes_name.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
+import 'package:ecored_app/src/features/finance/finance_injection.dart';
 import 'package:ecored_app/src/features/login/data/models/model_user.dart';
 import 'package:ecored_app/src/features/login/login_injection.dart';
 import 'package:ecored_app/src/features/maps/station_injection.dart';
@@ -14,7 +15,7 @@ void main() async {
   await Preferences().init();
   runApp(
     MultiProvider(
-      providers: [...loginProviders, ...stationProvider],
+      providers: [...loginProviders, ...stationProvider, ...financeProviders],
       child: MyApp(),
     ),
   );
@@ -28,6 +29,8 @@ class MyApp extends StatelessWidget {
     final Preferences pref = Preferences();
     final ModelUser? user = pref.getUser();
     final bool isLoggedIn = user?.token != null && user!.token.isNotEmpty;
+    print(user?.toJson());
+    print('Is user logged in? ${user?.token}');
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,

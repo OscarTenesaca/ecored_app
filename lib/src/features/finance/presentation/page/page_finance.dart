@@ -1,8 +1,11 @@
 import 'package:ecored_app/src/core/theme/theme_colors.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
+import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 import 'package:ecored_app/src/core/widgets/labels/label_title.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
+import 'package:ecored_app/src/features/finance/presentation/provider/finance_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class PageFinance extends StatefulWidget {
   const PageFinance({super.key});
@@ -13,7 +16,15 @@ class PageFinance extends StatefulWidget {
 
 class _PageFinanceState extends State<PageFinance> {
   @override
+  void initState() {
+    _loadData();
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final provider = context.watch<FinanceProvider>();
+
     return Scaffold(
       backgroundColor: primaryColor(),
       body: SingleChildScrollView(
@@ -53,7 +64,7 @@ class _PageFinanceState extends State<PageFinance> {
                     const SizedBox(height: 8),
                     LabelTitle(
                       alignment: Alignment.center,
-                      title: "\$ 10.00",
+                      title: "\$ ${provider.financeData?.totalRecharges}",
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       textColor: accentColor(),
@@ -92,5 +103,11 @@ class _PageFinanceState extends State<PageFinance> {
         ),
       ),
     );
+  }
+
+  Future<void> _loadData() async {
+    final provider = context.read<FinanceProvider>();
+    await provider.getWalletData({'user': Preferences().getUser()?.id});
+    Logger.logDev(provider.financeData.toString());
   }
 }

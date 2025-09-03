@@ -14,44 +14,49 @@ class PageProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<LoginProvider>();
-
     return Scaffold(
       resizeToAvoidBottomInset: true,
 
-      body:
-          (provider.isLoading)
-              ? Center(child: CircularProgressIndicator())
-              : Container(
-                padding: UtilSize.paddingMain(),
-                child: Column(
-                  children: <Widget>[
-                    _personInformation(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      child: LabelTitle(
-                        title: 'Información',
-                        fontSize: 14,
-                        textColor: grayInputColor(),
-                      ),
+      body: Consumer<LoginProvider>(
+        builder: (context, provider, _) {
+          if (provider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return Center(
+            child: Container(
+              padding: UtilSize.paddingMain(),
+              child: Column(
+                children: <Widget>[
+                  _personInformation(context),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    child: LabelTitle(
+                      title: 'Información',
+                      fontSize: 14,
+                      textColor: grayInputColor(),
                     ),
-                    _actionInformation(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      child: LabelTitle(
-                        title: 'Preferencias',
-                        fontSize: 14,
-                        textColor: grayInputColor(),
-                      ),
+                  ),
+                  _actionInformation(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    child: LabelTitle(
+                      title: 'Preferencias',
+                      fontSize: 14,
+                      textColor: grayInputColor(),
                     ),
-                    _preferencesInformation(context),
-                  ],
-                ),
+                  ),
+                  _preferencesInformation(context),
+                ],
               ),
+            ),
+          );
+        },
+      ),
     );
   }
 
-  Column _personInformation() {
+  Column _personInformation(BuildContext context) {
+    final user = Preferences().getUser();
     return Column(
       children: <Widget>[
         SizedBox(height: UtilSize.appBarHeight()),
@@ -59,18 +64,20 @@ class PageProfile extends StatelessWidget {
           img: 'https://getbeeapp.com/view/customer/constant_1.png',
           size: 120,
           alignment: Alignment.center,
-          onTap: () {},
+          onTap: () {
+            Navigator.pushNamed(context, RouteNames.pageUser);
+          },
         ),
 
         LabelTitle(
           alignment: Alignment.center,
-          title: 'Oscar Tenesaca',
+          title: user?.name ?? '',
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
         LabelTitle(
           alignment: Alignment.center,
-          title: 'tenesac@email.com',
+          title: user?.email ?? '',
           fontSize: 14,
           fontWeight: FontWeight.bold,
           textColor: grayInputColor(),

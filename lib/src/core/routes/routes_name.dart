@@ -2,6 +2,7 @@ class RouteNames {
   //INIT
   static const String pageLogin = 'routeLogin';
   static const String pageRegister = 'routeRegister';
+  static const String pageUser = 'routeUser';
   // static const String initforgot = 'routeInitForgot';
 
   //INIT PAGES CONTAINER

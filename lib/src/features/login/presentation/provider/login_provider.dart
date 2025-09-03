@@ -62,4 +62,19 @@ class LoginProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> updateUser(Map<String, dynamic> userData) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      user = await loginServices.updateUser(userData);
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
 }

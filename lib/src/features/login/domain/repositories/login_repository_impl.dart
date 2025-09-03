@@ -29,4 +29,9 @@ class LoginRepositoryImpl implements LoginRepository {
     // TODO: implement saveFCM
     throw UnimplementedError();
   }
+
+  @override
+  Future<ModelUser> updateUser(Map<String, dynamic> userData) {
+    return remoteDataSource.updateUser(userData);
+  }
 }

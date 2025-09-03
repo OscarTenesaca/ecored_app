@@ -27,4 +27,8 @@ class LoginServices {
   Future<int> saveFCM(Map<String, dynamic> body) async {
     return repositoryLogin.saveFCM(body);
   }
+
+  Future<ModelUser> updateUser(Map<String, dynamic> userData) async {
+    return repositoryLogin.updateUser(userData);
+  }
 }

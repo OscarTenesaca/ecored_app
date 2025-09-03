@@ -1,4 +1,5 @@
 import 'package:ecored_app/src/features/login/presentation/pages/page_register.dart';
+import 'package:ecored_app/src/features/login/presentation/pages/page_user.dart';
 import 'package:flutter/material.dart';
 import 'package:ecored_app/src/core/routes/routes_name.dart';
 
@@ -13,6 +14,7 @@ import 'package:ecored_app/src/features/profile/presentation/page/page_profile.d
 final Map<String, WidgetBuilder> appRoutes = {
   RouteNames.pageLogin: (_) => const PageLogin(),
   RouteNames.pageRegister: (_) => const PageRegister(),
+  RouteNames.pageUser: (_) => const PageUser(),
 
   RouteNames.pageAccess: (_) => const PageAccess(),
   RouteNames.pageHome: (_) => const PageHome(),

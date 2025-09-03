@@ -6,4 +6,5 @@ abstract class LoginRepository {
   Future<int> saveFCM(Map<String, dynamic> body);
   Future<ModelUser> login(String email, String password);
   Future<int> logout();
+  Future<ModelUser> updateUser(Map<String, dynamic> userData);
 }
