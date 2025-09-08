@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:ecored_app/src/core/adapter/adapter_http.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 import 'package:ecored_app/src/features/login/data/models/model_user.dart';
@@ -6,6 +8,7 @@ import 'package:ecored_app/src/features/login/data/models/model_user.dart';
 abstract class LoginRemoteDataSource {
   Future<ModelUser> registerUser(Map<String, dynamic> userData);
   Future<ModelUser> updateUser(Map<String, dynamic> userData);
+  Future<String> uploadImage(Map<String, dynamic> body);
   Future<ModelUser> login(String name, String email);
   Future<int> logout();
   Future<int> saveFCM(Map<String, dynamic> body);
@@ -88,5 +91,14 @@ class LoginRemoteDataSourceImpl implements LoginRemoteDataSource {
     respModelUser.token = prefs.getUser()?.token ?? '';
     prefs.saveUser(respModelUser);
     return respModelUser;
+  }
+
+  @override
+  Future<String> uploadImage(Map<String, dynamic> body) async {
+    log('Body upload image: $body');
+
+    final String endpoint = '$url/api/v1/files/user';
+
+    return 'secureUrl';
   }
 }

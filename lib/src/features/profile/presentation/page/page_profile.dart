@@ -61,7 +61,8 @@ class PageProfile extends StatelessWidget {
       children: <Widget>[
         SizedBox(height: UtilSize.appBarHeight()),
         CustomHiveImg(
-          img: 'https://getbeeapp.com/view/customer/constant_1.png',
+          // img: 'https://getbeeapp.com/view/customer/constant_1.png',
+          img: user?.img ?? '',
           size: 120,
           alignment: Alignment.center,
           onTap: () {

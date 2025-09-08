@@ -7,4 +7,5 @@ abstract class LoginRepository {
   Future<ModelUser> login(String email, String password);
   Future<int> logout();
   Future<ModelUser> updateUser(Map<String, dynamic> userData);
+  Future<String> uploadImage(Map<String, dynamic> body);
 }

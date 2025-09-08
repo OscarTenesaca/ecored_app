@@ -49,7 +49,7 @@ class CustomHiveImg extends StatelessWidget {
                     ),
                   ),
                 ),
-                (img.contains('/view/customer'))
+                (img.contains('files/user/'))
                     ? Container(
                       margin: const EdgeInsets.all(8.0),
                       child: CircleAvatar(

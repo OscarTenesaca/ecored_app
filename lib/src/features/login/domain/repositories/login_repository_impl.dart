@@ -34,4 +34,9 @@ class LoginRepositoryImpl implements LoginRepository {
   Future<ModelUser> updateUser(Map<String, dynamic> userData) {
     return remoteDataSource.updateUser(userData);
   }
+
+  @override
+  Future<String> uploadImage(Map<String, dynamic> body) {
+    return remoteDataSource.uploadImage(body);
+  }
 }

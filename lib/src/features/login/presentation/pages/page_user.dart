@@ -1,3 +1,4 @@
+import 'package:ecored_app/src/core/adapter/adapter_load_img.dart';
 import 'package:ecored_app/src/core/models/location_model.dart';
 import 'package:ecored_app/src/core/services/location_service.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
@@ -8,6 +9,8 @@ import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/login/data/models/model_user.dart';
 import 'package:ecored_app/src/features/login/presentation/provider/login_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 class PageUser extends StatelessWidget {
@@ -84,6 +87,7 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    print('img: $img');
     return Form(
       key: _formKey,
       child: Column(
@@ -91,10 +95,11 @@ class __FormState extends State<_Form> {
         children: [
           SizedBox(height: 15),
           CustomHiveImg(
-            img: 'https://getbeeapp.com/view/customer/constant_1.png',
+            // img: 'https://getbeeapp.com/view/customer/constant_1.png',
+            img: img,
             size: 120,
             alignment: Alignment.center,
-            onTap: () {},
+            onTap: () => _onChangeImg(context),
           ),
 
           CustomInput(
@@ -228,8 +233,12 @@ class __FormState extends State<_Form> {
                     }
                     // showSnackbar(context, 'Usuario actualizado con éxito');
                   } else {
-                    print('no hay cambios que actualizar');
-                    showSnackbar(context, 'No hay cambios que actualizar');
+                    showPopUpWithChildren(
+                      context: context,
+                      title: 'Alerta',
+                      subTitle: 'No hay cambios para actualizar.',
+                      textButton: 'Aceptar',
+                    );
                   }
                 }
               }
@@ -242,6 +251,37 @@ class __FormState extends State<_Form> {
 
   void _pickDate() {
     showDatePickerModal(context: context, notifier: birthdayNotifier);
+  }
+
+  void _onChangeImg(BuildContext context) async {
+    final adapter = AdapterLoadImg();
+    // final base64Img = await adapter.pickImageAndConvert  Base64();
+    // 📌 1. Seleccionar imagen
+    final String? imgPath = await adapter.pickImagePath();
+
+    print('Base64 Image: $imgPath');
+
+    if (imgPath == null) {
+      showPopUpWithChildren(
+        context: context,
+        title: 'Alerta',
+        subTitle:
+            'No tienes permisos para seleccionar imágenes. Por favor, habilítalos en la configuración de tu dispositivo.',
+        textButton: 'Habilitar',
+        onSubmit: () {
+          Navigator.pop(context);
+          openAppSettings();
+        },
+      );
+    }
+
+    // //send
+    final provider = context.read<LoginProvider>();
+    await provider.uploadImage({'file': imgPath});
+    // if (provider.errorMessage != null) {
+    //   print('Error Message: ${provider.errorMessage}');
+    //   // showSnackbar(context, provider.errorMessage!);
+    // }
   }
 
   Future<void> _loadCountries() async {

@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
+<dict>	
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Se requiere acceso a la galería para seleccionar una foto para el perfil del usuario.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>La cámara es utlizada solo para tomar una fotografía para actualizar el perfil del usuario.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Se requiere acceso al microfono para poder grabar audio.</string>
+	
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

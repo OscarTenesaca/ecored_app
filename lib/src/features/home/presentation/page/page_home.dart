@@ -20,7 +20,7 @@ class PageHome extends StatelessWidget {
               'Welcome to the Home Page',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            Text('User : ${user?.token}', style: TextStyle(fontSize: 18)),
+            Text('User : ${user?.toJson()}', style: TextStyle(fontSize: 18)),
           ],
         ),
       ),

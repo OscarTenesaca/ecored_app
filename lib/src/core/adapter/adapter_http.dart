@@ -21,7 +21,6 @@ class HttpAdapter {
 
   Future<Response> get(
     String endpoint, {
-
     Map<String, dynamic>? queryParams,
   }) async {
     _setHeaders();
@@ -62,11 +61,11 @@ class HttpAdapter {
     // _handleDioError(response);
     return response;
   }
+}
 
-  void _handleDioError(Response response) {
-    if (response.statusCode != 200) {
-      throw Exception(response.data ?? 'Error occurred');
-    }
+void _handleDioError(Response response) {
+  if (response.statusCode != 200) {
+    throw Exception(response.data ?? 'Error occurred');
   }
 }
 

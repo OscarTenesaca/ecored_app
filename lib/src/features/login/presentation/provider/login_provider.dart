@@ -77,4 +77,20 @@ class LoginProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> uploadImage(Map<String, dynamic> body) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      final String result = await loginServices.uploadImage(body);
+      print('Upload Image result: $result');
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
 }

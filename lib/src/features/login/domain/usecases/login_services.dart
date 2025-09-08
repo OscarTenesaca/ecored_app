@@ -31,4 +31,8 @@ class LoginServices {
   Future<ModelUser> updateUser(Map<String, dynamic> userData) async {
     return repositoryLogin.updateUser(userData);
   }
+
+  Future<String> uploadImage(Map<String, dynamic> body) async {
+    return repositoryLogin.uploadImage(body);
+  }
 }
