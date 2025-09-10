@@ -37,26 +37,75 @@ class MapCardInfomation extends StatelessWidget {
               ),
             ],
           ),
-          height: 500,
+          height: 700,
           child: ListView(
             padding: EdgeInsets.symmetric(vertical: 16, horizontal: 0),
             shrinkWrap: true,
             children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: InkWell(
-                  onTap: () => onClose?.call(),
-                  child: CircleAvatar(
-                    radius: 22,
-                    backgroundColor: Colors.grey.withOpacity(0.15),
-                    child: Icon(
-                      CupertinoIcons.xmark,
-                      color: Colors.grey,
-                      size: 20,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(width: 10),
+                  (stationData.status == ConnectionStatus.AVAILABLE.name)
+                      ? Blur(
+                        blurColor: Colors.green,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          child: LabelTitle(
+                            title: 'Disponible',
+                            textColor: accentColor(),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
+                      : Blur(
+                        blurColor: Colors.red,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
+                          child: LabelTitle(
+                            title: 'No Disponible',
+                            textColor: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  InkWell(
+                    onTap: () => onClose?.call(),
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: Colors.grey.withOpacity(0.15),
+                      child: Icon(
+                        CupertinoIcons.xmark,
+                        color: Colors.grey,
+                        size: 20,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
+              // Align(
+              //   alignment: Alignment.topRight,
+              //   child: InkWell(
+              //     onTap: () => onClose?.call(),
+              //     child: CircleAvatar(
+              //       radius: 22,
+              //       backgroundColor: Colors.grey.withOpacity(0.15),
+              //       child: Icon(
+              //         CupertinoIcons.xmark,
+              //         color: Colors.grey,
+              //         size: 20,
+              //       ),
+              //     ),
+              //   ),
+              // ),
 
               // 🔹 Nombre Estación
               Row(
@@ -233,8 +282,16 @@ class MapCardInfomation extends StatelessWidget {
             backgroundColor: color.withOpacity(0.15),
             child: Icon(icon, color: color, size: 22),
           ),
-          const SizedBox(height: 6),
-          Text(label, style: TextStyle(color: Colors.white70, fontSize: 12)),
+          Visibility(
+            visible: label.isNotEmpty,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(
+                label,
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -242,7 +299,7 @@ class MapCardInfomation extends StatelessWidget {
 
   /// 🔹 Tarjeta de conector
   Widget _chargerChip(Charger charger) {
-    final isAvailable = charger.status == "AVAILABLE";
+    final isAvailable = charger.status == ConnectionStatus.AVAILABLE.name;
     return Container(
       padding: const EdgeInsets.all(12),
       width: 110,

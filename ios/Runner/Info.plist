@@ -9,6 +9,11 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Se requiere acceso al microfono para poder grabar audio.</string>
 	
+	<key>UIBackgroundModes</key>
+	<array>
+	  <string>location</string>
+	</array>
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

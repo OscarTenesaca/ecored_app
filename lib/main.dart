@@ -1,3 +1,4 @@
+import 'package:ecored_app/src/core/provider/global_injection.dart';
 import 'package:ecored_app/src/core/routes/routes.dart';
 import 'package:ecored_app/src/core/routes/routes_name.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
@@ -15,7 +16,12 @@ void main() async {
   await Preferences().init();
   runApp(
     MultiProvider(
-      providers: [...loginProviders, ...stationProvider, ...financeProviders],
+      providers: [
+        ...globalProvider,
+        ...loginProviders,
+        ...stationProvider,
+        ...financeProviders,
+      ],
       child: MyApp(),
     ),
   );

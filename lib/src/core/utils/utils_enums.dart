@@ -1,0 +1,1 @@
+enum ConnectionStatus { AVAILABLE, OCCUPIED, MAINTENANCE, OUT_OF_SERVICE }

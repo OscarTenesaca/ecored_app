@@ -1,3 +1,4 @@
+import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:flutter/material.dart';
@@ -86,6 +87,7 @@ class _CustomMapState extends State<CustomMap> {
               initialZoom: widget.initialZoom,
             ),
             children: [
+              // Capa de mapa base (Google Maps)
               TileLayer(
                 urlTemplate:
                     'https://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga',
@@ -108,9 +110,13 @@ class _CustomMapState extends State<CustomMap> {
                                 onPressed: () {
                                   selectedMarker.value = markerData;
                                 },
-                                icon: const Icon(
-                                  Icons.location_on,
-                                  color: Colors.red,
+                                icon: Icon(
+                                  Icons.local_gas_station,
+                                  color:
+                                      (markerData.status ==
+                                              ConnectionStatus.AVAILABLE.name)
+                                          ? Colors.green
+                                          : Colors.red,
                                   size: 40,
                                 ),
                               ),

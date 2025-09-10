@@ -39,6 +39,7 @@
 //   }
 // }
 
+import 'package:ecored_app/src/core/provider/permissiongps_provider.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
@@ -64,13 +65,18 @@ class _PageMapsState extends State<PageMaps> {
 
   @override
   Widget build(BuildContext context) {
+    final gpsProvider = context.watch<PermissionGpsProvider>();
+    print(gpsProvider.isPermissionGranted);
+    print(gpsProvider.isAllGranted);
+
     return Scaffold(body: CustomMap(latLngMarkers: stationLocations));
   }
 
   Future<void> _loadMarkers() async {
     final provider = context.read<StationProvider>();
 
-    await provider.findAllStations({'status': 'AVAILABLE'});
+    // await provider.findAllStations({'status': 'AVAILABLE'});
+    await provider.findAllStations({});
     stationLocations = provider.stations!;
     Logger.logDev(provider.stations.toString());
   }
