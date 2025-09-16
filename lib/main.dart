@@ -35,8 +35,8 @@ class MyApp extends StatelessWidget {
     final Preferences pref = Preferences();
     final ModelUser? user = pref.getUser();
     final bool isLoggedIn = user?.token != null && user!.token.isNotEmpty;
-    print(user?.toJson());
-    print('Is user logged in? ${user?.token}');
+    // print(user?.toJson());
+    // print('Is user logged in? ${user?.token}');
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,

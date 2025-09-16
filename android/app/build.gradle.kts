@@ -8,8 +8,8 @@ plugins {
 android {
     namespace = "com.example.ecored_app"
     compileSdk = 35
-    ndkVersion = "23.1.7779620"
-    //    ndkVersion = flutter.ndkVersion
+    //ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
 
     compileOptions {

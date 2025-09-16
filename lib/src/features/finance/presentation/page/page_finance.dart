@@ -108,6 +108,6 @@ class _PageFinanceState extends State<PageFinance> {
   Future<void> _loadData() async {
     final provider = context.read<FinanceProvider>();
     await provider.getWalletData({'user': Preferences().getUser()?.id});
-    Logger.logDev(provider.financeData.toString());
+    // Logger.logDev(provider.financeData.toString());
   }
 }

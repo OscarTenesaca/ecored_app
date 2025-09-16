@@ -54,7 +54,6 @@ class LoginRemoteDataSourceImpl implements LoginRemoteDataSource {
     }
 
     final respModelUser = ModelUser.fromJson(response.data['data']);
-    print(respModelUser.toJson());
     prefs.saveUser(respModelUser);
     return respModelUser;
   }

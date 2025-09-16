@@ -40,12 +40,14 @@
 // }
 
 import 'package:ecored_app/src/core/provider/permissiongps_provider.dart';
-import 'package:ecored_app/src/core/utils/utils_index.dart';
+import 'package:ecored_app/src/core/utils/utils_logger.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:ecored_app/src/features/maps/presentation/provider/station_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import 'package:latlong2/latlong.dart';
 
 class PageMaps extends StatefulWidget {
   const PageMaps({super.key});
@@ -56,20 +58,96 @@ class PageMaps extends StatefulWidget {
 
 class _PageMapsState extends State<PageMaps> {
   List<ModelStation> stationLocations = [];
+  late PermissionGpsProvider gpsProvider;
 
   @override
   void initState() {
     _loadMarkers();
+    gpsProvider = context.read<PermissionGpsProvider>();
+
+    // Obtener posición inicial
+    gpsProvider.getCurrentPosition();
+
+    // Iniciar tracking
+    gpsProvider.startTracking();
+
     super.initState();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final gpsProvider = context.watch<PermissionGpsProvider>();
-    print(gpsProvider.isPermissionGranted);
-    print(gpsProvider.isAllGranted);
+  void dispose() {
+    gpsProvider.stopTracking(); // ya no usamos context
+    super.dispose();
+  }
 
-    return Scaffold(body: CustomMap(latLngMarkers: stationLocations));
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Consumer2<StationProvider, PermissionGpsProvider>(
+        builder: (context, stationProvider, gpsProvider, _) {
+          Logger.logDev(
+            'PageMaps build - isLoading: ${stationProvider.isLoading}, stations: ${stationProvider.stations?.length}, currentPosition: ${gpsProvider.currentPosition}',
+          );
+          return Stack(
+            children: [
+              CustomMap(
+                latLngMarkers: stationLocations,
+                userMarker:
+                    gpsProvider.currentPosition != null
+                        ? LatLng(
+                          gpsProvider.currentPosition!.latitude,
+                          gpsProvider.currentPosition!.longitude,
+                        )
+                        : null,
+              ),
+
+              Visibility(
+                visible: stationProvider.isLoading,
+                child: Blur(
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    // return Consumer<PermissionGpsProvider>(
+    //   builder: (context, provider, _) {
+    //     if (!provider.isAllGranted) {
+    //       return PermissionGPS();
+    //     }
+
+    // return Scaffold(
+    // body: Consumer<StationProvider>(
+    //   builder: (context, provider, _) {
+    //     return Stack(
+    //       children: [
+    //         CustomMap(
+    //           latLngMarkers: stationLocations,
+    //           userMarker:
+    //               providerPermissin.currentPosition != null
+    //                   ? LatLng(
+    //                     providerPermissin.currentPosition!.latitude,
+    //                     providerPermissin.currentPosition!.longitude,
+    //                   )
+    //                   : null,
+    //         ),
+
+    //         Visibility(
+    //           visible: provider.isLoading,
+    //           child: Blur(
+    //             child: const Center(child: CircularProgressIndicator()),
+    //           ),
+    //         ),
+    //       ],
+    //     );
+    //   },
+    // ),
+    // );
+    // },
+    // );
   }
 
   Future<void> _loadMarkers() async {
@@ -78,6 +156,6 @@ class _PageMapsState extends State<PageMaps> {
     // await provider.findAllStations({'status': 'AVAILABLE'});
     await provider.findAllStations({});
     stationLocations = provider.stations!;
-    Logger.logDev(provider.stations.toString());
+    // Logger.logDev(provider.stations.toString());
   }
 }

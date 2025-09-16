@@ -7,9 +7,6 @@ class AdapterLoadImg {
   final ImagePicker _picker = ImagePicker();
 
   Future<String?> pickImageAndConvertBase64() async {
-    final bool isAndroid = Platform.isAndroid;
-    final bool isIOS = Platform.isIOS;
-
     bool hasPermission = false;
 
     final status = await Permission.photos.request();
@@ -38,7 +35,7 @@ class AdapterLoadImg {
     return base64Encode(bytes);
   }
 
-  /// Pide permisos y devuelve el archivo seleccionado (XFile) o null
+  // / Pide permisos y devuelve el archivo seleccionado (XFile) o null
   Future<XFile?> pickImageSendFile() async {
     bool hasPermission = false;
 

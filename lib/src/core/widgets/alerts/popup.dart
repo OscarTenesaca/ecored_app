@@ -1,4 +1,5 @@
 import 'package:ecored_app/src/core/theme/theme_index.dart';
+import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:flutter/material.dart';
 
@@ -86,6 +87,107 @@ showPopUpWithChildren({
     },
   );
 }
+
+// ? Show modal
+showModalChild({required BuildContext context, required Widget child}) {
+  return showDialog(
+    barrierDismissible: false, // 👈 no se cierra al tocar afuera
+    useSafeArea: false,
+    context: context,
+    builder: (contextBuilder) {
+      return Material(
+        color: Colors.transparent,
+        child: Blur(
+          intensity: Intensity.high.value,
+          blurColor: whiteColor(),
+          child: Stack(
+            children: [
+              // Contenido centrado
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: UtilSize.width(context) * 0.05,
+                        vertical: 10,
+                      ),
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Align(
+                          alignment: Alignment.topRight,
+                          child: CircleAvatar(
+                            backgroundColor: Colors.black54,
+                            radius: 16,
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    child,
+                  ],
+                ),
+              ),
+
+              // Botón de cerrar en la esquina superior derecha
+              // Positioned(
+              //   top: 20,
+              //   right: 20,
+              //   child: GestureDetector(
+              //     onTap: () => Navigator.pop(context),
+              //     child: Container(
+              //       decoration: BoxDecoration(
+              //         color: Colors.black54,
+              //         shape: BoxShape.circle,
+              //       ),
+              //       padding: const EdgeInsets.all(8),
+              //       child: const Icon(
+              //         Icons.close,
+              //         color: Colors.white,
+              //         size: 20,
+              //       ),
+              //     ),
+              //   ),
+              // ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+// showModalChild({required BuildContext context, required Widget child}) {
+//   return showDialog(
+//     barrierDismissible: false,
+//     useSafeArea: false,
+//     context: context,
+//     builder: (contextBuilder) {
+//       return Material(
+//         color: Colors.transparent,
+//         child: Blur(
+//           intensity: Intensity.high.value,
+//           blurColor: whiteColor(),
+//           child: Stack(
+//             alignment: Alignment.center,
+//             fit: StackFit.loose,
+//             children: [
+//               Positioned.fill(
+//                 child: GestureDetector(onTap: () => Navigator.pop(context)),
+//               ),
+
+//               child,
+//             ],
+//           ),
+//         ),
+//       );
+//     },
+//   );
+// }
 
 // showModal({
 //   required List<String> options,

@@ -14,15 +14,12 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
 
   @override
   Future<ModelFinance> getWalletData(Map<String, dynamic> params) async {
-    print('params: $params');
     final String endpoint = '$url/api/v1/wallets';
     final response = await httpAdapter.get(endpoint, queryParams: params);
 
     if (response.statusCode != 200) {
       throw ('Ocurrió un problema, intente más tarde');
     }
-
-    print(response.data);
 
     final respModelFinance = ModelFinance.fromJson(response.data['data'][0]);
     return respModelFinance;

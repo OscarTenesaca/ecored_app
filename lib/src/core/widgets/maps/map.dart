@@ -10,6 +10,7 @@ class CustomMap extends StatefulWidget {
   final LatLng initLatLng;
   final double initialZoom;
   final List<ModelStation> latLngMarkers;
+  final LatLng? userMarker;
 
   const CustomMap({
     super.key,
@@ -17,6 +18,7 @@ class CustomMap extends StatefulWidget {
     this.initLatLng = const LatLng(-2.888100139166612, -78.98455544907367),
     this.initialZoom = 16,
     this.latLngMarkers = const [],
+    this.userMarker = const LatLng(-2.888100139166612, -78.98455544907367),
   });
 
   @override
@@ -124,6 +126,24 @@ class _CustomMapState extends State<CustomMap> {
                           )
                           .toList(),
                 ),
+
+              // 🔹 Usuario
+              if (widget.userMarker != null)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      width: 40,
+                      height: 40,
+                      point: widget.userMarker!,
+                      // point: widget.initLatLng,
+                      child: const Icon(
+                        Icons.person_pin_circle,
+                        color: Colors.blue,
+                        size: 35,
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
         ),
@@ -145,6 +165,7 @@ class _CustomMapState extends State<CustomMap> {
             if (marker == null) return const SizedBox.shrink();
             return MapCardInfomation(
               stationData: marker,
+              userMarker: widget.userMarker,
               onClose: () => selectedMarker.value = null,
             );
           },

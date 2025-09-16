@@ -9,7 +9,7 @@ import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/login/data/models/model_user.dart';
 import 'package:ecored_app/src/features/login/presentation/provider/login_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+// import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
@@ -87,7 +87,6 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
-    print('img: $img');
     return Form(
       key: _formKey,
       child: Column(
@@ -95,8 +94,9 @@ class __FormState extends State<_Form> {
         children: [
           SizedBox(height: 15),
           CustomHiveImg(
-            // img: 'https://getbeeapp.com/view/customer/constant_1.png',
-            img: img,
+            img:
+                'http://10.0.2.2:3000/api/v1/files/user/6d8d77e7-04f6-4dc3-a4ba-5bb44cec2370.jpeg',
+            // img: img,
             size: 120,
             alignment: Alignment.center,
             onTap: () => _onChangeImg(context),

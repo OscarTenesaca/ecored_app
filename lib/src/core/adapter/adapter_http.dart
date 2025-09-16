@@ -13,7 +13,7 @@ class HttpAdapter {
   // Configurar los encabezados para incluir el token
   void _setHeaders() {
     String authToken = Preferences().getUser()?.token ?? '';
-    Logger.logInfo(' $authToken');
+    // Logger.logInfo(' $authToken');
     //Bearer Token
     _dio.options.headers['Authorization'] = 'Bearer $authToken';
     _dio.options.headers['Content-Type'] = 'application/json';

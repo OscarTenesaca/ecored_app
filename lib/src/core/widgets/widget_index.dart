@@ -14,4 +14,6 @@ export 'labels/label_icon_title.dart';
 export 'maps/map.dart';
 export 'maps/map_card_info.dart';
 export 'maps/map_permission.dart';
+export 'permission/permission_gps.dart';
 export 'scale/scaler.dart';
+export 'web/web_external.dart';

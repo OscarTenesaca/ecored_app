@@ -14,6 +14,20 @@
 	  <string>location</string>
 	</array>
 
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Se requiere su ubicación para el servicio de mapas, no se comparte ni almacena.</string>
+	
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Se requiere su ubicación incluso cuando la app está en segundo plano para funciones de seguimiento.</string>
+	
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Se requiere su ubicación siempre para funciones de seguimiento.</string>
+	
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key><true/>
+	</dict>
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

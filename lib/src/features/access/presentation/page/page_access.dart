@@ -22,7 +22,8 @@ class _PageAccessState extends State<PageAccess> {
       body: ValueListenableBuilder(
         valueListenable: _indexNotifier,
         builder: (context, index, child) {
-          return IndexedStack(index: index, children: _getPages(index));
+          // return IndexedStack(index: index, children: _getPages(index));
+          return _getPages(index)[index];
         },
       ),
       bottomNavigationBar: CustomBottonBar(indexNotifier: _indexNotifier),

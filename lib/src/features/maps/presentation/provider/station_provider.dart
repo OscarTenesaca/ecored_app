@@ -12,19 +12,23 @@ class StationProvider extends ChangeNotifier {
   StationProvider(this.services);
 
   Future<void> findAllStations(Map<String, dynamic> query) async {
-    print('StationProvider findAllStations');
+    // print('StationProvider findAllStations');
     try {
-      isLoading = true;
-      errorMessage = null;
-      // notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        isLoading = true;
+        errorMessage = null;
+        notifyListeners();
+      });
 
       stations = await services.findAllStations(query);
       // Process the stations as needed
     } catch (e) {
       errorMessage = e.toString();
     } finally {
-      isLoading = false;
-      // notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        isLoading = false;
+        notifyListeners();
+      });
     }
   }
 }

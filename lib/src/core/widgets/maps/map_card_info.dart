@@ -1,16 +1,26 @@
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
+import 'package:ecored_app/src/core/widgets/alerts/popup.dart';
 import 'package:ecored_app/src/core/widgets/blur/blur.dart';
 import 'package:ecored_app/src/core/widgets/labels/label_icon_title.dart';
 import 'package:ecored_app/src/core/widgets/labels/label_title.dart';
+import 'package:ecored_app/src/core/widgets/web/web_external.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 
 class MapCardInfomation extends StatelessWidget {
   final ModelStation stationData;
+  final LatLng? userMarker;
   final Function()? onClose;
-  const MapCardInfomation({super.key, required this.stationData, this.onClose});
+
+  const MapCardInfomation({
+    super.key,
+    required this.stationData,
+    this.userMarker,
+    this.onClose,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +146,7 @@ class MapCardInfomation extends StatelessWidget {
               const SizedBox(height: 16),
 
               // 🔹 Acciones principales
-              _actionButtons(),
+              _actionButtons(context),
 
               const Divider(color: Colors.white24, height: 32),
 
@@ -255,12 +265,22 @@ class MapCardInfomation extends StatelessWidget {
   }
 
   /// 🔹 Botones de acción
-  Widget _actionButtons() {
+  Widget _actionButtons(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         _actionItem(CupertinoIcons.map, 'Cómo llegar', Colors.blue, () {
-          // Handle "Cómo llegar" tap
+          //only tap show popup
+          showModalChild(
+            context: context,
+            child: WebExternal(
+              width: UtilSize.width(context) * 0.9,
+              height: UtilSize.height(context) * 0.8,
+              borderRadius: 30,
+              url:
+                  "https://www.google.com/maps/dir/?api=1&origin=-2.9058943255657588,-78.99674653401117&destination=${stationData.lat},${stationData.lng}&travelmode=driving",
+            ),
+          );
         }),
         _actionItem(CupertinoIcons.phone, 'Contactar', Colors.green, () {
           // Handle "Contactar" tap
@@ -272,9 +292,14 @@ class MapCardInfomation extends StatelessWidget {
     );
   }
 
-  Widget _actionItem(IconData icon, String label, Color color, Function onTap) {
+  Widget _actionItem(
+    IconData icon,
+    String label,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return InkWell(
-      onTap: onTap(),
+      onTap: onTap,
       child: Column(
         children: [
           CircleAvatar(
