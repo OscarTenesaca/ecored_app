@@ -11,6 +11,8 @@ class ModelStation {
   String id;
   String name;
   String address;
+  String prefixCode;
+  String phone;
   String lat;
   String lng;
   Map<String, double> priceWithTipeConnector;
@@ -23,6 +25,8 @@ class ModelStation {
     required this.id,
     required this.name,
     required this.address,
+    required this.prefixCode,
+    required this.phone,
     required this.lat,
     required this.lng,
     required this.priceWithTipeConnector,
@@ -36,6 +40,8 @@ class ModelStation {
     id: json["_id"] ?? '',
     name: json["name"] ?? '',
     address: json["address"] ?? '',
+    prefixCode: json["prefixCode"] ?? '',
+    phone: json["phone"] ?? '',
     lat: json["lat"] ?? '',
     lng: json["lng"] ?? '',
     priceWithTipeConnector: Map<String, double>.from(
@@ -59,6 +65,8 @@ class ModelStation {
     "_id": id,
     "name": name,
     "address": address,
+    "prefixCode": prefixCode,
+    "phone": phone,
     "lat": lat,
     "lng": lng,
     "priceWithTipeConnector": priceWithTipeConnector,

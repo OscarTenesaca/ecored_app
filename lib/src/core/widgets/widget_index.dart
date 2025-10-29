@@ -2,6 +2,7 @@ export 'alerts/popup.dart';
 export 'background/background.dart';
 export 'blur/blur.dart';
 export 'button_bar/custom_bottom_bar.dart';
+export 'buttons/custom_button_circle.dart';
 export 'buttons/custom_button.dart';
 export 'images/custom_asset_img.dart';
 export 'images/custom_hive_img.dart';

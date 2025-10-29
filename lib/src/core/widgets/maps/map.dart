@@ -78,6 +78,7 @@ class _CustomMapState extends State<CustomMap> {
 
   @override
   Widget build(BuildContext context) {
+    print('markers length: ${widget.latLngMarkers}');
     return Stack(
       children: [
         AbsorbPointer(

@@ -12,7 +12,6 @@ class StationProvider extends ChangeNotifier {
   StationProvider(this.services);
 
   Future<void> findAllStations(Map<String, dynamic> query) async {
-    // print('StationProvider findAllStations');
     try {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         isLoading = true;
@@ -21,6 +20,7 @@ class StationProvider extends ChangeNotifier {
       });
 
       stations = await services.findAllStations(query);
+      print('StationProvider findAllStations: ${stations?.length}');
       // Process the stations as needed
     } catch (e) {
       errorMessage = e.toString();

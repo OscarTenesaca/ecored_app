@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+// import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 class WebExternal extends StatelessWidget {
   final double width;
@@ -29,9 +29,10 @@ class WebExternal extends StatelessWidget {
       child: SizedBox(
         width: width,
         height: height,
-        child: InAppWebView(
-          initialUrlRequest: URLRequest(url: WebUri(uriParse)),
-        ),
+        child: Text('Web view disabled for now URLLAUNCHER'),
+        // child: InAppWebView(
+        //   initialUrlRequest: URLRequest(url: WebUri(uriParse)),
+        // ),
       ),
     );
   }

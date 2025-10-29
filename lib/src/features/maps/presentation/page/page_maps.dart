@@ -39,6 +39,8 @@
 //   }
 // }
 
+import 'dart:developer';
+
 import 'package:ecored_app/src/core/provider/permissiongps_provider.dart';
 import 'package:ecored_app/src/core/utils/utils_logger.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
@@ -85,9 +87,6 @@ class _PageMapsState extends State<PageMaps> {
     return Scaffold(
       body: Consumer2<StationProvider, PermissionGpsProvider>(
         builder: (context, stationProvider, gpsProvider, _) {
-          Logger.logDev(
-            'PageMaps build - isLoading: ${stationProvider.isLoading}, stations: ${stationProvider.stations?.length}, currentPosition: ${gpsProvider.currentPosition}',
-          );
           return Stack(
             children: [
               CustomMap(
@@ -151,11 +150,12 @@ class _PageMapsState extends State<PageMaps> {
   }
 
   Future<void> _loadMarkers() async {
+    print('Loading markers...');
     final provider = context.read<StationProvider>();
 
     // await provider.findAllStations({'status': 'AVAILABLE'});
     await provider.findAllStations({});
     stationLocations = provider.stations!;
-    // Logger.logDev(provider.stations.toString());
+    log('PageMaps _loadMarkers: ${stationLocations.length} markers loaded');
   }
 }

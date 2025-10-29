@@ -1,3 +1,4 @@
+import 'package:ecored_app/src/core/adapter/adapter_launcher.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/widgets/alerts/popup.dart';
@@ -269,25 +270,45 @@ class MapCardInfomation extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _actionItem(CupertinoIcons.map, 'Cómo llegar', Colors.blue, () {
-          //only tap show popup
-          showModalChild(
-            context: context,
-            child: WebExternal(
-              width: UtilSize.width(context) * 0.9,
-              height: UtilSize.height(context) * 0.8,
-              borderRadius: 30,
-              url:
-                  "https://www.google.com/maps/dir/?api=1&origin=-2.9058943255657588,-78.99674653401117&destination=${stationData.lat},${stationData.lng}&travelmode=driving",
-            ),
+        _actionItem(CupertinoIcons.location_solid, 'Cómo llegar', Colors.red, () {
+          //       'https://www.google.com/maps/search/?api=1&query=$query',
+
+          AdapterLauncher().launchMapsDirections(
+            latOrigin: '${userMarker!.latitude}',
+            lngOrigin: '${userMarker!.longitude}',
+            latDestination: '${stationData.lat}',
+            lngDestination: '${stationData.lng}',
           );
+          //   //only tap show popup
+          //   showModalChild(
+          //     context: context,
+          //     child: WebExternal(
+          //       width: UtilSize.width(context) * 0.9,
+          //       height: UtilSize.height(context) * 0.8,
+          //       borderRadius: 30,
+          //       url:
+          //           "https://www.google.com/maps/dir/?api=1&origin=${userMarker!.latitude},${userMarker!.longitude}&destination=${stationData.lat},${stationData.lng}&travelmode=driving",
+          //     ),
+          //   );
         }),
-        _actionItem(CupertinoIcons.phone, 'Contactar', Colors.green, () {
+        _actionItem(CupertinoIcons.phone_fill, 'Contactar', Colors.blue, () {
+          AdapterLauncher().launchPhone(
+            stationData.prefixCode + stationData.phone,
+          );
           // Handle "Contactar" tap
         }),
-        _actionItem(CupertinoIcons.heart, 'Favorito', Colors.red, () {
-          // Handle "Favorito" tap
-        }),
+        _actionItem(
+          CupertinoIcons.device_phone_portrait,
+          'WhatsApp',
+          Colors.green,
+          () {
+            AdapterLauncher().launchWhatsApp(
+              stationData.prefixCode + stationData.phone,
+            );
+
+            // Handle "WhatsApp" tap
+          },
+        ),
       ],
     );
   }
