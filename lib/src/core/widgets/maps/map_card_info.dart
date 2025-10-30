@@ -1,17 +1,20 @@
 import 'package:ecored_app/src/core/adapter/adapter_launcher.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
-import 'package:ecored_app/src/core/widgets/alerts/popup.dart';
 import 'package:ecored_app/src/core/widgets/blur/blur.dart';
+import 'package:ecored_app/src/core/widgets/buttons/custom_button_circle.dart';
 import 'package:ecored_app/src/core/widgets/labels/label_icon_title.dart';
 import 'package:ecored_app/src/core/widgets/labels/label_title.dart';
-import 'package:ecored_app/src/core/widgets/web/web_external.dart';
+import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
+import 'package:ecored_app/src/features/maps/presentation/provider/station_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
-class MapCardInfomation extends StatelessWidget {
+import 'package:provider/provider.dart';
+
+class MapCardInfomation extends StatefulWidget {
   final ModelStation stationData;
   final LatLng? userMarker;
   final Function()? onClose;
@@ -22,6 +25,19 @@ class MapCardInfomation extends StatelessWidget {
     this.userMarker,
     this.onClose,
   });
+
+  @override
+  State<MapCardInfomation> createState() => _MapCardInfomationState();
+}
+
+class _MapCardInfomationState extends State<MapCardInfomation> {
+  List<ModelCharger> chargerData = [];
+
+  @override
+  void initState() {
+    _loadMarkers();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,11 +54,11 @@ class MapCardInfomation extends StatelessWidget {
             right: 16,
           ),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.85),
+            color: Colors.black.withValues(alpha: 0.8),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),
@@ -57,7 +73,7 @@ class MapCardInfomation extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   SizedBox(width: 10),
-                  (stationData.status == ConnectionStatus.AVAILABLE.name)
+                  (widget.stationData.status == ConnectionStatus.AVAILABLE.name)
                       ? Blur(
                         blurColor: Colors.green,
                         borderRadius: BorderRadius.circular(20),
@@ -88,11 +104,12 @@ class MapCardInfomation extends StatelessWidget {
                           ),
                         ),
                       ),
+
                   InkWell(
-                    onTap: () => onClose?.call(),
+                    onTap: () => widget.onClose?.call(),
                     child: CircleAvatar(
                       radius: 22,
-                      backgroundColor: Colors.grey.withOpacity(0.15),
+                      backgroundColor: Colors.grey.withValues(alpha: 0.15),
                       child: Icon(
                         CupertinoIcons.xmark,
                         color: Colors.grey,
@@ -102,21 +119,6 @@ class MapCardInfomation extends StatelessWidget {
                   ),
                 ],
               ),
-              // Align(
-              //   alignment: Alignment.topRight,
-              //   child: InkWell(
-              //     onTap: () => onClose?.call(),
-              //     child: CircleAvatar(
-              //       radius: 22,
-              //       backgroundColor: Colors.grey.withOpacity(0.15),
-              //       child: Icon(
-              //         CupertinoIcons.xmark,
-              //         color: Colors.grey,
-              //         size: 20,
-              //       ),
-              //     ),
-              //   ),
-              // ),
 
               // 🔹 Nombre Estación
               Row(
@@ -127,21 +129,21 @@ class MapCardInfomation extends StatelessWidget {
                     color: Colors.greenAccent,
                     size: 32,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   LabelTitle(
-                    title: stationData.name,
+                    title: widget.stationData.name,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 10),
 
               // 🔹 Dirección
               LabelIconTitle(
                 icon: CupertinoIcons.location_solid,
                 iconColor: Colors.grey.shade400,
-                title: stationData.address,
+                title: widget.stationData.address,
                 textColor: grayInputColor(),
               ),
               const SizedBox(height: 16),
@@ -157,9 +159,11 @@ class MapCardInfomation extends StatelessWidget {
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
+
               const SizedBox(height: 6),
+
               Text(
-                'ElectroGasolinera con múltiples conectores rápidos y seguros. Abierto las 24 horas.',
+                widget.stationData.description,
                 style: TextStyle(color: grayInputColor(), fontSize: 14),
               ),
 
@@ -172,11 +176,11 @@ class MapCardInfomation extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
               const SizedBox(height: 10),
+
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
-                children:
-                    stationData.chargers.map((c) => _chargerChip(c)).toList(),
+                children: chargerData.map((c) => _chargerChip(c)).toList(),
               ),
 
               // LabelTitle(
@@ -227,37 +231,6 @@ class MapCardInfomation extends StatelessWidget {
               //     );
               //   },
               // ),
-
-              //!opt 2
-              LabelTitle(
-                title: 'Precios por kWh',
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-              const SizedBox(height: 10),
-              Column(
-                children:
-                    stationData.priceWithTipeConnector.entries.map((e) {
-                      return ListTile(
-                        dense: true,
-                        leading: const Icon(
-                          CupertinoIcons.bolt_fill,
-                          color: Colors.amber,
-                        ),
-                        title: Text(
-                          e.key,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        trailing: Text(
-                          "\$${e.value.toStringAsFixed(2)}",
-                          style: const TextStyle(
-                            color: Colors.greenAccent,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-              ),
             ],
           ),
         ),
@@ -270,106 +243,70 @@ class MapCardInfomation extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _actionItem(CupertinoIcons.location_solid, 'Cómo llegar', Colors.red, () {
-          //       'https://www.google.com/maps/search/?api=1&query=$query',
-
-          AdapterLauncher().launchMapsDirections(
-            latOrigin: '${userMarker!.latitude}',
-            lngOrigin: '${userMarker!.longitude}',
-            latDestination: '${stationData.lat}',
-            lngDestination: '${stationData.lng}',
-          );
-          //   //only tap show popup
-          //   showModalChild(
-          //     context: context,
-          //     child: WebExternal(
-          //       width: UtilSize.width(context) * 0.9,
-          //       height: UtilSize.height(context) * 0.8,
-          //       borderRadius: 30,
-          //       url:
-          //           "https://www.google.com/maps/dir/?api=1&origin=${userMarker!.latitude},${userMarker!.longitude}&destination=${stationData.lat},${stationData.lng}&travelmode=driving",
-          //     ),
-          //   );
-        }),
-        _actionItem(CupertinoIcons.phone_fill, 'Contactar', Colors.blue, () {
-          AdapterLauncher().launchPhone(
-            stationData.prefixCode + stationData.phone,
-          );
-          // Handle "Contactar" tap
-        }),
-        _actionItem(
-          CupertinoIcons.device_phone_portrait,
-          'WhatsApp',
-          Colors.green,
-          () {
-            AdapterLauncher().launchWhatsApp(
-              stationData.prefixCode + stationData.phone,
+        CustomButtonCircle(
+          icon: CupertinoIcons.location_solid,
+          color: Colors.blueAccent,
+          onPressed: () {
+            AdapterLauncher().launchMapsDirections(
+              latOrigin: '${widget.userMarker!.latitude}',
+              lngOrigin: '${widget.userMarker!.longitude}',
+              latDestination: '${widget.stationData.lat}',
+              lngDestination: '${widget.stationData.lng}',
             );
+          },
+        ),
 
-            // Handle "WhatsApp" tap
+        CustomButtonCircle(
+          icon: CupertinoIcons.phone_fill,
+          color: Colors.cyan,
+          onPressed: () {
+            AdapterLauncher().launchPhone(
+              widget.stationData.prefixCode + widget.stationData.phone,
+            );
+          },
+        ),
+
+        CustomButtonCircle(
+          icon: CupertinoIcons.device_phone_portrait,
+          color: Colors.greenAccent,
+          onPressed: () {
+            AdapterLauncher().launchWhatsApp(
+              widget.stationData.prefixCode + widget.stationData.phone,
+            );
           },
         ),
       ],
     );
   }
 
-  Widget _actionItem(
-    IconData icon,
-    String label,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: color.withOpacity(0.15),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          Visibility(
-            visible: label.isNotEmpty,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Text(
-                label,
-                style: TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// 🔹 Tarjeta de conector
-  Widget _chargerChip(Charger charger) {
-    final isAvailable = charger.status == ConnectionStatus.AVAILABLE.name;
+  ///
+  Widget _chargerChip(ModelCharger charger) {
+    final bool isAvailable = charger.status == ConnectionStatus.AVAILABLE.name;
+    final Color statusColor =
+        isAvailable ? Colors.greenAccent : Colors.redAccent;
+
     return Container(
       padding: const EdgeInsets.all(12),
-      width: 110,
+      width: 130,
       decoration: BoxDecoration(
-        color:
-            isAvailable
-                ? Colors.green.withOpacity(0.1)
-                : Colors.red.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        color: statusColor.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isAvailable ? Colors.green : Colors.red,
-          width: 1.2,
+          color: statusColor.withValues(alpha: 0.8),
+          width: 1.4,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            charger.typeConnection,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: isAvailable ? Colors.green : Colors.red,
-            ),
+          LabelTitle(
+            padding: false,
+            title: charger.typeConnection,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            textColor: isAvailable ? Colors.green : Colors.red,
+            alignment: Alignment.center,
           ),
           const SizedBox(height: 4),
           Row(
@@ -380,176 +317,40 @@ class MapCardInfomation extends StatelessWidget {
                 color: Colors.amber,
               ),
               const SizedBox(width: 4),
-              Text(
-                '${charger.powerKw} kW',
-                style: TextStyle(color: Colors.white70, fontSize: 12),
+              LabelTitle(
+                title: '${charger.powerKw} kW',
+                fontSize: 12,
+                textColor: whiteColor(),
+              ),
+              const SizedBox(width: 15),
+              LabelTitle(
+                title: charger.typeCharger,
+                fontSize: 12,
+                textColor: whiteColor(),
               ),
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            charger.typeCharger,
-            style: TextStyle(color: Colors.white54, fontSize: 12),
+
+          Card(
+            color: statusColor.withValues(alpha: 0.15),
+            child: LabelTitle(
+              title:
+                  '\$${charger.priceWithTipeConnector.toStringAsFixed(2)} / kWh',
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              textColor: whiteColor(),
+              alignment: Alignment.center,
+            ),
           ),
         ],
       ),
     );
   }
+
+  Future<void> _loadMarkers() async {
+    final provider = context.read<StationProvider>();
+    await provider.findAllChargers({'station': widget.stationData.id});
+    chargerData = provider.chargers!;
+  }
 }
-
-// import 'package:ecored_app/src/core/theme/theme_index.dart';
-// import 'package:ecored_app/src/core/utils/utils_index.dart';
-// import 'package:ecored_app/src/core/widgets/blur/blur.dart';
-// import 'package:ecored_app/src/core/widgets/labels/label_icon_title.dart';
-// import 'package:ecored_app/src/core/widgets/labels/label_title.dart';
-// import 'package:flutter/cupertino.dart';
-// import 'package:flutter/material.dart';
-
-// class MapCardInfomation extends StatelessWidget {
-//   const MapCardInfomation({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final chargers = [
-//       {
-//         "_id": "68955d22fc2dedae08b1f855",
-//         "typeConnection": "TYPE_1",
-//         "powerKw": 22,
-//         "status": "AVAILABLE",
-//         "typeCharger": "DC",
-//       },
-//       {
-//         "_id": "68955d29fc2dedae08b1f858",
-//         "typeConnection": "TYPE_2",
-//         "powerKw": 22,
-//         "status": "AVAILABLE",
-//         "typeCharger": "DC",
-//       },
-//       {
-//         "_id": "68955d33fc2dedae08b1f85b",
-//         "typeConnection": "TYPE_1",
-//         "powerKw": 22,
-//         "status": "AVAILABLE",
-//         "typeCharger": "AC",
-//       },
-//     ];
-
-//     final chargesWidget =
-//         chargers.map((charger) {
-//           return Column(
-//             children: [
-//               LabelTitle(
-//                 title: 'Conector ${charger["typeConnection"]}',
-//                 fontSize: 12,
-//                 fontWeight: FontWeight.bold,
-//               ),
-//               LabelIconTitle(
-//                 icon: CupertinoIcons.bolt,
-//                 iconColor: Colors.amber,
-//                 title: '${charger["powerKw"]} kW',
-//                 textColor: grayInputColor(),
-//               ),
-//               LabelIconTitle(
-//                 icon:
-//                     (charger["status"] == 'AVAILABLE')
-//                         ? CupertinoIcons.check_mark
-//                         : CupertinoIcons.xmark,
-//                 iconColor:
-//                     (charger["status"] == 'AVAILABLE')
-//                         ? Colors.green
-//                         : Colors.red,
-//                 title:
-//                     (charger["status"] == 'AVAILABLE')
-//                         ? 'Disponible'
-//                         : 'No disponible',
-//                 textColor: grayInputColor(),
-//               ),
-
-//               LabelIconTitle(
-//                 icon: CupertinoIcons.star_lefthalf_fill,
-//                 iconColor: Colors.blue,
-//                 title: '${charger["typeCharger"]}',
-//                 textColor: grayInputColor(),
-//               ),
-//             ],
-//           );
-//         }).toList();
-
-//     return Positioned(
-//       bottom: 0,
-//       left: 10,
-//       right: 10, // 👈 agrega esto
-
-//       child: Blur(
-//         child: Container(
-//           padding: EdgeInsets.only(
-//             bottom: UtilSize.bottomPadding() + 50,
-//             top: 20,
-//             left: 10,
-//             right: 10,
-//           ),
-//           color: Colors.black.withOpacity(0.8),
-//           width: double.infinity,
-//           height: 500,
-//           child: ListView(
-//             shrinkWrap: true,
-//             children: [
-//               LabelTitle(
-//                 title: 'Gasolinera 1',
-//                 fontSize: 16,
-//                 fontWeight: FontWeight.bold,
-//               ),
-
-//               LabelIconTitle(
-//                 icon: CupertinoIcons.location_solid,
-//                 iconColor: grayInputColor(),
-//                 title: 'Av. Amazonas y Naciones Unidas',
-//                 textColor: grayInputColor(),
-//               ),
-
-//               containAtions(),
-
-//               LabelTitle(
-//                 title: 'Descripción',
-//                 fontSize: 16,
-//                 fontWeight: FontWeight.bold,
-//               ),
-
-//               Container(
-//                 padding: EdgeInsets.all(10),
-//                 child: Text(
-//                   'Esta es una descripción de la gasolinera 1. Aquí se puede incluir información adicional sobre los servicios que ofrece, horarios, etc.',
-//                   style: TextStyle(color: grayInputColor(), fontSize: 14),
-//                 ),
-//               ),
-
-//               //ccconectores
-//               // LabelTitle(
-//               //   title: 'Conectores',
-//               //   fontSize: 16,
-//               //   fontWeight: FontWeight.bold,
-//               // ),
-//               ...chargesWidget,
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget containAtions() {
-//     return Container(
-//       width: double.infinity,
-//       height: 60,
-//       margin: EdgeInsets.all(10),
-//       decoration: BoxDecoration(
-//         color: greyColorWithTransparency(),
-//         borderRadius: BorderRadius.circular(10),
-//       ),
-//       child: Row(
-//         mainAxisAlignment: MainAxisAlignment.spaceAround,
-//         children: [Text('Como llegar '), Text('Contactar')],
-//       ),
-//     );
-//   }
-// }

@@ -13,13 +13,15 @@ class ModelStation {
   String address;
   String prefixCode;
   String phone;
+  String description;
   String lat;
   String lng;
-  Map<String, double> priceWithTipeConnector;
-  List<Charger> chargers;
   String status;
-  LocationModel? country;
-  LocationModel? canton;
+  String administrator;
+  DateTime createdAt;
+  String? province;
+  // LocationModel? country;
+  // LocationModel? canton;
 
   ModelStation({
     required this.id,
@@ -27,38 +29,38 @@ class ModelStation {
     required this.address,
     required this.prefixCode,
     required this.phone,
+    required this.description,
     required this.lat,
     required this.lng,
-    required this.priceWithTipeConnector,
-    required this.chargers,
     required this.status,
-    required this.country,
-    required this.canton,
+    // required this.country,
+    // required this.province,
+    // required this.canton,
+    required this.administrator,
+    required this.createdAt,
   });
 
   factory ModelStation.fromJson(Map<String, dynamic> json) => ModelStation(
-    id: json["_id"] ?? '',
-    name: json["name"] ?? '',
-    address: json["address"] ?? '',
-    prefixCode: json["prefixCode"] ?? '',
-    phone: json["phone"] ?? '',
-    lat: json["lat"] ?? '',
-    lng: json["lng"] ?? '',
-    priceWithTipeConnector: Map<String, double>.from(
-      json["priceWithTipeConnector"],
-    ),
-    chargers: List<Charger>.from(
-      json["chargers"].map((x) => Charger.fromJson(x)),
-    ),
-    canton:
-        json["province"] != null
-            ? LocationModel.fromJson(json["province"])
-            : null,
-    country:
-        json["country"] != null
-            ? LocationModel.fromJson(json["country"])
-            : null,
+    id: json["_id"],
+    name: json["name"],
+    address: json["address"],
+    prefixCode: json["prefixCode"],
+    phone: json["phone"],
+    description: json["description"],
+    lat: json["lat"],
+    lng: json["lng"],
     status: json["status"],
+    administrator: json["administrator"],
+    createdAt: DateTime.parse(json["createdAt"]),
+    // province: json["province"],
+    // canton:
+    //     json["province"] != null
+    //         ? LocationModel.fromJson(json["province"])
+    //         : null,
+    // country:
+    //     json["country"] != null
+    //         ? LocationModel.fromJson(json["country"])
+    //         : null,
   );
 
   Map<String, dynamic> toJson() => {
@@ -67,44 +69,14 @@ class ModelStation {
     "address": address,
     "prefixCode": prefixCode,
     "phone": phone,
+    "description": description,
     "lat": lat,
     "lng": lng,
-    "priceWithTipeConnector": priceWithTipeConnector,
-    "chargers": List<dynamic>.from(chargers.map((x) => x.toJson())),
     "status": status,
-    "country": country,
-    "canton": canton,
-  };
-}
-
-class Charger {
-  String id;
-  String typeConnection;
-  double powerKw;
-  String status;
-  String typeCharger;
-
-  Charger({
-    required this.id,
-    required this.typeConnection,
-    required this.powerKw,
-    required this.status,
-    required this.typeCharger,
-  });
-
-  factory Charger.fromJson(Map<String, dynamic> json) => Charger(
-    id: json["_id"],
-    typeConnection: json["typeConnection"],
-    powerKw: json["powerKw"].toDouble(),
-    status: json["status"],
-    typeCharger: json["typeCharger"],
-  );
-
-  Map<String, dynamic> toJson() => {
-    "_id": id,
-    "typeConnection": typeConnection,
-    "powerKw": powerKw,
-    "status": status,
-    "typeCharger": typeCharger,
+    // "country": country?.toJson(),
+    // "province": province,
+    // "canton": canton?.toJson(),
+    "administrator": administrator,
+    "createdAt": createdAt.toIso8601String(),
   };
 }

@@ -99,7 +99,9 @@ class PermissionGpsProvider extends ChangeNotifier {
         // desiredAccuracy: LocationAccuracy.high,
       );
       currentPosition = position;
-      _safeNotify();
+      // print('Posición actual obtenida: $position');
+      notifyListeners();
+      // _safeNotify();
       return position;
     } catch (e) {
       print('Error al obtener posición: $e');
@@ -126,8 +128,9 @@ class PermissionGpsProvider extends ChangeNotifier {
     ).listen(
       (Position position) {
         currentPosition = position;
-        print('Nueva posición: $position');
-        _safeNotify();
+        // print('Nueva posición: $position');
+        notifyListeners();
+        // _safeNotify();
       },
       onError: (e) {
         print('Error en stream de ubicación: $e');
