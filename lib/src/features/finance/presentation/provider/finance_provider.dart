@@ -1,4 +1,5 @@
 import 'package:ecored_app/src/features/finance/data/models/model_finance.dart';
+import 'package:ecored_app/src/features/finance/data/models/model_transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:ecored_app/src/features/finance/domain/usecases/finance_services.dart';
 
@@ -7,13 +8,13 @@ class FinanceProvider extends ChangeNotifier {
 
   bool isLoading = false;
   ModelFinance? financeData;
+  List<ModelTransaction>? transactionData;
   String? errorMessage;
 
   FinanceProvider(this.services);
 
   Future<void> getWalletData(Map<String, dynamic> params) async {
     isLoading = true;
-    // notifyListeners();
 
     try {
       financeData = await services.getWalletData(params);
@@ -21,7 +22,19 @@ class FinanceProvider extends ChangeNotifier {
       errorMessage = e.toString();
     } finally {
       isLoading = false;
-      // notifyListeners();
+    }
+  }
+
+  Future<void> getTransactionData(Map<String, dynamic> params) async {
+    isLoading = true;
+
+    try {
+      transactionData = await services.getTransactionData(params);
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
   }
 }

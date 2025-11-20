@@ -24,7 +24,6 @@ class _PageFinanceState extends State<PageFinance> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<FinanceProvider>();
-
     return Scaffold(
       backgroundColor: primaryColor(),
       body: SingleChildScrollView(
@@ -64,18 +63,18 @@ class _PageFinanceState extends State<PageFinance> {
                     const SizedBox(height: 8),
                     LabelTitle(
                       alignment: Alignment.center,
-                      title: "\$ ${provider.financeData?.totalRecharges}",
+                      title: "\$ ${provider.financeData?.balance ?? '0.00'}",
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       textColor: accentColor(),
                     ),
 
-                    // const SizedBox(height: 8),
-                    // ElevatedButton.icon(
-                    //   onPressed: () {},
-                    //   icon: const Icon(Icons.add_circle),
-                    //   label: const Text("Recargar"),
-                    // ),
+                    const SizedBox(height: 8),
+                    ElevatedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.add_circle),
+                      label: const Text("Recargar"),
+                    ),
                   ],
                 ),
               ),
@@ -89,15 +88,19 @@ class _PageFinanceState extends State<PageFinance> {
             ),
             const SizedBox(height: 12),
 
-            ListTile(
-              leading: const Icon(Icons.attach_money, color: Colors.green),
-              title: Text("+ \$ 12.00"),
-              subtitle: Text("Fecha: 21/02/2023"),
-            ),
-            ListTile(
-              leading: const Icon(Icons.local_gas_station, color: Colors.red),
-              title: Text("- \$ 10.00"),
-              subtitle: Text("Estación Sur • 21/02/2023"),
+            ListView.separated(
+              padding: EdgeInsets.zero,
+              itemCount: provider.transactionData?.length ?? 0,
+              shrinkWrap: true,
+              separatorBuilder: (_, int index) => SizedBox(height: 8),
+              itemBuilder: (BuildContext context, int index) {
+                final transaction = provider.transactionData?[index];
+                return ListTile(
+                  leading: const Icon(Icons.attach_money, color: Colors.green),
+                  title: Text("+ \$ ${transaction?.amount ?? '0.00'}"),
+                  subtitle: Text(transaction?.createdAt.toString() ?? ''),
+                );
+              },
             ),
           ],
         ),
@@ -108,6 +111,6 @@ class _PageFinanceState extends State<PageFinance> {
   Future<void> _loadData() async {
     final provider = context.read<FinanceProvider>();
     await provider.getWalletData({'user': Preferences().getUser()?.id});
-    // Logger.logDev(provider.financeData.toString());
+    await provider.getTransactionData({'user': Preferences().getUser()?.id});
   }
 }
