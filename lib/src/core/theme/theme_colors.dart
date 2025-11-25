@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 // Definición de colores constantes
 const Color kPrimaryColor = Color.fromRGBO(26, 26, 26, 1); // Negro
 // const Color kAccentColor = Color.fromRGBO(225, 215, 63, 1); // Amarillo
-const Color kAccentColor = Color.fromRGBO(144, 188, 88, 1); // Amarillo
+// const Color kAccentColor = Color.fromRGBO(144, 188, 88, 1); // Amarillo
+const Color kAccentColor = Color.fromRGBO(191, 231, 74, 1); // Amarillo
 
 const Color kGreyColorTransparency = Color.fromRGBO(97, 97, 97, 0.5);
 const Color kWhiteColor = Color.fromRGBO(255, 255, 255, 1); // Blanco

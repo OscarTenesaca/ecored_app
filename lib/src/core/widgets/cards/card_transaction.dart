@@ -7,6 +7,7 @@ class CardTransaction extends StatelessWidget {
   final Color titleColor; // Color del título
   final String subtitle; // Subtítulo (fecha de la transacción)
   final Color subtitleColor; // Color del subtítulo
+  final Function()? onTap; // Acción al
 
   const CardTransaction({
     super.key,
@@ -16,6 +17,7 @@ class CardTransaction extends StatelessWidget {
     this.titleColor = Colors.white,
     this.iconBgColor = Colors.green,
     this.subtitleColor = Colors.grey,
+    this.onTap,
   });
 
   @override
@@ -57,9 +59,7 @@ class CardTransaction extends StatelessWidget {
           ),
         ),
         trailing: const Icon(Icons.chevron_right), // Icono de flecha al final
-        onTap: () {
-          // Acción al seleccionar la transacción (se puede personalizar)
-        },
+        onTap: onTap,
       ),
     );
   }

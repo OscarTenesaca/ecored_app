@@ -1,3 +1,5 @@
+import 'package:ecored_app/src/features/finance/presentation/page/page_order.dart';
+import 'package:ecored_app/src/features/finance/presentation/page/page_recharge.dart';
 import 'package:ecored_app/src/features/login/presentation/pages/page_register.dart';
 import 'package:ecored_app/src/features/login/presentation/pages/page_user.dart';
 import 'package:flutter/material.dart';
@@ -20,5 +22,8 @@ final Map<String, WidgetBuilder> appRoutes = {
   RouteNames.pageHome: (_) => const PageHome(),
   RouteNames.pageMap: (_) => const PageMaps(),
   RouteNames.pageFinance: (_) => const PageFinance(),
+  RouteNames.pageRecharge: (_) => const PageRecharge(),
+  RouteNames.pageOrder: (_) => const PageOrder(),
+
   RouteNames.pageProfile: (_) => const PageProfile(),
 };

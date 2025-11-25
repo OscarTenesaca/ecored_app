@@ -1,3 +1,4 @@
+import 'package:ecored_app/src/core/routes/routes_name.dart';
 import 'package:ecored_app/src/core/theme/theme_colors.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
@@ -106,12 +107,32 @@ class _PageFinanceState extends State<PageFinance> {
                       icon: Icons.attach_money,
                       title: "+ \$ ${transaction.amount}",
                       subtitle: transaction.createdAt.toString(),
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          RouteNames.pageRecharge,
+                          arguments: transaction.recharge,
+                        );
+                      },
                     )
                     : CardTransaction(
                       icon: Icons.local_gas_station,
                       iconBgColor: Colors.red,
                       title: "- \$ ${transaction.amount}",
                       subtitle: transaction.createdAt.toString(),
+                      onTap: () {
+                        // print(transaction.toJson());
+                        Navigator.pushNamed(
+                          context,
+                          RouteNames.pageOrder,
+                          // arguments: transaction.order,
+                          arguments: {'id': '689a752ead618c73a5312ef5'},
+                        );
+                      },
+                      // () => Navigator.pushNamed(
+                      //   context,
+                      //   RouteNames.pageOrder,
+                      // ),
                     );
               },
             ),

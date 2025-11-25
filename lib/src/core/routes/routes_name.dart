@@ -16,7 +16,8 @@ class RouteNames {
 
   //FINANCE
   static const String pageFinance = 'routeFinance';
-
+  static const String pageRecharge = 'routeRecharge';
+  static const String pageOrder = 'routeOrder';
   //PROFILE
   static const String pageProfile = 'routeProfile';
 }

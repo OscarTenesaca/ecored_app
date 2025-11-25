@@ -1,5 +1,4 @@
-import 'package:ecored_app/src/features/finance/data/models/model_finance.dart';
-import 'package:ecored_app/src/features/finance/data/models/model_transaction.dart';
+import 'package:ecored_app/src/features/finance/data/models/model_index.dart';
 import 'package:ecored_app/src/features/finance/domain/repositories/finance_repository.dart';
 
 class FinanceServices {
@@ -15,5 +14,13 @@ class FinanceServices {
     Map<String, dynamic> params,
   ) async {
     return await repository.getTransactionData(params);
+  }
+
+  Future<ModelOrder> getOrderData(Map<String, dynamic> params) {
+    return repository.getOrderData(params);
+  }
+
+  Future<ModelRecharge> getRechargeData(Map<String, dynamic> params) {
+    return repository.getRechargeData(params);
   }
 }
