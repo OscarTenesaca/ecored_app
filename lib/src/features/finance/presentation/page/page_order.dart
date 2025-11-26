@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:ecored_app/src/core/theme/theme_colors.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
@@ -16,14 +18,19 @@ class PageOrder extends StatefulWidget {
 class _PageOrderState extends State<PageOrder> {
   @override
   void initState() {
-    _loadData();
+    Future.delayed(Duration.zero, () {
+      final ModelTransaction args =
+          ModalRoute.of(context)?.settings.arguments as ModelTransaction;
+      _loadData(args);
+    });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<FinanceProvider>();
-    final orderData = provider.orderData;
+    final ModelOrder? orderData = provider.orderData;
+    log('orderData: ${orderData!.toJson().toString()}');
 
     return Scaffold(
       // backgroundColor: const Color(0xFF0A0A0A),
@@ -39,17 +46,17 @@ class _PageOrderState extends State<PageOrder> {
             /// -------- CARD PRINCIPAL -----------
             CardSummary(
               titleColor: grayInputColor(),
-              status: orderData?.status ?? '',
-              subtitle: '- \$${orderData?.total ?? '0.00'}',
+              status: orderData.status,
+              subtitle: '- \$${orderData.total}',
               subtitleColor: Colors.red,
-              leftText: orderData?.country.name ?? '',
+              leftText: orderData.country.name,
               leftTextColor: grayInputColor(),
-              rightText: orderData?.createdAt ?? '',
+              rightText: orderData.createdAt,
               rightTextColor: Colors.white.withOpacity(0.65),
             ),
 
             /// -------- GRID DE INFORMACIÓN ------
-            _infoGrid(orderData as ModelOrder),
+            _infoGrid(orderData),
 
             CardTitleDescription(
               title: 'Estación',
@@ -101,9 +108,9 @@ class _PageOrderState extends State<PageOrder> {
     );
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData(ModelTransaction args) async {
     final provider = context.read<FinanceProvider>();
-    await provider.getOrderData({'id': '689a752ead618c73a5312ef5'});
+    await provider.getOrderData({'id': args.order});
   }
 }
 

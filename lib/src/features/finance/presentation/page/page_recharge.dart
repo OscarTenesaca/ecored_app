@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:ecored_app/src/core/theme/theme_colors.dart';
 import 'package:ecored_app/src/core/utils/utils_size.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
+import 'package:ecored_app/src/features/finance/data/models/model_index.dart';
 import 'package:ecored_app/src/features/finance/presentation/provider/finance_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,16 +18,20 @@ class PageRecharge extends StatefulWidget {
 class _PageRechargeState extends State<PageRecharge> {
   @override
   void initState() {
-    _loadData();
+    Future.delayed(Duration.zero, () {
+      final ModelTransaction args =
+          ModalRoute.of(context)?.settings.arguments as ModelTransaction;
+      _loadData(args);
+    });
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    final rechargeId = ModalRoute.of(context)?.settings.arguments as String?;
-
     final provider = context.watch<FinanceProvider>();
     final rechargeData = provider.rechargeData;
+    log('rechargeData: ${rechargeData!.toJson().toString()}');
 
     return Scaffold(
       // backgroundColor: const Color(0xFF0A0A0A),
@@ -113,8 +120,8 @@ class _PageRechargeState extends State<PageRecharge> {
     );
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData(ModelTransaction args) async {
     final provider = context.read<FinanceProvider>();
-    await provider.getRechargeData({'id': '69179b5707c42a3043e3699f'});
+    await provider.getRechargeData({'id': args.recharge});
   }
 }
