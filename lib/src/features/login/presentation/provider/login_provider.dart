@@ -18,12 +18,16 @@ class LoginProvider extends ChangeNotifier {
       notifyListeners();
 
       user = await loginServices.registerUser(userData);
+
+      if (user != null) {
+        errorMessage = null; // Clear any previous error messages
+      }
     } catch (e) {
-      print('Error during registration: $e');
-      errorMessage = e.toString();
+      errorMessage = e.toString(); // Assign the error message
+      user = null; // Make sure user is null if there was an error
     } finally {
       isLoading = false;
-      notifyListeners();
+      notifyListeners(); // Notify listeners to rebuild UI with the updated state
     }
   }
 

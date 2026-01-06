@@ -1,3 +1,4 @@
+import 'package:ecored_app/src/core/models/nuvei_model.dart';
 import 'package:ecored_app/src/features/finance/data/models/model_index.dart';
 import 'package:ecored_app/src/features/finance/domain/repositories/finance_repository.dart';
 
@@ -22,5 +23,9 @@ class FinanceServices {
 
   Future<ModelRecharge> getRechargeData(Map<String, dynamic> params) {
     return repository.getRechargeData(params);
+  }
+
+  Future<Map> postNuveiData(ModelNuvei body) {
+    return repository.postNuveiData(body);
   }
 }

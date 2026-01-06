@@ -1,4 +1,5 @@
 export 'alerts/popup.dart';
+export 'alerts/snackbar.dart';
 export 'background/background.dart';
 export 'background/background_glass.dart';
 export 'blur/blur.dart';
@@ -17,6 +18,7 @@ export 'labels/label_title.dart';
 export 'labels/label_row_text.dart';
 export 'labels/label_icon_title.dart';
 export 'maps/map.dart';
+export 'paymentes/paymentes_nuvei.dart';
 export 'maps/map_card_info.dart';
 export 'maps/map_permission.dart';
 export 'permission/permission_gps.dart';

@@ -229,7 +229,7 @@ class __FormState extends State<_Form> {
 
                     if (provider.user != null) {
                     } else if (provider.errorMessage != null) {
-                      showSnackbar(context, provider.errorMessage!);
+                      // showSnackbar(context, provider.errorMessage!);
                     }
                     // showSnackbar(context, 'Usuario actualizado con éxito');
                   } else {

@@ -2,8 +2,7 @@ import 'package:ecored_app/src/core/models/location_model.dart';
 import 'package:ecored_app/src/core/routes/routes_name.dart';
 import 'package:ecored_app/src/core/services/location_service.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
-import 'package:ecored_app/src/core/utils/utils_logger.dart';
-import 'package:ecored_app/src/core/widgets/alerts/snackbar.dart';
+import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/login/presentation/provider/login_provider.dart';
 import 'package:flutter/material.dart';
@@ -17,19 +16,13 @@ class PageRegister extends StatelessWidget {
     return Scaffold(
       backgroundColor: primaryColor(),
 
-      body: Container(
-        decoration: globalDecoration(),
+      body: Padding(
+        padding: EdgeInsets.only(top: UtilSize.statusBarHeight()),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             CustomAssetImg(width: 200, height: 100),
-            LabelTitle(
-              alignment: Alignment.center,
-              title: 'Bienvenido a Ecored',
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-
+            SizedBox(height: 40),
             const _Form(),
           ],
         ),
@@ -65,12 +58,12 @@ class __FormState extends State<_Form> {
 
   @override
   void initState() {
-    // _ciController.text = '0302618251';
-    // _nameController.text = 'John Doe';
-    // _emailController.text = 'johndoe@example.com';
-    // _passwordController.text = 'password123';
-    // _confirmPasswordController.text = 'password123';
-    // _phoneController.text = '999999999';
+    _ciController.text = '0302618252';
+    _nameController.text = 'John Doe';
+    _emailController.text = 'johndoe@example.com';
+    _passwordController.text = '12345';
+    _confirmPasswordController.text = '12345';
+    _phoneController.text = '999999999';
 
     super.initState();
     _loadCountries();
@@ -178,7 +171,7 @@ class __FormState extends State<_Form> {
                     child: CustomInputLocation(
                       locations: countries,
                       locationNotifier: countryNotifier,
-                      title: 'Selecciona país',
+                      title: 'País',
                       initialCountry: 'ECUADOR', // ✅ ID del país por defecto
                     ),
                   ),
@@ -197,7 +190,7 @@ class __FormState extends State<_Form> {
                             child: CustomInputLocation(
                               locations: snapshot.data!,
                               locationNotifier: provinceNotifier,
-                              title: 'Selecciona provincia',
+                              title: 'Provincia',
                             ),
                           );
                         },
@@ -213,6 +206,17 @@ class __FormState extends State<_Form> {
                 textButtonColor: primaryColor(),
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
+                    // vaalid phone ,birthdate, country, province
+                    if (_phoneController.text.isEmpty ||
+                        birthdayNotifier.value.isEmpty ||
+                        countryNotifier.value.isEmpty ||
+                        provinceNotifier.value.isEmpty) {
+                      final msg =
+                          'Por favor revise que todos los campos estén completos.';
+                      showSnackbar(context, msg, SnackbarStatus.error);
+                      return;
+                    }
+
                     final Map<String, dynamic> body = {
                       'ci': _ciController.text,
                       'name': _nameController.text,
@@ -229,18 +233,20 @@ class __FormState extends State<_Form> {
                           ).toIso8601String(),
                     };
 
-                    print('body: $body');
-
                     final provider = context.read<LoginProvider>();
                     await provider.registerUser(body);
 
                     if (provider.user != null) {
+                      final msg = 'Registro exitoso. Por favor, inicie sesión.';
+                      showSnackbar(context, msg, SnackbarStatus.success);
+
                       Navigator.pushNamed(context, RouteNames.pageLogin);
                     } else if (provider.errorMessage != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(provider.errorMessage!)),
-                      );
+                      final msg = provider.errorMessage!;
+                      showSnackbar(context, msg, SnackbarStatus.error);
                     }
+                  } else {
+                    print('Formulario no válido');
                   }
                 },
               ),

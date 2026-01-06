@@ -168,7 +168,7 @@ class PageProfile extends StatelessWidget {
               if (provider.user == null) {
                 Navigator.pushReplacementNamed(context, RouteNames.pageLogin);
               } else {
-                showSnackbar(context, provider.errorMessage!);
+                // showSnackbar(context, provider.errorMessage!);
               }
             },
           ),

@@ -7,6 +7,7 @@ class CustomInput extends StatefulWidget {
   final bool? filled;
   final bool obscured;
   final Color? filledColor;
+  final Color? borderColor;
   final TextEditingController? textEditingController;
   final TextCapitalization textCapitalization;
   final String? Function(String?)? validator;
@@ -24,6 +25,7 @@ class CustomInput extends StatefulWidget {
     this.textInputType = TextInputType.text,
     this.filled = true,
     this.filledColor = const Color.fromARGB(255, 130, 130, 130),
+    this.borderColor = Colors.transparent,
     this.onEditingComplete,
     this.maxLines,
     this.enabled = true,
@@ -72,9 +74,9 @@ class _CustomInputState extends State<CustomInput> {
         border: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(10)),
         ),
-        enabledBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-          borderSide: BorderSide(color: Colors.transparent),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
+          borderSide: BorderSide(color: widget.borderColor!),
         ),
         filled: widget.filled,
         hintText: widget.hintText,

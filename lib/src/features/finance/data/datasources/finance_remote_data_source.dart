@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:ecored_app/src/core/adapter/adapter_http.dart';
+import 'package:ecored_app/src/core/models/nuvei_model.dart';
 import 'package:ecored_app/src/features/finance/data/models/model_index.dart';
 
 abstract class FinanceRemoteDataSource {
@@ -10,6 +11,7 @@ abstract class FinanceRemoteDataSource {
   );
   Future<ModelOrder> getOrderData(Map<String, dynamic> params);
   Future<ModelRecharge> getRechargeData(Map<String, dynamic> params);
+  Future<Map> postNuveiData(ModelNuvei body);
 }
 
 class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
@@ -74,9 +76,20 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
       throw ('Ocurrió un problema, intente más tarde');
     }
 
-    print('Recharge Response Data: ${response.data}');
     final respModelRecharge = ModelRecharge.fromJson(response.data['data']);
-    print(respModelRecharge.toJson());
     return respModelRecharge;
+  }
+
+  @override
+  Future<Map> postNuveiData(ModelNuvei body) async {
+    final String endpoint = '$url/api/v1/paymentes/nuvei/reference';
+
+    final resp = await httpAdapter.post(endpoint, data: body.toJson());
+
+    if (resp.statusCode != 201) {
+      throw ('Ocurrió un problema, intente más tarde');
+    }
+
+    return resp.data;
   }
 }

@@ -1,4 +1,6 @@
+import 'package:ecored_app/src/core/widgets/paymentes/paymentes_nuvei.dart';
 import 'package:ecored_app/src/features/finance/presentation/page/page_order.dart';
+import 'package:ecored_app/src/features/finance/presentation/page/page_plan.dart';
 import 'package:ecored_app/src/features/finance/presentation/page/page_recharge.dart';
 import 'package:ecored_app/src/features/login/presentation/pages/page_register.dart';
 import 'package:ecored_app/src/features/login/presentation/pages/page_user.dart';
@@ -24,6 +26,8 @@ final Map<String, WidgetBuilder> appRoutes = {
   RouteNames.pageFinance: (_) => const PageFinance(),
   RouteNames.pageRecharge: (_) => const PageRecharge(),
   RouteNames.pageOrder: (_) => const PageOrder(),
+  RouteNames.pagePlan: (_) => const PagePlan(),
+  RouteNames.pagePaymentesNuvei: (_) => const PaymentesNuvei(),
 
   RouteNames.pageProfile: (_) => const PageProfile(),
 };

@@ -74,7 +74,9 @@ class _PageFinanceState extends State<PageFinance> {
 
                     const SizedBox(height: 8),
                     ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushNamed(context, RouteNames.pagePlan);
+                      },
                       icon: const Icon(Icons.add_circle),
                       label: const Text("Recargar"),
                     ),

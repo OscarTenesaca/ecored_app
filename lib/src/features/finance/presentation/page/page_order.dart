@@ -30,7 +30,17 @@ class _PageOrderState extends State<PageOrder> {
   Widget build(BuildContext context) {
     final provider = context.watch<FinanceProvider>();
     final ModelOrder? orderData = provider.orderData;
-    log('orderData: ${orderData!.toJson().toString()}');
+
+    if (orderData == null) {
+      return const Scaffold(
+        body: Center(
+          child: LabelTitle(
+            title: 'Información no disponible',
+            alignment: Alignment.center,
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       // backgroundColor: const Color(0xFF0A0A0A),
@@ -46,7 +56,7 @@ class _PageOrderState extends State<PageOrder> {
             /// -------- CARD PRINCIPAL -----------
             CardSummary(
               titleColor: grayInputColor(),
-              status: orderData.status,
+              status: orderData!.status,
               subtitle: '- \$${orderData.total}',
               subtitleColor: Colors.red,
               leftText: orderData.country.name,
