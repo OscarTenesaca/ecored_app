@@ -46,13 +46,42 @@ class PageHome extends StatelessWidget {
         child: ListView(
           shrinkWrap: true,
           children: [
-            LabelTitle(
-              title: 'Bienvenido ${user?.name ?? 'Usuario'}',
-              textColor: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              textAlign: TextAlign.center,
-              alignment: Alignment.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Título de bienvenida
+                Expanded(
+                  child: Column(
+                    children: [
+                      LabelTitle(
+                        title:
+                            'Bienvenido ${user?.name.split(' ')[0] ?? 'Usuario'},',
+                        textColor: accentColor(),
+                        fontSize: 24,
+                        textAlign: TextAlign.left,
+                        alignment: Alignment.centerLeft,
+                      ),
+                      LabelTitle(
+                        title: 'Hora de recargar.',
+                        textColor: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        textAlign: TextAlign.left,
+                        alignment: Alignment.centerLeft,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Imagen de perfil en círculo
+                CircleAvatar(
+                  radius: 25,
+                  backgroundImage:
+                      user?.img != null
+                          ? NetworkImage(user!.img)
+                          : const AssetImage(AssetPaths.logo) as ImageProvider,
+                ),
+              ],
             ),
             const SizedBox(height: 30),
             //asset image
