@@ -1,27 +1,15 @@
-import 'dart:convert';
-
-import 'package:ecored_app/src/core/models/location_model.dart';
-
-ModelStation modelStationFromJson(String str) =>
-    ModelStation.fromJson(json.decode(str));
-
-String modelStationToJson(ModelStation data) => json.encode(data.toJson());
-
 class ModelStation {
-  String id;
-  String name;
-  String address;
-  String prefixCode;
-  String phone;
-  String description;
-  String lat;
-  String lng;
-  String status;
-  String administrator;
-  DateTime createdAt;
-  String? province;
-  // LocationModel? country;
-  // LocationModel? canton;
+  final String id;
+  final String name;
+  final String address;
+  final String prefixCode;
+  final String phone;
+  final String description;
+  final String lat;
+  final String lng;
+  final String status;
+  final String administrator;
+  final DateTime createdAt;
 
   ModelStation({
     required this.id,
@@ -33,34 +21,25 @@ class ModelStation {
     required this.lat,
     required this.lng,
     required this.status,
-    // required this.country,
-    // required this.province,
-    // required this.canton,
     required this.administrator,
     required this.createdAt,
   });
 
   factory ModelStation.fromJson(Map<String, dynamic> json) => ModelStation(
-    id: json["_id"],
-    name: json["name"],
-    address: json["address"],
-    prefixCode: json["prefixCode"],
-    phone: json["phone"],
-    description: json["description"],
-    lat: json["lat"],
-    lng: json["lng"],
-    status: json["status"],
-    administrator: json["administrator"],
-    createdAt: DateTime.parse(json["createdAt"]),
-    // province: json["province"],
-    // canton:
-    //     json["province"] != null
-    //         ? LocationModel.fromJson(json["province"])
-    //         : null,
-    // country:
-    //     json["country"] != null
-    //         ? LocationModel.fromJson(json["country"])
-    //         : null,
+    id: json["_id"] ?? '',
+    name: json["name"] ?? '',
+    address: json["address"] ?? '',
+    prefixCode: json["prefixCode"] ?? '',
+    phone: json["phone"] ?? '',
+    description: json["description"] ?? '',
+    lat: json["location"]["coordinates"][1]?.toString() ?? '0',
+    lng: json["location"]["coordinates"][0]?.toString() ?? '0',
+    status: json["status"] ?? '',
+    administrator: json["administrator"] ?? '',
+    createdAt:
+        json["createdAt"] != null
+            ? DateTime.parse(json["createdAt"])
+            : DateTime.now(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -73,9 +52,6 @@ class ModelStation {
     "lat": lat,
     "lng": lng,
     "status": status,
-    // "country": country?.toJson(),
-    // "province": province,
-    // "canton": canton?.toJson(),
     "administrator": administrator,
     "createdAt": createdAt.toIso8601String(),
   };

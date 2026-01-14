@@ -13,6 +13,7 @@ class RouteNames {
 
   //MAPS
   static const String pageMap = 'routeMap';
+  static const String pageStation = 'routeStation';
 
   //FINANCE
   static const String pageFinance = 'routeFinance';

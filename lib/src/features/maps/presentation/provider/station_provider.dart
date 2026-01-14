@@ -14,27 +14,19 @@ class StationProvider extends ChangeNotifier {
   String? errorMessage;
 
   StationProvider(this.services);
-
   Future<void> findAllStations(Map<String, dynamic> query) async {
     try {
-      // WidgetsBinding.instance.addPostFrameCallback((_) {
-      //   isLoading = true;
-      //   errorMessage = null;
-      //   notifyListeners();
-      // });
-      log('************ StationProvider findAllStations called ***********');
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
 
       stations = await services.findAllStations(query);
-      log('StationProvider findAllStations: ${stations?.length}');
-      // Process the stations as needed
     } catch (e) {
-      log('Error in StationProvider findAllStations: $e');
       errorMessage = e.toString();
+      stations = null;
     } finally {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        isLoading = false;
-        notifyListeners();
-      });
+      isLoading = false;
+      notifyListeners();
     }
   }
 

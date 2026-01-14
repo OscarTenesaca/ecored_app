@@ -76,6 +76,7 @@ class PermissionGpsProvider extends ChangeNotifier {
         break;
       case LocationPermission.deniedForever:
         isPermissionGranted = false;
+        // await Geolocator.openAppSettings();
         print(
           'Permiso de ubicación denegado permanentemente. Abrir Configuración manualmente.',
         );
@@ -111,6 +112,7 @@ class PermissionGpsProvider extends ChangeNotifier {
 
   // 🔹 Iniciar seguimiento continuo
   Future<void> startTracking() async {
+    print('Iniciando seguimiento de ubicación.');
     _positionStream?.cancel();
 
     if (!isPermissionGranted || !isGpsEnabled) {
@@ -138,8 +140,14 @@ class PermissionGpsProvider extends ChangeNotifier {
     );
   }
 
+  //  only call setting to null if disposed         // await Geolocator.openAppSettings();
+  void openSettings() async {
+    await Geolocator.openAppSettings();
+  }
+
   // 🔹 Detener seguimiento
   void stopTracking() {
+    print('Deteniendo seguimiento de ubicación.');
     _positionStream?.cancel();
     _positionStream = null;
   }

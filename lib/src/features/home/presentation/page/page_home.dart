@@ -41,7 +41,7 @@ class PageHome extends StatelessWidget {
     return Scaffold(
       backgroundColor: primaryColor(),
       body: Container(
-        margin: EdgeInsets.only(top: UtilSize.statusBarHeight() + 20),
+        margin: EdgeInsets.only(top: UtilSize.statusBarHeight()),
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: ListView(
           shrinkWrap: true,

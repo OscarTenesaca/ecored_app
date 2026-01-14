@@ -4,6 +4,7 @@ export 'background/background.dart';
 export 'background/background_glass.dart';
 export 'blur/blur.dart';
 export 'button_bar/custom_bottom_bar.dart';
+export 'buttons/custom_button_select.dart';
 export 'buttons/custom_button_circle.dart';
 export 'buttons/custom_button.dart';
 export 'cards/card_summary.dart';

@@ -6,7 +6,7 @@ ModelCharger modelChargerFromJson(String str) =>
 String modelChargerToJson(ModelCharger data) => json.encode(data.toJson());
 
 class ModelCharger {
-  String id;
+  String? id;
   String typeConnection;
   int powerKw;
   String status;
@@ -14,7 +14,7 @@ class ModelCharger {
   double priceWithTipeConnector;
 
   ModelCharger({
-    required this.id,
+    this.id,
     required this.typeConnection,
     required this.powerKw,
     required this.status,
