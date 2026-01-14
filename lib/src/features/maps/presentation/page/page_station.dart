@@ -1,3 +1,5 @@
+import 'package:ecored_app/src/core/models/location_model.dart';
+import 'package:ecored_app/src/core/services/location_service.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
@@ -28,6 +30,9 @@ class _PageStationState extends State<PageStation> {
   final _locationFormKey = GlobalKey<FormState>();
   final _addressController = TextEditingController();
   final ValueNotifier<Map<String, String>> stLatLngNotifier = ValueNotifier({});
+  final ValueNotifier<String> countryNotifier = ValueNotifier<String>('');
+  final ValueNotifier<String> provinceNotifier = ValueNotifier<String>('');
+  final ValueNotifier<String> cantonNotifier = ValueNotifier<String>('');
 
   // ───────────────── STEP 3 (CHARGERS) ─────────────────
   List<Map<String, dynamic>> chargers = [];
@@ -131,19 +136,22 @@ class _PageStationState extends State<PageStation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Registrar estación")),
-      body: Column(
-        children: [
-          _buildStepIndicator(),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [_stepBasic(), _stepLocation(), _stepChargers()],
+      // appBar: AppBar(title: const Text("Registrar estación")),
+      body: Padding(
+        padding: EdgeInsets.only(top: UtilSize.appBarHeight()),
+        child: Column(
+          children: [
+            _buildStepIndicator(),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [_stepBasic(), _stepLocation(), _stepChargers()],
+              ),
             ),
-          ),
-          _buildNavigationButtons(),
-        ],
+            _buildNavigationButtons(),
+          ],
+        ),
       ),
     );
   }
@@ -178,12 +186,14 @@ class _PageStationState extends State<PageStation> {
     return Form(
       key: _basicFormKey,
       child: Padding(
-        padding: const EdgeInsets.all(25),
+        padding: const EdgeInsets.only(top: 25, left: 25, right: 25),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
             spacing: 25,
             children: [
+              CustomAssetImg(width: 200, height: 100),
+
               CustomInput(
                 hintText: 'Nombre de la estación',
                 textEditingController: _nameController,
@@ -225,20 +235,102 @@ class _PageStationState extends State<PageStation> {
     return Form(
       key: _locationFormKey,
       child: Padding(
-        padding: const EdgeInsets.all(25),
+        padding: const EdgeInsets.only(top: 25, left: 25, right: 25),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
+            spacing: 10,
             children: [
               CustomInput(
                 hintText: 'Dirección',
                 textEditingController: _addressController,
                 validator: (v) => v!.isEmpty ? '* Ingrese la dirección' : null,
               ),
-              SizedBox(height: 20),
+
+              Row(
+                children: [
+                  Flexible(
+                    child: FutureBuilder<List<LocationModel>>(
+                      future: LocationServiceImpl().countries(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
+                        if (snapshot.hasError) {
+                          return const Text('Error al cargar países');
+                        }
+
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return const Text('No hay países disponibles');
+                        }
+
+                        return CustomInputLocation(
+                          locations:
+                              snapshot.data!, // ✅ usa los datos del Future
+                          locationNotifier: countryNotifier,
+                          title: 'País',
+                          initialCountry: 'ECUADOR',
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+                  ValueListenableBuilder<String>(
+                    valueListenable: countryNotifier,
+                    builder: (context, country, child) {
+                      return FutureBuilder<List<LocationModel>>(
+                        future: LocationServiceImpl().provinces({
+                          'country': country,
+                        }),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const CircularProgressIndicator();
+                          }
+
+                          return Flexible(
+                            child: CustomInputLocation(
+                              locations: snapshot.data!,
+                              locationNotifier: provinceNotifier,
+                              title: 'Provincia',
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+
+              // Ciudad
+              ValueListenableBuilder<String>(
+                valueListenable: provinceNotifier,
+                builder: (context, province, child) {
+                  return FutureBuilder<List<LocationModel>>(
+                    future: LocationServiceImpl().cantons({
+                      'province': province,
+                    }),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const CircularProgressIndicator();
+                      }
+
+                      return CustomInputLocation(
+                        locations: snapshot.data!,
+                        locationNotifier: cantonNotifier,
+                        title: 'Ciudad',
+                      );
+                    },
+                  );
+                },
+              ),
               Container(
                 width: double.infinity,
-                height: UtilSize.height(context) * 0.6,
+                height: UtilSize.height(context) * 0.5,
                 decoration: BoxDecoration(
                   color: Colors.grey,
                   borderRadius: BorderRadius.circular(15),
@@ -394,21 +486,25 @@ class _PageStationState extends State<PageStation> {
   // ───────────────── NAV BUTTONS ─────────────────
   Widget _buildNavigationButtons() {
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.only(bottom: UtilSize.bottomPadding()),
       child: Row(
         children: [
           if (_currentStep > 0)
             Expanded(
-              child: OutlinedButton(
+              child: CustomButton(
+                textButton: 'Atras',
+                buttonColor: greyColorWithTransparency(),
+                textButtonColor: accentColor(),
                 onPressed: _back,
-                child: const Text("Atrás"),
               ),
             ),
           if (_currentStep > 0) const SizedBox(width: 12),
           Expanded(
-            child: ElevatedButton(
+            child: CustomButton(
+              textButton: _currentStep == 2 ? 'Guardar' : 'Siguiente',
+              buttonColor: accentColor(),
+              textButtonColor: primaryColor(),
               onPressed: _currentStep == 2 ? _submit : _next,
-              child: Text(_currentStep == 2 ? "Guardar" : "Siguiente"),
             ),
           ),
         ],
