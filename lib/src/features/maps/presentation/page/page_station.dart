@@ -43,7 +43,8 @@ class _PageStationState extends State<PageStation> {
 
   void _addCharger() {
     chargers.add({
-      // VALUE NOTIFIERS      "typeConnection": ValueNotifier<Map<String, String>?>(null),
+      // VALUE NOTIFIERS
+      "typeConnection": ValueNotifier<Map<String, String>?>(null),
       "status": ValueNotifier<Map<String, String>?>(null),
       "format": ValueNotifier<Map<String, String>?>(null),
       "typeCharger": ValueNotifier<Map<String, String>?>(null),
@@ -67,8 +68,6 @@ class _PageStationState extends State<PageStation> {
         prefixNotifier.value.isNotEmpty &&
         stTypePnNotifier.value.isNotEmpty &&
         stStatusNotifier.value.isNotEmpty;
-
-    bool isValidNotifyStep2 = stLatLngNotifier.value.isNotEmpty;
 
     if (_currentStep == 0 && !_basicFormKey.currentState!.validate()) return;
     if (_currentStep == 0 && !isValidNotifyStep1) {
@@ -104,8 +103,8 @@ class _PageStationState extends State<PageStation> {
       "prefix": prefixNotifier.value,
       "phone": _phoneController.text,
       "description": _descriptionController.text,
-      "status": stStatusNotifier.value,
-
+      "status": stStatusNotifier.value['key'],
+      "typePoint": stTypePnNotifier.value['key'],
       "address": _addressController.text,
       "location": stLatLngNotifier.value,
       "chargers":
@@ -162,7 +161,10 @@ class _PageStationState extends State<PageStation> {
             width: 30,
             height: 6,
             decoration: BoxDecoration(
-              color: _currentStep >= index ? Colors.blue : Colors.grey.shade300,
+              color:
+                  _currentStep >= index
+                      ? accentColor()
+                      : greyColorWithTransparency(),
               borderRadius: BorderRadius.circular(4),
             ),
           );
