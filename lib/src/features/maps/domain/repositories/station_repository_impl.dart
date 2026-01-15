@@ -17,4 +17,14 @@ class StationRepositoryImpl implements StationRepository {
   Future<List<ModelCharger>> findAllChargers(Map<String, dynamic> query) {
     return remoteDataSource.findAllChargers(query);
   }
+
+  @override
+  Future<int> createStation(Map<String, dynamic> stationData) {
+    return remoteDataSource.createStation(stationData);
+  }
+
+  @override
+  Future<int> createCharger(Map<String, dynamic> chargerData) {
+    return remoteDataSource.createCharger(chargerData);
+  }
 }

@@ -1,9 +1,13 @@
 import 'package:ecored_app/src/core/models/location_model.dart';
+import 'package:ecored_app/src/core/provider/permissiongps_provider.dart';
 import 'package:ecored_app/src/core/services/location_service.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
+import 'package:ecored_app/src/features/maps/presentation/provider/station_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:latlong2/latlong.dart';
 
 class PageStation extends StatefulWidget {
   const PageStation({super.key});
@@ -102,8 +106,10 @@ class _PageStationState extends State<PageStation> {
   }
 
   // ───────────────── SUBMIT ─────────────────
-  void _submit() {
-    final body = {
+  void _submit() async {
+    final StationProvider _station = context.read<StationProvider>();
+
+    final bodyStation = {
       "name": _nameController.text,
       "prefix": prefixNotifier.value,
       "phone": _phoneController.text,
@@ -111,23 +117,31 @@ class _PageStationState extends State<PageStation> {
       "status": stStatusNotifier.value['key'],
       "typePoint": stTypePnNotifier.value['key'],
       "address": _addressController.text,
-      "location": stLatLngNotifier.value,
-      "chargers":
-          chargers.map((c) {
-            return {
-              "typeConnection": c["typeConnection"]!.value['key'],
-              "status": c["status"]!.value['key'],
-              "format": c["format"]!.value['key'],
-              "typeCharger": c["typeCharger"]!.value['key'],
-              "powerKw": c["powerKw"]!.text,
-              "intensity": c["intensity"]!.text,
-              "voltage": c["voltage"]!.text,
-              "priceWithTipeConnector": c["priceWithTipeConnector"]!.text,
-            };
-          }).toList(),
+      "location": {
+        "type": "Point",
+        "coordinates": [
+          stLatLngNotifier.value['lng'] ?? 0,
+          stLatLngNotifier.value['lat'] ?? 0,
+        ],
+      },
+      // "chargers":
+      //     chargers.map((c) {
+      //       return {
+      //         "typeConnection": c["typeConnection"]!.value['key'],
+      //         "status": c["status"]!.value['key'],
+      //         "format": c["format"]!.value['key'],
+      //         "typeCharger": c["typeCharger"]!.value['key'],
+      //         "powerKw": c["powerKw"]!.text,
+      //         "intensity": c["intensity"]!.text,
+      //         "voltage": c["voltage"]!.text,
+      //         "priceWithTipeConnector": c["priceWithTipeConnector"]!.text,
+      //       };
+      //     }).toList(),
     };
 
-    debugPrint(body.toString());
+    await _station.createStation(bodyStation);
+
+    debugPrint(bodyStation.toString());
 
     // aquí llamas a tu API
   }
@@ -328,15 +342,63 @@ class _PageStationState extends State<PageStation> {
                   );
                 },
               ),
-              Container(
-                width: double.infinity,
-                height: UtilSize.height(context) * 0.5,
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: const Center(child: Text('Mapa de ubicación aquí')),
+              Consumer<PermissionGpsProvider>(
+                builder: (context, gps, _) {
+                  if (gps.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (!gps.isAllGranted) {
+                    return const Center(child: Text('GPS no disponible'));
+                  }
+
+                  if (gps.currentPosition == null) {
+                    gps.getCurrentPosition(); // se pide una sola vez
+                    return const Center(child: Text('Obteniendo ubicación...'));
+                  }
+
+                  final position = gps.currentPosition!;
+
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: UtilSize.height(context) * 0.5,
+                      child: CustomMapPin(
+                        initialPosition: LatLng(
+                          position.latitude,
+                          position.longitude,
+                        ),
+                        onLocationSelected: (latLng) {
+                          stLatLngNotifier.value = {
+                            'lat': latLng.latitude.toString(),
+                            'lng': latLng.longitude.toString(),
+                          };
+                          print(stLatLngNotifier.value);
+                        },
+                      ),
+                    ),
+                  );
+                },
               ),
+
+              // ClipRRect(
+              //   borderRadius: BorderRadius.circular(15),
+              //   child: SizedBox(
+              //     width: double.infinity,
+              //     height: UtilSize.height(context) * 0.5,
+              //     child: CustomMapPin(
+              //       initialPosition:await PermissionGpsProvider().getCurrentPosition();,
+              //       onLocationSelected: (latLng) {
+              //         stLatLngNotifier.value = {
+              //           'lat': latLng.latitude.toString(),
+              //           'lng': latLng.longitude.toString(),
+              //         };
+              //         print(stLatLngNotifier.value);
+              //       },
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),

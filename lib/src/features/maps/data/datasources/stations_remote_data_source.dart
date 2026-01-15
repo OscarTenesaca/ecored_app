@@ -7,6 +7,8 @@ import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 abstract class StationsRemoteDataSource {
   Future<List<ModelStation>> findAllStations(Map<String, dynamic> query);
   Future<List<ModelCharger>> findAllChargers(Map<String, dynamic> query);
+  Future<int> createStation(Map<String, dynamic> stationData);
+  Future<int> createCharger(Map<String, dynamic> chargerData);
   // Future<ModelCharger
 }
 
@@ -55,5 +57,21 @@ class StationsRemoteDataSourceImpl implements StationsRemoteDataSource {
       log('Error fetching chargers: ${response}');
       return [];
     }
+  }
+
+  @override
+  Future<int> createCharger(Map<String, dynamic> chargerData) async {
+    final String endpoint = '$url/api/v1/charger';
+    final response = await httpAdapter.post(endpoint, data: chargerData);
+    print('response createCharger: ${response.data}');
+    return response.statusCode!;
+  }
+
+  @override
+  Future<int> createStation(Map<String, dynamic> stationData) async {
+    final String endpoint = '$url/api/v1/station';
+    final response = await httpAdapter.post(endpoint, data: stationData);
+    print('response createStation: ${response.data}');
+    return response.statusCode!;
   }
 }

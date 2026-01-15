@@ -41,4 +41,38 @@ class StationProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<int> createStation(Map<String, dynamic> stationData) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      final statusCode = await services.createStation(stationData);
+      return statusCode;
+    } catch (e) {
+      errorMessage = e.toString();
+      return -1;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<int> createCharger(Map<String, dynamic> chargerData) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      final statusCode = await services.createCharger(chargerData);
+      return statusCode;
+    } catch (e) {
+      errorMessage = e.toString();
+      return -1;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
 }
