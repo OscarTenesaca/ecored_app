@@ -3,7 +3,9 @@ import 'package:ecored_app/src/core/provider/permissiongps_provider.dart';
 import 'package:ecored_app/src/core/services/location_service.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
+import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
+import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:ecored_app/src/features/maps/presentation/provider/station_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -107,16 +109,21 @@ class _PageStationState extends State<PageStation> {
 
   // ───────────────── SUBMIT ─────────────────
   void _submit() async {
-    final StationProvider _station = context.read<StationProvider>();
+    final stationProvider = context.read<StationProvider>();
 
+    /// 1️⃣ BODY DE LA STATION
     final bodyStation = {
+      "user": Preferences().getUser()!.id,
       "name": _nameController.text,
-      "prefix": prefixNotifier.value,
+      "prefixCode": prefixNotifier.value,
       "phone": _phoneController.text,
       "description": _descriptionController.text,
       "status": stStatusNotifier.value['key'],
       "typePoint": stTypePnNotifier.value['key'],
       "address": _addressController.text,
+      "country": countryNotifier.value,
+      "province": provinceNotifier.value,
+      "canton": cantonNotifier.value,
       "location": {
         "type": "Point",
         "coordinates": [
@@ -124,33 +131,86 @@ class _PageStationState extends State<PageStation> {
           stLatLngNotifier.value['lat'] ?? 0,
         ],
       },
-      // "chargers":
-      //     chargers.map((c) {
-      //       return {
-      //         "typeConnection": c["typeConnection"]!.value['key'],
-      //         "status": c["status"]!.value['key'],
-      //         "format": c["format"]!.value['key'],
-      //         "typeCharger": c["typeCharger"]!.value['key'],
-      //         "powerKw": c["powerKw"]!.text,
-      //         "intensity": c["intensity"]!.text,
-      //         "voltage": c["voltage"]!.text,
-      //         "priceWithTipeConnector": c["priceWithTipeConnector"]!.text,
-      //       };
-      //     }).toList(),
     };
 
-    await _station.createStation(bodyStation);
+    late ModelStation station;
 
-    debugPrint(bodyStation.toString());
+    /// 2️⃣ CREAR STATION
+    try {
+      station = await stationProvider.createStation(bodyStation);
+      debugPrint('Station creada: ${station.toJson()}');
+    } catch (e) {
+      debugPrint('Error creating station: $e');
+      showPopUpWithChildren(
+        context: context,
+        title: 'No se pudo completar la acción',
+        subTitle:
+            'No pudimos crear la estación en este momento.\nInténtalo de nuevo.',
+        textButton: 'Aceptar',
+      );
+      return;
+    }
 
-    // aquí llamas a tu API
+    /// 3️⃣ BODY DE LOS CHARGERS
+    final List<Map<String, dynamic>> bodyChargers =
+        chargers.map((c) {
+          return {
+            "station": station.id,
+            "typeConnection": c["typeConnection"]!.value['key'],
+            "status": c["status"]!.value['key'],
+            "format": c["format"]!.value['key'],
+            "typeCharger": c["typeCharger"]!.value['key'],
+            "powerKw": c["powerKw"]!.text,
+            "intensity": c["intensity"]!.text,
+            "voltage": c["voltage"]!.text,
+            "priceWithTipeConnector": c["priceWithTipeConnector"]!.text,
+          };
+        }).toList();
+
+    /// 4️⃣ CREAR CHARGERS 1 x 1
+    int successCount = 0;
+
+    for (final charger in bodyChargers) {
+      try {
+        final statusCode = await stationProvider.createCharger(charger);
+        if (statusCode == 201) {
+          successCount++;
+        }
+      } catch (e) {
+        debugPrint('Error creando charger: $e');
+      }
+    }
+
+    /// 5️⃣ RESULTADO FINAL
+    if (successCount == bodyChargers.length) {
+      showPopUpWithChildren(
+        context: context,
+        title: '¡Estación creada!',
+        subTitle:
+            'La estación y todos sus cargadores han sido creados exitosamente.',
+        textButton: 'Aceptar',
+        // onSubmit: () {
+        //   Navigator.pop(context);
+        // },
+      );
+    } else {
+      showPopUpWithChildren(
+        context: context,
+        title: 'Estación creada con errores',
+        subTitle:
+            'La estación fue creada, pero algunos cargadores no pudieron ser añadidos.\nInténtalo de nuevo.',
+        textButton: 'Aceptar',
+        // onSubmit: () {
+        //   Navigator.pop(context); // cerrar el popup
+        // },
+      );
+    }
   }
 
   // ───────────────── UI ─────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(title: const Text("Registrar estación")),
       body: Padding(
         padding: EdgeInsets.only(top: UtilSize.appBarHeight()),
         child: Column(

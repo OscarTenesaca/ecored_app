@@ -19,7 +19,7 @@ class StationRepositoryImpl implements StationRepository {
   }
 
   @override
-  Future<int> createStation(Map<String, dynamic> stationData) {
+  Future<ModelStation> createStation(Map<String, dynamic> stationData) {
     return remoteDataSource.createStation(stationData);
   }
 

@@ -7,7 +7,7 @@ import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 abstract class StationsRemoteDataSource {
   Future<List<ModelStation>> findAllStations(Map<String, dynamic> query);
   Future<List<ModelCharger>> findAllChargers(Map<String, dynamic> query);
-  Future<int> createStation(Map<String, dynamic> stationData);
+  Future<ModelStation> createStation(Map<String, dynamic> stationData);
   Future<int> createCharger(Map<String, dynamic> chargerData);
   // Future<ModelCharger
 }
@@ -60,18 +60,30 @@ class StationsRemoteDataSourceImpl implements StationsRemoteDataSource {
   }
 
   @override
+  Future<ModelStation> createStation(Map<String, dynamic> stationData) async {
+    final String endpoint = '$url/api/v1/station';
+    final response = await httpAdapter.post(endpoint, data: stationData);
+    switch (response.statusCode) {
+      case 200:
+      case 201:
+        // print('200/201 response data: ${response.data}');
+        return ModelStation.fromJson(response.data['data']);
+      case 400:
+        // print('400 response data: ${response.data}');
+        throw Exception('Bad request: ${response.data['message']}');
+      case 409:
+        // print('409 response data: ${response.data}');
+        throw Exception('Conflict: ${response.data['message']}');
+      default:
+        throw Exception('Failed to create station: ${response.statusCode}');
+    }
+  }
+
+  @override
   Future<int> createCharger(Map<String, dynamic> chargerData) async {
     final String endpoint = '$url/api/v1/charger';
     final response = await httpAdapter.post(endpoint, data: chargerData);
     print('response createCharger: ${response.data}');
-    return response.statusCode!;
-  }
-
-  @override
-  Future<int> createStation(Map<String, dynamic> stationData) async {
-    final String endpoint = '$url/api/v1/station';
-    final response = await httpAdapter.post(endpoint, data: stationData);
-    print('response createStation: ${response.data}');
     return response.statusCode!;
   }
 }

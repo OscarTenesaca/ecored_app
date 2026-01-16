@@ -69,7 +69,7 @@ class _CustomInputPhoneState extends State<CustomInputPhone> {
         ),
         fillColor: grayInputColor(),
         filled: true,
-        errorStyle: TextStyle(fontSize: 12, color: primaryColor()),
+        errorStyle: TextStyle(fontSize: 12, color: Colors.red.shade300),
       ),
 
       initialCountryCode: initialCountryCode,
