@@ -138,7 +138,6 @@ class _PageMapsState extends State<PageMaps> {
       // ✅ obtener ubicación
       final position = await _gps.getCurrentPosition();
       print('📍 posición actual: $position');
-
       await _station.findAllStations({});
 
       // 🔄 iniciar tracking
