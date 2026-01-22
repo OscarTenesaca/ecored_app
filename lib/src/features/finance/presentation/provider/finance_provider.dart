@@ -75,4 +75,14 @@ class FinanceProvider extends ChangeNotifier {
     }
     return {};
   }
+
+  Future<int> postRecharge(Map<String, dynamic> body) async {
+    try {
+      final response = await services.postRecharge(body);
+      return response;
+    } catch (e) {
+      errorMessage = e.toString();
+    }
+    return -1;
+  }
 }

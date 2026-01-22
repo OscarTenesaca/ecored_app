@@ -10,4 +10,5 @@ abstract class FinanceRepository {
   Future<ModelRecharge> getRechargeData(Map<String, dynamic> params);
 
   Future<Map> postNuveiData(ModelNuvei body);
+  Future<int> postRecharge(Map<String, dynamic> body);
 }

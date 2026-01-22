@@ -35,4 +35,9 @@ class FinanceRepositoryImpl implements FinanceRepository {
   Future<Map> postNuveiData(ModelNuvei body) {
     return remoteDataSource.postNuveiData(body);
   }
+
+  @override
+  Future<int> postRecharge(Map<String, dynamic> body) {
+    return remoteDataSource.postRecharge(body);
+  }
 }

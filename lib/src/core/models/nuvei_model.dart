@@ -12,6 +12,7 @@ String modelNuveiToJson(ModelNuvei data) => json.encode(data.toJson());
 class ModelNuvei {
   String userId;
   String email;
+  String? phone;
   String description;
   double amount;
   double vat;
@@ -20,6 +21,7 @@ class ModelNuvei {
   ModelNuvei({
     required this.userId,
     required this.email,
+    this.phone,
     required this.description,
     required this.amount,
     required this.vat,
@@ -29,6 +31,7 @@ class ModelNuvei {
   factory ModelNuvei.fromJson(Map<String, dynamic> json) => ModelNuvei(
     userId: json["userId"],
     email: json["email"],
+    phone: json["phone"],
     description: json["description"],
     amount: json["amount"],
     vat: json["vat"],
@@ -38,6 +41,7 @@ class ModelNuvei {
   Map<String, dynamic> toJson() => {
     "userId": userId,
     "email": email,
+    "phone": phone,
     "description": description,
     "amount": amount,
     "vat": vat,

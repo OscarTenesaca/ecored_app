@@ -1,128 +1,313 @@
 import 'package:ecored_app/src/core/models/nuvei_model.dart';
+import 'package:ecored_app/src/core/utils/utils_preferences.dart';
+import 'package:ecored_app/src/core/widgets/alerts/popup.dart';
+import 'package:ecored_app/src/core/widgets/alerts/snackbar.dart';
 import 'package:ecored_app/src/features/finance/presentation/provider/finance_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 
 class PaymentesNuvei extends StatefulWidget {
-  const PaymentesNuvei({super.key});
+  final ModelNuvei bodyNuvei;
+  final Map<String, dynamic> bodyEcored;
+
+  const PaymentesNuvei({
+    super.key,
+    required this.bodyNuvei,
+    required this.bodyEcored,
+  });
 
   @override
   State<PaymentesNuvei> createState() => _PaymentesNuveiState();
 }
 
 class _PaymentesNuveiState extends State<PaymentesNuvei> {
-  late ModelNuvei arg;
   String reference = '';
+  InAppWebViewController? _webViewController;
+  bool _checkoutOpened = false;
 
   @override
   void initState() {
-    Future.delayed(Duration.zero, () {
-      arg = ModalRoute.of(context)?.settings.arguments as ModelNuvei;
-      _loadData(arg);
-    });
     super.initState();
+    Future.delayed(Duration.zero, () {
+      _loadData(widget.bodyNuvei);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Mi HTML")),
+      appBar: AppBar(title: const Text('Pago Nuvei')),
       body:
-          (reference.isEmpty)
-              ? Center(child: CircularProgressIndicator())
+          reference.isEmpty
+              ? const Center(child: CircularProgressIndicator())
               : InAppWebView(
-                initialData: InAppWebViewInitialData(data: htmlNuvei),
-                onLoadStart: (controller, url) {
-                  print("Iniciando carga en: $url");
-                },
-                onLoadError: (controller, url, code, message) {
-                  print(
-                    "Error de carga en: $url, código: $code, mensaje: $message",
+                initialData: InAppWebViewInitialData(data: _htmlNuvei()),
+                onWebViewCreated: (controller) {
+                  _webViewController = controller;
+
+                  // 🔥 RECIBE RESULTADO DEL PAGO
+                  controller.addJavaScriptHandler(
+                    handlerName: 'paymentResult',
+                    callback: (args) async {
+                      final result = args.first as Map<String, dynamic>;
+                      await _handlePaymentResult(result);
+                    },
                   );
                 },
-                onLoadHttpError: (controller, url, statusCode, description) {
-                  print(
-                    "Error HTTP en: $url, código: $statusCode, descripción: $description",
-                  );
-                },
-                onConsoleMessage: (controller, consoleMessage) {
-                  print(
-                    "Mensaje en la consola del WebView: ${consoleMessage.message}",
-                  );
+                onLoadStop: (controller, url) async {
+                  if (!_checkoutOpened) {
+                    _checkoutOpened = true;
+                    await controller.evaluateJavascript(
+                      source: """
+                    paymentCheckout.open({
+                      reference: "$reference"
+                    });
+                  """,
+                    );
+                  }
                 },
               ),
     );
   }
 
+  // ========================
+  // BACKEND NUVEI
+  // ========================
   Future<void> _loadData(ModelNuvei args) async {
     final provider = context.read<FinanceProvider>();
-    final repNuvei = await provider.postNuveiData(args);
+    final Map repNuvei = await provider.postNuveiData(args);
+
+    if (repNuvei['statusCode'] == 200) {
+      setState(() {
+        reference = repNuvei['data']['reference'];
+      });
+    } else {
+      showSnackbar(
+        context,
+        'Error al procesar el pago: ${repNuvei['message']}',
+        SnackbarStatus.error,
+      );
+    }
   }
 
-  final String htmlNuvei = '''
+  // ========================
+  // CONTROL DE ESTADO PAGO
+  // ========================
+  Future<void> _handlePaymentResult(Map<String, dynamic> result) async {
+    final transaction = result['transaction'];
 
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Example | Payment Checkout Js</title>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    widget.bodyEcored['authorizationCode'] =
+        transaction['authorization_code'] ?? '';
+    widget.bodyEcored['transactionId'] = transaction['id'] ?? '';
 
-          <script src="https://code.jquery.com/jquery-3.5.0.min.js"></script>
-          <script src="https://cdn.paymentez.com/ccapi/sdk/payment_checkout_3.0.0.min.js"></script>
-        </head>
-        <body>
-        <button class="js-payment-checkout">Pay with Card</button>
+    final bool isApproved =
+        transaction['status'] == 'success' &&
+        transaction['current_status'] == 'APPROVED';
 
-        <div id="response"></div>
+    if (isApproved) {
+      await _consumeEcoredApi(result);
+    } else {
+      showSnackbar(
+        context,
+        'El pago no fue aprobado. Intente nuevamente.',
+        SnackbarStatus.error,
+      );
+    }
+  }
 
-        <script>
-          let paymentCheckout = new PaymentCheckout.modal({
-            env_mode: "stg", // `prod`, `stg`, `local` to change environment. Default is `stg`
-            onOpen: function () {
-              console.log("modal open");
-            },
-            onClose: function () {
-              console.log("modal closed");
-            },
-            onResponse: function (response) { // The callback to invoke when the Checkout process is completed
+  // ========================
+  // CONSUME API ECORED
+  // ========================
+  Future<void> _consumeEcoredApi(Map paymentData) async {
+    final provider = context.read<FinanceProvider>();
 
-              /*
-                In Case of an error, this will be the response.
-                response = {
-                  "error": {
-                    "type": "Server Error",
-                    "help": "Try Again Later",
-                    "description": "Sorry, there was a problem loading Checkout."
-                  }
-                }
-                When the User completes all the Flow in the Checkout, this will be the response.
-                response = {
-                  "transaction":{
-                      "status": "success", // success or failure
-                      "id": "CB-81011", // transaction_id
-                      "status_detail": 3 // for the status detail please refer to: https://paymentez.github.io/api-doc/#status-details
-                  }
-                }
-              */
-              console.log("modal response");
-              document.getElementById("response").innerHTML = JSON.stringify(response);
-            }
-          });
+    final response = await provider.postRecharge(widget.bodyEcored);
 
-          let btnOpenCheckout = document.querySelector('.js-payment-checkout');
-          btnOpenCheckout.addEventListener('click', function () {
-            paymentCheckout.open({
-              reference: '8REV4qMyQP3w4xGmANU' // reference received for Payment Gateway
-            });
-          });
+    if (response == 201) {
+      if (!mounted) return;
+      showPopUpWithChildren(
+        context: context,
+        title: 'Pago exitoso',
+        subTitle: 'Su pago ha sido procesado correctamente.',
+        textButton: 'Aceptar',
+        onSubmit: () {
+          Navigator.pop(context); // Cierra el popup
+          Navigator.pop(context, true); // Retorna al screen anterior
 
-          window.addEventListener('popstate', function () {
-            paymentCheckout.close();
-          });
-        </script>
-        </body>
-        </html>
-  ''';
+          // Refresca los datos de la wallet y transacciones
+          final provider = context.read<FinanceProvider>();
+          provider.getWalletData({'user': Preferences().getUser()?.id});
+          provider.getTransactionData({'user': Preferences().getUser()?.id});
+        },
+      );
+    } else {
+      showSnackbar(
+        context,
+        'Pago aprobado, pero falló Ecored. Código de respuesta: $response',
+        SnackbarStatus.error,
+      );
+    }
+  }
+
+  // ========================
+  // HTML
+  // ========================
+  String _htmlNuvei() {
+    return '''
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Nuvei Checkout</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="https://code.jquery.com/jquery-3.5.0.min.js"></script>
+  <script src="https://cdn.paymentez.com/ccapi/sdk/payment_checkout_3.0.0.min.js"></script>
+</head>
+<body>
+
+<script>
+  window.paymentCheckout = new PaymentCheckout.modal({
+    env_mode: "stg",
+    onResponse: function (response) {
+      // 🔥 ENVÍA RESPUESTA A FLUTTER
+      window.flutter_inappwebview.callHandler(
+        'paymentResult',
+        response
+      );
+    }
+  });
+</script>
+
+</body>
+</html>
+''';
+  }
 }
+
+
+// import 'dart:convert';
+
+// import 'package:ecored_app/src/core/models/nuvei_model.dart';
+// import 'package:ecored_app/src/features/finance/presentation/provider/finance_provider.dart';
+// import 'package:flutter/material.dart';
+// import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+// import 'package:provider/provider.dart';
+
+// class PaymentesNuvei extends StatefulWidget {
+//   final ModelNuvei bodyNuvei;
+//   final Map<String, dynamic> bodyEcored;
+
+//   const PaymentesNuvei({
+//     super.key,
+//     required this.bodyNuvei,
+//     required this.bodyEcored,
+//   });
+
+//   @override
+//   State<PaymentesNuvei> createState() => _PaymentesNuveiState();
+// }
+
+// class _PaymentesNuveiState extends State<PaymentesNuvei> {
+//   // late ModelNuvei arg;
+//   String reference = '';
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     Future.delayed(Duration.zero, () {
+//       _loadData(widget.bodyNuvei);
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: const Text('Pago Nuvei')),
+//       body:
+//           reference.isEmpty
+//               ? const Center(child: CircularProgressIndicator())
+//               : InAppWebView(
+//                 initialData: InAppWebViewInitialData(
+//                   data: _htmlNuvei(reference),
+//                 ),
+//                 onLoadStart: (controller, url) {
+//                   debugPrint('Iniciando carga: $url');
+//                 },
+
+//                 onConsoleMessage: (controller, consoleMessage) {
+//                   // diferencais si esta bn o o malo si esta bn consume la api de ecored caso contrario muestra error
+//                   debugPrint('Mensaje de consola: ${consoleMessage.message}');
+
+//                   final response = jsonDecode(consoleMessage.message);
+
+//                   debugPrint('Response decoded: $response');
+//                   // Aquí puedes manejar el mensaje de consola como
+//                 },
+//               ),
+//     );
+//   }
+
+//   Future<void> _loadData(ModelNuvei args) async {
+//     final provider = context.read<FinanceProvider>();
+//     final Map repNuvei = await provider.postNuveiData(args);
+
+//     if (repNuvei['statusCode'] == 200) {
+//       setState(() {
+//         reference = repNuvei['data']['reference'];
+//       });
+//     } else {
+//       if (!mounted) return;
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text('Error al procesar el pago: ${repNuvei['message']}'),
+//         ),
+//       );
+//     }
+//   }
+
+//   String _htmlNuvei(String reference) {
+//     return '''
+//       <!DOCTYPE html>
+//       <html>
+//       <head>
+//         <title>Nuvei Checkout</title>
+//         <meta charset="UTF-8">
+//         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+//         <script src="https://code.jquery.com/jquery-3.5.0.min.js"></script>
+//         <script src="https://cdn.paymentez.com/ccapi/sdk/payment_checkout_3.0.0.min.js"></script>
+//       </head>
+//       <body>
+    
+//       <div id="response"></div>
+    
+//       <script>
+//         let paymentCheckout = new PaymentCheckout.modal({
+//           env_mode: "stg",
+//           onOpen: function () {
+//             console.log("modal open");
+//           },
+//           onClose: function () {
+//             console.log("modal closed");
+//           },
+//           onResponse: function (response) {
+//             console.log("modal response");
+//             document.getElementById("response").innerHTML = JSON.stringify(response);
+//           }
+//         });
+    
+//         // ⬇️ ABRE AUTOMÁTICAMENTE EL CHECKOUT
+//         document.addEventListener("DOMContentLoaded", function () {
+//           paymentCheckout.open({
+//             reference: "$reference"
+//           });
+//         });
+//       </script>
+    
+//       </body>
+//       </html>
+//   ''';
+//   }
+// }

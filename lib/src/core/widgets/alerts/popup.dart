@@ -3,14 +3,17 @@ import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:flutter/material.dart';
 
+// information popup with custom children and one button
 showPopUpWithChildren({
   required BuildContext context,
   required String title,
   required String subTitle,
   required String textButton,
+  String? textButtonClose,
   bool isPop = true,
   List<Widget>? children,
   Function? onSubmit,
+  Function? onClose,
   bool showButton = true,
 }) {
   return showDialog(
@@ -27,9 +30,11 @@ showPopUpWithChildren({
             alignment: Alignment.center,
             fit: StackFit.loose,
             children: [
+              // Fondo tocable para cerrar el pop-up
               Positioned.fill(
                 child: GestureDetector(onTap: () => Navigator.pop(context)),
               ),
+              // Pop-up central
               Center(
                 child: Container(
                   margin: const EdgeInsets.all(20),
@@ -42,6 +47,7 @@ showPopUpWithChildren({
                         mainAxisSize: MainAxisSize.min,
                         spacing: 15,
                         children: [
+                          // Título
                           Text(
                             title,
                             style: TextStyle(
@@ -51,6 +57,7 @@ showPopUpWithChildren({
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          // Subtítulo
                           Text(
                             subTitle,
                             textAlign: TextAlign.center,
@@ -59,20 +66,43 @@ showPopUpWithChildren({
                               fontSize: 12,
                             ),
                           ),
-                          Column(
-                            spacing: 20,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: children ?? [],
-                          ),
-                          if (showButton)
-                            CustomButton(
-                              buttonColor: accentColor(),
-                              textButtonColor: primaryColor(),
-                              textButton: textButton,
-                              onPressed: () {
-                                onSubmit?.call();
-                                if (isPop) Navigator.pop(context);
-                              },
+                          // Widgets extra (children)
+                          if (children != null && children.isNotEmpty)
+                            Column(
+                              spacing: 20,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: children,
+                            ),
+                          // Botones
+                          if (showButton || textButtonClose != null)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                if (textButtonClose != null)
+                                  Expanded(
+                                    child: CustomButton(
+                                      buttonColor: Colors.transparent,
+                                      textButtonColor: accentColor(),
+                                      textButton: textButtonClose,
+                                      onPressed: () {
+                                        onClose?.call();
+                                        Navigator.pop(context);
+                                      },
+                                    ),
+                                  ),
+                                if (showButton)
+                                  Expanded(
+                                    child: CustomButton(
+                                      buttonColor: accentColor(),
+                                      textButtonColor: primaryColor(),
+                                      textButton: textButton,
+                                      onPressed: () {
+                                        onSubmit?.call();
+                                        if (isPop) Navigator.pop(context);
+                                      },
+                                    ),
+                                  ),
+                              ],
                             ),
                         ],
                       ),
@@ -87,6 +117,110 @@ showPopUpWithChildren({
     },
   );
 }
+
+// showPopUpWithChildren({
+//   required BuildContext context,
+//   required String title,
+//   required String subTitle,
+//   required String textButton,
+//   String? textButtonClose,
+//   bool isPop = true,
+//   List<Widget>? children,
+//   Function? onSubmit,
+//   Function? onClose,
+//   bool showButton = true,
+// }) {
+//   return showDialog(
+//     barrierDismissible: false,
+//     useSafeArea: false,
+//     context: context,
+//     builder: (contextBuilder) {
+//       return Material(
+//         color: Colors.transparent,
+//         child: Blur(
+//           intensity: Intensity.high.value,
+//           blurColor: whiteColor(),
+//           child: Stack(
+//             alignment: Alignment.center,
+//             fit: StackFit.loose,
+//             children: [
+//               Positioned.fill(
+//                 child: GestureDetector(onTap: () => Navigator.pop(context)),
+//               ),
+//               Center(
+//                 child: Container(
+//                   margin: const EdgeInsets.all(20),
+//                   child: Blur(
+//                     intensity: Intensity.megaHigh.value,
+//                     blurColor: primaryColor(),
+//                     child: Padding(
+//                       padding: const EdgeInsets.all(20.0),
+//                       child: Column(
+//                         mainAxisSize: MainAxisSize.min,
+//                         spacing: 15,
+//                         children: [
+//                           Text(
+//                             title,
+//                             style: TextStyle(
+//                               fontFamily: 'YaroRg',
+//                               fontSize: 14,
+//                               color: accentColor(),
+//                               fontWeight: FontWeight.bold,
+//                             ),
+//                           ),
+//                           Text(
+//                             subTitle,
+//                             textAlign: TextAlign.center,
+//                             style: const TextStyle(
+//                               fontFamily: 'YaroRg',
+//                               fontSize: 12,
+//                             ),
+//                           ),
+//                           Column(
+//                             spacing: 20,
+//                             mainAxisAlignment: MainAxisAlignment.center,
+//                             children: children ?? [],
+//                           ),
+//                           if (showButton)
+//                             CustomButton(
+//                               buttonColor: accentColor(),
+//                               textButtonColor: primaryColor(),
+//                               textButton: textButton,
+//                               onPressed: () {
+//                                 onSubmit?.call();
+//                                 if (isPop) Navigator.pop(context);
+//                               },
+//                             ),
+
+//                           // Close button
+//                           if (textButtonClose != null)
+//                             TextButton(
+//                               onPressed: () {
+//                                 onClose?.call();
+//                                 Navigator.pop(context);
+//                               },
+//                               child: Text(
+//                                 textButtonClose,
+//                                 style: TextStyle(
+//                                   color: accentColor(),
+//                                   fontFamily: 'YaroRg',
+//                                   fontSize: 14,
+//                                 ),
+//                               ),
+//                             ),
+//                         ],
+//                       ),
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       );
+//     },
+//   );
+// }
 
 // ? Show modal
 showModalChild({required BuildContext context, required Widget child}) {
@@ -132,27 +266,6 @@ showModalChild({required BuildContext context, required Widget child}) {
                   ],
                 ),
               ),
-
-              // Botón de cerrar en la esquina superior derecha
-              // Positioned(
-              //   top: 20,
-              //   right: 20,
-              //   child: GestureDetector(
-              //     onTap: () => Navigator.pop(context),
-              //     child: Container(
-              //       decoration: BoxDecoration(
-              //         color: Colors.black54,
-              //         shape: BoxShape.circle,
-              //       ),
-              //       padding: const EdgeInsets.all(8),
-              //       child: const Icon(
-              //         Icons.close,
-              //         color: Colors.white,
-              //         size: 20,
-              //       ),
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         ),

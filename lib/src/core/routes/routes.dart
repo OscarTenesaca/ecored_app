@@ -30,7 +30,6 @@ final Map<String, WidgetBuilder> appRoutes = {
   RouteNames.pageRecharge: (_) => const PageRecharge(),
   RouteNames.pageOrder: (_) => const PageOrder(),
   RouteNames.pagePlan: (_) => const PagePlan(),
-  RouteNames.pagePaymentesNuvei: (_) => const PaymentesNuvei(),
 
   RouteNames.pageProfile: (_) => const PageProfile(),
 };

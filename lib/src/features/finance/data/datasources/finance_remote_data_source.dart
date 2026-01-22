@@ -12,6 +12,7 @@ abstract class FinanceRemoteDataSource {
   Future<ModelOrder> getOrderData(Map<String, dynamic> params);
   Future<ModelRecharge> getRechargeData(Map<String, dynamic> params);
   Future<Map> postNuveiData(ModelNuvei body);
+  Future<int> postRecharge(Map<String, dynamic> body);
 }
 
 class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
@@ -77,6 +78,7 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
     }
 
     final respModelRecharge = ModelRecharge.fromJson(response.data['data']);
+    print('RECHARGE RESPONSE DATA: ${response.data['data']}');
     return respModelRecharge;
   }
 
@@ -91,5 +93,12 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
     }
 
     return resp.data;
+  }
+
+  @override
+  Future<int> postRecharge(Map<String, dynamic> body) async {
+    final String endpoint = '$url/api/v1/recharges';
+    final resp = await httpAdapter.post(endpoint, data: body);
+    return resp.statusCode!;
   }
 }

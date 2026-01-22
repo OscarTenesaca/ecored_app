@@ -28,4 +28,8 @@ class FinanceServices {
   Future<Map> postNuveiData(ModelNuvei body) {
     return repository.postNuveiData(body);
   }
+
+  Future<int> postRecharge(Map<String, dynamic> body) {
+    return repository.postRecharge(body);
+  }
 }

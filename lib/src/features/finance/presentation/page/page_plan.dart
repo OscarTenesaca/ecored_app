@@ -1,24 +1,12 @@
 import 'package:ecored_app/src/core/models/nuvei_model.dart';
+import 'package:ecored_app/src/core/models/payment_model.dart';
+import 'package:ecored_app/src/core/models/plan_moder.dart';
 import 'package:ecored_app/src/core/routes/routes_name.dart';
+import 'package:ecored_app/src/core/services/paymentes_service.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
-import 'package:ecored_app/src/core/widgets/labels/label_title.dart';
-import 'package:ecored_app/src/core/widgets/paymentes/paymentes_nuvei.dart';
+import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:flutter/material.dart';
-
-class PlanModel {
-  final String name;
-  final double price;
-  final String benefit;
-  final bool popular;
-
-  PlanModel({
-    required this.name,
-    required this.price,
-    required this.benefit,
-    this.popular = false,
-  });
-}
 
 class PagePlan extends StatefulWidget {
   const PagePlan({super.key});
@@ -43,7 +31,15 @@ class _PagePlanState extends State<PagePlan> {
     PlanModel(name: 'Combo 4', price: 50, benefit: 'Carga hasta 100 kWh'),
   ];
 
-  void pagar() {
+  List<PaymentModel> paymentMethods = [];
+
+  @override
+  void initState() {
+    _loadPaymentMethods();
+    super.initState();
+  }
+
+  void pagar(PaymentModel method) {
     final monto =
         selectedPlan == 0
             ? double.tryParse(customAmountController.text) ?? 0
@@ -51,27 +47,50 @@ class _PagePlanState extends State<PagePlan> {
 
     if (monto == 0) return;
 
+    //********* body the nuvei *********
+
+    final devReference =
+        "REF${Preferences().getUser()!.id}-${DateTime.now().millisecondsSinceEpoch}";
+
     final body = ModelNuvei(
       userId: Preferences().getUser()!.id,
       email: Preferences().getUser()!.email,
+      phone: Preferences().getUser()!.phone,
       description: "Recarga de saldo Ecored",
       amount: monto,
       vat: 0,
-      devReference:
-          "REF${Preferences().getUser()!.id} ${DateTime.now().millisecondsSinceEpoch}",
+      devReference: devReference,
     );
 
-    Navigator.pushNamed(
+    //******  body the ecored *******
+    final bodyEcored = {
+      "value": monto,
+      "devReference": devReference,
+      "authorizationCode": "",
+      "transactionId": "",
+      "user": Preferences().getUser()!.id,
+      "payment": method.id,
+    };
+
+    Navigator.push(
       context,
-      RouteNames.pagePaymentesNuvei,
-      arguments: body,
+      MaterialPageRoute(
+        builder: (_) => PaymentesNuvei(bodyNuvei: body, bodyEcored: bodyEcored),
+      ),
     );
+  }
+
+  Future<void> _loadPaymentMethods() async {
+    final methods = await PaymentesServiceImpl().getPaymentMethods();
+    setState(() {
+      paymentMethods = methods;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
+      backgroundColor: primaryColor(),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
@@ -99,7 +118,7 @@ class _PagePlanState extends State<PagePlan> {
                     final plan = plans[i];
                     final isSelected = selectedPlan == plan.price;
 
-                    return NeonPlanCard(
+                    return CardPlan(
                       plan: plan,
                       selected: isSelected,
                       onTap: () {
@@ -115,6 +134,7 @@ class _PagePlanState extends State<PagePlan> {
 
               const SizedBox(height: 16),
 
+              // PaymentMethodSelector(amount: 1, onSelected: (method) {}),
               LabelTitle(
                 title: 'Monto personalizado',
                 fontSize: 18,
@@ -156,161 +176,27 @@ class _PagePlanState extends State<PagePlan> {
                     ),
                   ),
                   const SizedBox(width: 14),
+                  PaymentSelector(
+                    title: 'Pagar',
+                    onSelected: (method) {
+                      print('Método seleccionado: ${method.name}');
 
-                  ElevatedButton(
-                    onPressed: pagar,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kAccentColor,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 18,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text("Pagar", style: TextStyle(fontSize: 17)),
+                      switch (method.name.toLowerCase()) {
+                        case 'nuvei':
+                          pagar(method);
+                          break;
+
+                        default:
+                          showSnackbar(
+                            context,
+                            'Método de pago no reconocido.',
+                            SnackbarStatus.error,
+                          );
+                          break;
+                      }
+                    },
                   ),
                 ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class NeonPlanCard extends StatelessWidget {
-  final PlanModel plan;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const NeonPlanCard({
-    super.key,
-    required this.plan,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final neonGreen = accentColor();
-
-    return AnimatedScale(
-      scale: selected ? 1.07 : 1.0,
-      duration: const Duration(milliseconds: 190),
-      curve: Curves.easeOut,
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-
-            // 🟢 Borde NEON verde
-            border: Border.all(
-              width: selected ? 2.4 : 1.2,
-              color: selected ? neonGreen : Colors.white12,
-            ),
-
-            // Fondo futurista oscuro
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors:
-                  selected
-                      ? [const Color(0xFF16200F), const Color(0xFF0E140A)]
-                      : [const Color(0xFF141414), const Color(0xFF0F0F0F)],
-            ),
-
-            // ✨ Glow verde neon
-            boxShadow:
-                selected
-                    ? [
-                      BoxShadow(
-                        color: neonGreen.withValues(alpha: 0.55),
-                        blurRadius: 18,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                    : [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // 🟢 Badge POPULAR neon
-              if (plan.popular)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        neonGreen.withValues(alpha: 0.9),
-                        neonGreen.withValues(alpha: 0.6),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: neonGreen.withValues(alpha: 0.7),
-                        blurRadius: 12,
-                      ),
-                    ],
-                  ),
-                  child: const Text(
-                    "POPULAR",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-              const SizedBox(height: 12),
-
-              Text(
-                plan.name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  letterSpacing: -0.3,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              const SizedBox(height: 6),
-
-              Text(
-                "\$${plan.price.toStringAsFixed(0)}",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: neonGreen,
-                  letterSpacing: -1,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              Text(
-                plan.benefit,
-                style: const TextStyle(fontSize: 14, color: Colors.white70),
-                textAlign: TextAlign.center,
               ),
             ],
           ),

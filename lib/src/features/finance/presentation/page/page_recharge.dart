@@ -1,3 +1,14 @@
+// import 'package:flutter/material.dart';
+
+// class PageRecharge extends StatelessWidget {
+//   const PageRecharge({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container();
+//   }
+// }
+
 import 'dart:developer';
 
 import 'package:ecored_app/src/core/theme/theme_colors.dart';
@@ -31,7 +42,7 @@ class _PageRechargeState extends State<PageRecharge> {
   Widget build(BuildContext context) {
     final provider = context.watch<FinanceProvider>();
     final rechargeData = provider.rechargeData;
-    log('rechargeData: ${rechargeData!.toJson().toString()}');
+    print('RECHARGE DATA: $rechargeData');
 
     return Scaffold(
       // backgroundColor: const Color(0xFF0A0A0A),
@@ -80,10 +91,10 @@ class _PageRechargeState extends State<PageRecharge> {
                   label: "Autorización",
                   value: rechargeData.authorizationCode,
                 ),
-                LabelRowText(
-                  label: "Referencia",
-                  value: rechargeData.devReference,
-                ),
+                // LabelRowText(
+                //   label: "Referencia",
+                //   value: rechargeData.devReference,
+                // ),
               ],
             ),
 
@@ -122,6 +133,7 @@ class _PageRechargeState extends State<PageRecharge> {
 
   Future<void> _loadData(ModelTransaction args) async {
     final provider = context.read<FinanceProvider>();
+    print('ARGUMENTS RECARGA: ${args.recharge}');
     await provider.getRechargeData({'id': args.recharge});
   }
 }
