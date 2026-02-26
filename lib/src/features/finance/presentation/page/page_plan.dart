@@ -75,7 +75,12 @@ class _PagePlanState extends State<PagePlan> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => PaymentesNuvei(bodyNuvei: body, bodyEcored: bodyEcored),
+        builder:
+            (_) => PaymentesNuvei(
+              status: PaymentStatus.recharge,
+              bodyNuvei: body,
+              bodyEcored: bodyEcored,
+            ),
       ),
     );
   }

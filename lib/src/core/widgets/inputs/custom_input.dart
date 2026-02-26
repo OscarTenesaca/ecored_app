@@ -12,6 +12,7 @@ class CustomInput extends StatefulWidget {
   final TextCapitalization textCapitalization;
   final String? Function(String?)? validator;
   final Function? onEditingComplete;
+  final Function? onChanged;
   final int? maxLines;
   final bool enabled;
 
@@ -27,6 +28,7 @@ class CustomInput extends StatefulWidget {
     this.filledColor = const Color.fromARGB(255, 130, 130, 130),
     this.borderColor = Colors.transparent,
     this.onEditingComplete,
+    this.onChanged,
     this.maxLines,
     this.enabled = true,
   });
@@ -58,6 +60,7 @@ class _CustomInputState extends State<CustomInput> {
       onTapOutside: (_) => FocusScope.of(context).unfocus(),
       validator: widget.validator,
       onEditingComplete: () => widget.onEditingComplete?.call(),
+      onChanged: (value) => widget.onChanged?.call(value),
       controller: widget.textEditingController,
       autofocus: false,
       obscureText: widget.obscured ? _obscured : false,

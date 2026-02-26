@@ -157,6 +157,7 @@ class _PageMapsState extends State<PageMaps> {
       backgroundColor: primaryColor(),
       body: Consumer2<PermissionGpsProvider, StationProvider>(
         builder: (context, gps, station, _) {
+          debugPrint('🔄station ${station.chargers}');
           if (gps.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }

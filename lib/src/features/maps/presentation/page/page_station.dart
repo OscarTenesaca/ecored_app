@@ -232,7 +232,7 @@ class _PageStationState extends State<PageStation> {
                         ],
                       ),
                     ),
-                    _buildNavigationButtons(),
+                    // _buildNavigationButtons(),
                   ],
                 ),
               ),
@@ -277,40 +277,9 @@ class _PageStationState extends State<PageStation> {
               ),
             ],
           );
-
-          // return Stack(
-          //   children: [
-          //     Padding(
-          //       padding: EdgeInsets.only(top: UtilSize.appBarHeight()),
-          //       child: Column(
-          //         children: [
-          //           _buildStepIndicator(),
-          //           Expanded(
-          //             child: PageView(
-          //               controller: _pageController,
-          //               physics: const NeverScrollableScrollPhysics(),
-          //               children: [
-          //                 _stepBasic(),
-          //                 _stepLocation(),
-          //                 _stepChargers(),
-          //               ],
-          //             ),
-          //           ),
-          //           _buildNavigationButtons(),
-          //         ],
-          //       ),
-          //     ),
-
-          //     /// LOADING
-          //     if (stationProv.isLoading)
-          //       Container(
-          //         color: Colors.black.withOpacity(0.4),
-          //         child: const Center(child: CircularProgressIndicator()),
-          //       ),
-          //   ],
-          // );
         },
       ),
+      bottomNavigationBar: _buildNavigationButtons(), // ✅ aquí
     );
   }
 

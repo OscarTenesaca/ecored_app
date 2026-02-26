@@ -6,4 +6,5 @@ abstract class StationRepository {
   Future<List<ModelCharger>> findAllChargers(Map<String, dynamic> query);
   Future<ModelStation> createStation(Map<String, dynamic> stationData);
   Future<int> createCharger(Map<String, dynamic> chargerData);
+  Future<ModelCharger> findOneCharger(Map<String, dynamic> query);
 }

@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:ecored_app/src/core/adapter/adapter_http.dart';
 import 'package:ecored_app/src/core/models/nuvei_model.dart';
+import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/features/finance/data/models/model_index.dart';
 
 abstract class FinanceRemoteDataSource {
@@ -13,6 +14,8 @@ abstract class FinanceRemoteDataSource {
   Future<ModelRecharge> getRechargeData(Map<String, dynamic> params);
   Future<Map> postNuveiData(ModelNuvei body);
   Future<int> postRecharge(Map<String, dynamic> body);
+  Future<int> postOrder(Map<String, dynamic> body);
+  Future<int> postOrderPayment(Map<String, dynamic> body);
 }
 
 class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
@@ -30,6 +33,7 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
       throw ('Ocurrió un problema, intente más tarde');
     }
 
+    print('FINANCE RESPONSE DATA: ${response.data['data'][0]}');
     final respModelFinance = ModelFinance.fromJson(response.data['data'][0]);
     return respModelFinance;
   }
@@ -63,6 +67,7 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
     if (response.statusCode != 200) {
       throw ('Ocurrió un problema, intente más tarde');
     }
+    print('ORDER RESPONSE DATA: ${response.data['data']}');
     final respModelOrder = ModelOrder.fromJson(response.data['data']);
 
     return respModelOrder;
@@ -99,6 +104,23 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
   Future<int> postRecharge(Map<String, dynamic> body) async {
     final String endpoint = '$url/api/v1/recharges';
     final resp = await httpAdapter.post(endpoint, data: body);
+    return resp.statusCode!;
+  }
+
+  @override
+  Future<int> postOrder(Map<String, dynamic> body) async {
+    final String endpoint = '$url/api/v1/orders';
+    final resp = await httpAdapter.post(endpoint, data: body);
+    // Logger.logDev('POST ORDER RESPONSE: ${resp.data}');
+    return resp.statusCode!;
+  }
+
+  // permite comprar por pasarela de pago para crear recarga y orden
+  @override
+  Future<int> postOrderPayment(Map<String, dynamic> body) async {
+    final String endpoint = '$url/api/v1/paymentes/order';
+    final resp = await httpAdapter.post(endpoint, data: body);
+    print('POST ORDER PAYMENT RESPONSE: ${resp.data}');
     return resp.statusCode!;
   }
 }

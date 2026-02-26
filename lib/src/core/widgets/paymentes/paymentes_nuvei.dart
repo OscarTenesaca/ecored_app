@@ -7,14 +7,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 
+enum PaymentStatus { recharge, order }
+
 class PaymentesNuvei extends StatefulWidget {
   final ModelNuvei bodyNuvei;
   final Map<String, dynamic> bodyEcored;
+  final PaymentStatus status;
 
   const PaymentesNuvei({
     super.key,
     required this.bodyNuvei,
     required this.bodyEcored,
+    required this.status,
   });
 
   @override
@@ -106,7 +110,14 @@ class _PaymentesNuveiState extends State<PaymentesNuvei> {
         transaction['current_status'] == 'APPROVED';
 
     if (isApproved) {
-      await _consumeEcoredApi(result);
+      switch (widget.status) {
+        case PaymentStatus.recharge:
+          await _consumeEcoredApi(result);
+          break;
+        case PaymentStatus.order:
+          await _consumeOrder(result);
+          break;
+      }
     } else {
       showSnackbar(
         context,
@@ -117,12 +128,47 @@ class _PaymentesNuveiState extends State<PaymentesNuvei> {
   }
 
   // ========================
-  // CONSUME API ECORED
+  // CONSUME API ECORED FOR RECHARGE
   // ========================
   Future<void> _consumeEcoredApi(Map paymentData) async {
     final provider = context.read<FinanceProvider>();
 
     final response = await provider.postRecharge(widget.bodyEcored);
+
+    if (response == 201) {
+      if (!mounted) return;
+      showPopUpWithChildren(
+        context: context,
+        title: 'Pago exitoso',
+        subTitle: 'Su pago ha sido procesado correctamente.',
+        textButton: 'Aceptar',
+        onSubmit: () {
+          Navigator.pop(context); // Cierra el popup
+          Navigator.pop(context, true); // Retorna al screen anterior
+
+          // Refresca los datos de la wallet y transacciones
+          final provider = context.read<FinanceProvider>();
+          provider.getWalletData({'user': Preferences().getUser()?.id});
+          provider.getTransactionData({'user': Preferences().getUser()?.id});
+        },
+      );
+    } else {
+      showSnackbar(
+        context,
+        'Pago aprobado, pero falló Ecored. Código de respuesta: $response',
+        SnackbarStatus.error,
+      );
+    }
+  }
+
+  // ========================
+  // CONSUME API ECORED FOR ORDER
+  // ========================
+
+  Future<void> _consumeOrder(Map paymentData) async {
+    final provider = context.read<FinanceProvider>();
+
+    final response = await provider.postOrderPayment(widget.bodyEcored);
 
     if (response == 201) {
       if (!mounted) return;

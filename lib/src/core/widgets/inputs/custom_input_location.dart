@@ -1,5 +1,6 @@
 import 'package:ecored_app/src/core/models/location_model.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
+import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:flutter/material.dart';
 
 class CustomInputLocation extends StatefulWidget {
@@ -59,7 +60,7 @@ class _CustomInputLocationState extends State<CustomInputLocation> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.black87,
-      // isScrollControlled: true,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -82,87 +83,90 @@ class _CustomInputLocationState extends State<CustomInputLocation> {
             }
 
             return SafeArea(
-              child: Column(
-                children: [
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 5,
-                    width: 50,
-                    decoration: BoxDecoration(
-                      color: grayInputColor(),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: TextField(
-                      autofocus: true, // 👈 abre con teclado listo
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: "Buscar ubicación",
-                        hintStyle: const TextStyle(color: Colors.white70),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: Colors.white,
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade800,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
+              child: SizedBox(
+                height: UtilSize.height(context) * 0.85, // 👈 altura 80%
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(
+                      height: 5,
+                      width: 50,
+                      decoration: BoxDecoration(
+                        color: grayInputColor(),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      onChanged: filterInModal,
                     ),
-                  ),
+                    const SizedBox(height: 12),
 
-                  Expanded(
-                    child:
-                        filteredCountries.isEmpty
-                            ? const Center(
-                              child: Text(
-                                "No se encontraron resultados",
-                                style: TextStyle(color: Colors.white70),
-                              ),
-                            )
-                            : ListView.builder(
-                              itemCount: filteredCountries.length,
-                              itemBuilder: (context, index) {
-                                LocationModel country =
-                                    filteredCountries[index];
-                                return ListTile(
-                                  leading:
-                                      (country.flag != '')
-                                          ? Text(
-                                            country.flag,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 24,
-                                            ),
-                                          )
-                                          : null,
-                                  title: Text(
-                                    country.name,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: TextField(
+                        autofocus: true, // 👈 abre con teclado listo
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: "Buscar ubicación",
+                          hintStyle: const TextStyle(color: Colors.white70),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Colors.white,
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade800,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        onChanged: filterInModal,
+                      ),
+                    ),
+
+                    Expanded(
+                      child:
+                          filteredCountries.isEmpty
+                              ? const Center(
+                                child: Text(
+                                  "No se encontraron resultados",
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                              )
+                              : ListView.builder(
+                                itemCount: filteredCountries.length,
+                                itemBuilder: (context, index) {
+                                  LocationModel country =
+                                      filteredCountries[index];
+                                  return ListTile(
+                                    leading:
+                                        (country.flag != '')
+                                            ? Text(
+                                              country.flag,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 24,
+                                              ),
+                                            )
+                                            : null,
+                                    title: Text(
+                                      country.name,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
                                     ),
-                                  ),
-                                  onTap: () {
-                                    setState(() {
-                                      selectedCountry = country;
-                                      widget.locationNotifier.value =
-                                          country.id;
-                                    });
-                                    Navigator.pop(context);
-                                  },
-                                );
-                              },
-                            ),
-                  ),
-                ],
+                                    onTap: () {
+                                      setState(() {
+                                        selectedCountry = country;
+                                        widget.locationNotifier.value =
+                                            country.id;
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                  );
+                                },
+                              ),
+                    ),
+                  ],
+                ),
               ),
             );
           },

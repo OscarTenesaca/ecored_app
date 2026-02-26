@@ -1,12 +1,15 @@
 import 'dart:developer';
 
 import 'package:ecored_app/src/core/adapter/adapter_http.dart';
+import 'package:ecored_app/src/core/utils/utils_logger.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
+import 'package:flutter/foundation.dart';
 
 abstract class StationsRemoteDataSource {
   Future<List<ModelStation>> findAllStations(Map<String, dynamic> query);
   Future<List<ModelCharger>> findAllChargers(Map<String, dynamic> query);
+  Future<ModelCharger> findOneCharger(Map<String, dynamic> query);
   Future<ModelStation> createStation(Map<String, dynamic> stationData);
   Future<int> createCharger(Map<String, dynamic> chargerData);
   // Future<ModelCharger
@@ -26,11 +29,14 @@ class StationsRemoteDataSourceImpl implements StationsRemoteDataSource {
     if (response.statusCode == 200) {
       final responseStation = response.data['data'];
 
+      print('**(**** ): ${responseStation}');
+
       List<ModelStation> stations =
           (responseStation as List)
               .map((stationJson) => ModelStation.fromJson(stationJson))
               .toList();
 
+      debugPrint('******** stations: ${stations.length}');
       return stations;
     } else {
       log('Error fetching stations: ${response.statusCode}');
@@ -83,7 +89,18 @@ class StationsRemoteDataSourceImpl implements StationsRemoteDataSource {
   Future<int> createCharger(Map<String, dynamic> chargerData) async {
     final String endpoint = '$url/api/v1/charger';
     final response = await httpAdapter.post(endpoint, data: chargerData);
-    print('response createCharger: ${response.data}');
     return response.statusCode!;
+  }
+
+  @override
+  Future<ModelCharger> findOneCharger(Map<String, dynamic> query) async {
+    final String endpoint = '$url/api/v1/charger/${query['id']}';
+    final response = await httpAdapter.get(endpoint);
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseCharger = response.data['data'];
+      return ModelCharger.fromJson(responseCharger);
+    } else {
+      throw Exception('Failed to fetch charger: ${response.statusCode}');
+    }
   }
 }

@@ -22,4 +22,8 @@ class StationServices {
   Future<int> createCharger(Map<String, dynamic> chargerData) {
     return repository.createCharger(chargerData);
   }
+
+  Future<ModelCharger> findOneCharger(Map<String, dynamic> query) {
+    return repository.findOneCharger(query);
+  }
 }

@@ -13,17 +13,17 @@ class ModelOrder {
   String id;
   String platformBuy;
   String status;
-  int kWhCharged;
+  double kWhCharged;
   double tax;
-  int subtotal;
+  double subtotal;
   double total;
-  int discount;
-  int discountTotal;
+  double discount;
+  double discountTotal;
   User user;
   Stations stations;
   Charger charger;
   String recharge;
-  Payment payment;
+  // Payment payment;
   Country country;
   String createdAt;
 
@@ -41,7 +41,7 @@ class ModelOrder {
     required this.stations,
     required this.charger,
     required this.recharge,
-    required this.payment,
+    // required this.payment,
     required this.country,
     required this.createdAt,
   });
@@ -50,17 +50,17 @@ class ModelOrder {
     id: json["_id"],
     platformBuy: json["platformBuy"],
     status: json["status"],
-    kWhCharged: json["kWhCharged"],
+    kWhCharged: json["kWhCharged"]?.toDouble(),
     tax: json["tax"]?.toDouble(),
-    subtotal: json["subtotal"],
+    subtotal: json["subtotal"]?.toDouble(),
     total: json["total"]?.toDouble(),
-    discount: json["discount"],
-    discountTotal: json["discountTotal"],
+    discount: json["discount"]?.toDouble(),
+    discountTotal: json["discountTotal"]?.toDouble(),
     user: User.fromJson(json["user"]),
     stations: Stations.fromJson(json["stations"]),
     charger: Charger.fromJson(json["charger"]),
     recharge: json["recharge"],
-    payment: Payment.fromJson(json["payment"]),
+    // payment: Payment.fromJson(json["payment"]),
     country: Country.fromJson(json["country"]),
     createdAt: json["createdAt"],
   );
@@ -79,7 +79,7 @@ class ModelOrder {
     "stations": stations.toJson(),
     "charger": charger.toJson(),
     "recharge": recharge,
-    "payment": payment.toJson(),
+    // "payment": payment.toJson(),
     "country": country.toJson(),
     "createdAt": createdAt,
   };

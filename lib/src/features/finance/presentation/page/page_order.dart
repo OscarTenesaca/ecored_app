@@ -85,33 +85,33 @@ class _PageOrderState extends State<PageOrder> {
               ],
             ),
 
-            CardTitleDescription(
-              title: 'Pago',
-              icon: Icons.credit_card_rounded,
-              rows: [
-                LabelRowText(
-                  label: "Método",
-                  value:
-                      (orderData.payment.name.toLowerCase() == 'nuvei')
-                          ? 'Pago con tarjeta'
-                          : orderData.payment.name,
-                ),
-                LabelRowText(
-                  label: "Subtotal",
-                  value: "\$${orderData.subtotal}",
-                ),
-                LabelRowText(label: "Impuesto", value: "\$${orderData.tax}"),
-                LabelRowText(
-                  label: "Descuento",
-                  value: "\$${orderData.discount}",
-                ),
-                LabelRowText(
-                  label: "Total",
-                  value:
-                      "\$${(orderData.discount == 0) ? orderData.total : orderData.discountTotal}",
-                ),
-              ],
-            ),
+            // CardTitleDescription(
+            //   title: 'Pago',
+            //   icon: Icons.credit_card_rounded,
+            //   rows: [
+            //     LabelRowText(
+            //       label: "Método",
+            //       value:
+            //           (orderData.payment.name.toLowerCase() == 'nuvei')
+            //               ? 'Pago con tarjeta'
+            //               : orderData.payment.name,
+            //     ),
+            //     LabelRowText(
+            //       label: "Subtotal",
+            //       value: "\$${orderData.subtotal}",
+            //     ),
+            //     LabelRowText(label: "Impuesto", value: "\$${orderData.tax}"),
+            //     LabelRowText(
+            //       label: "Descuento",
+            //       value: "\$${orderData.discount}",
+            //     ),
+            //     LabelRowText(
+            //       label: "Total",
+            //       value:
+            //           "\$${(orderData.discount == 0) ? orderData.total : orderData.discountTotal}",
+            //     ),
+            //   ],
+            // ),
           ],
         ),
       ),
@@ -120,6 +120,7 @@ class _PageOrderState extends State<PageOrder> {
 
   Future<void> _loadData(ModelTransaction args) async {
     final provider = context.read<FinanceProvider>();
+    print('Loading order data for order ID: ${args.order}');
     await provider.getOrderData({'id': args.order});
   }
 }

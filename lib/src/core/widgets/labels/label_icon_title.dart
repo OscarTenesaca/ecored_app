@@ -42,7 +42,7 @@ class LabelIconTitle extends StatelessWidget {
           (padding)
               // ? EdgeInsets.symmetric(vertical: 4, horizontal: 8)
               ? EdgeInsets.symmetric(vertical: 4)
-              : EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+              : EdgeInsets.zero,
       child: Wrap(
         alignment: WrapAlignment.center,
         runAlignment: WrapAlignment.center,

@@ -13,7 +13,7 @@ class ModelFinance {
   String id;
   String status;
   String currency;
-  int balance;
+  double balance;
   String user;
   DateTime createdAt;
 
@@ -27,11 +27,11 @@ class ModelFinance {
   });
 
   factory ModelFinance.fromJson(Map<String, dynamic> json) => ModelFinance(
-    id: json["_id"],
-    status: json["status"],
-    currency: json["currency"],
-    balance: json["balance"],
-    user: json["user"],
+    id: json["_id"] ?? '',
+    status: json["status"] ?? '',
+    currency: json["currency"] ?? '',
+    balance: double.parse((json["balance"] ?? 0).toStringAsFixed(2)),
+    user: json["user"] ?? '',
     createdAt: DateTime.parse(json["createdAt"]),
   );
 

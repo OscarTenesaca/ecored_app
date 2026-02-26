@@ -66,7 +66,7 @@ class _PageFinanceState extends State<PageFinance> {
                     const SizedBox(height: 8),
                     LabelTitle(
                       alignment: Alignment.center,
-                      title: "\$ ${provider.financeData?.balance ?? '0.00'}",
+                      title: "\$ ${provider.financeData?.balance}",
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       textColor: accentColor(),
@@ -79,6 +79,14 @@ class _PageFinanceState extends State<PageFinance> {
                       },
                       icon: const Icon(Icons.add_circle),
                       label: const Text("Recargar"),
+                    ),
+
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pushNamed(context, RouteNames.pageScanQr);
+                      },
+                      icon: const Icon(Icons.add_circle),
+                      label: const Text("ecanear qr"),
                     ),
                   ],
                 ),
@@ -108,7 +116,10 @@ class _PageFinanceState extends State<PageFinance> {
                     ? CardTransaction(
                       icon: Icons.attach_money,
                       title: "+ \$ ${transaction.amount}",
-                      subtitle: transaction.createdAt.toString(),
+                      // subtitle: transaction.createdAt.toString(),
+                      subtitle: UtilsDate.formatLocal(
+                        transaction.createdAt.toString(),
+                      ),
                       onTap: () {
                         Navigator.pushNamed(
                           context,
@@ -121,7 +132,9 @@ class _PageFinanceState extends State<PageFinance> {
                       icon: Icons.local_gas_station,
                       iconBgColor: Colors.red,
                       title: "- \$ ${transaction.amount}",
-                      subtitle: transaction.createdAt.toString(),
+                      subtitle: UtilsDate.formatLocal(
+                        transaction.createdAt.toString(),
+                      ),
                       onTap: () {
                         Navigator.pushNamed(
                           context,

@@ -14,6 +14,7 @@ class LocationServiceImpl implements LocationRemoteDataSource {
 
   @override
   Future<List<LocationModel>> countries() async {
+    print('Fetching countries from $url/api/v1/country');
     final String enpoint = '$url/api/v1/country';
     final response = await httpAdapter.get(enpoint);
     if (response.statusCode != 200) {

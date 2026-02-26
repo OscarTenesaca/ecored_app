@@ -40,4 +40,14 @@ class FinanceRepositoryImpl implements FinanceRepository {
   Future<int> postRecharge(Map<String, dynamic> body) {
     return remoteDataSource.postRecharge(body);
   }
+
+  @override
+  Future<int> postOrder(Map<String, dynamic> body) {
+    return remoteDataSource.postOrder(body);
+  }
+
+  @override
+  Future<int> postOrderPayment(Map<String, dynamic> body) {
+    return remoteDataSource.postOrderPayment(body);
+  }
 }

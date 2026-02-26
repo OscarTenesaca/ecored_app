@@ -1,3 +1,4 @@
+import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:flutter/material.dart';
 
 BoxDecoration glass({bool deep = false}) {
@@ -14,5 +15,24 @@ BoxDecoration glass({bool deep = false}) {
       ),
     ],
     backgroundBlendMode: BlendMode.overlay,
+  );
+}
+
+// ================= HELPERS =================
+BoxDecoration cardDecoration({bool shadow = false}) {
+  return BoxDecoration(
+    color: Color(0xff111111),
+    borderRadius: BorderRadius.circular(16),
+    border: Border.all(color: Color(0xff2A2A2A)),
+    boxShadow:
+        shadow
+            ? [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 6,
+                offset: Offset(0, 3),
+              ),
+            ]
+            : null,
   );
 }

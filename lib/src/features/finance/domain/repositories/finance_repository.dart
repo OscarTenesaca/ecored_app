@@ -11,4 +11,6 @@ abstract class FinanceRepository {
 
   Future<Map> postNuveiData(ModelNuvei body);
   Future<int> postRecharge(Map<String, dynamic> body);
+  Future<int> postOrder(Map<String, dynamic> body);
+  Future<int> postOrderPayment(Map<String, dynamic> body);
 }

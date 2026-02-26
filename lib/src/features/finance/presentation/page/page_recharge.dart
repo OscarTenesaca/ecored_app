@@ -12,6 +12,7 @@
 import 'dart:developer';
 
 import 'package:ecored_app/src/core/theme/theme_colors.dart';
+import 'package:ecored_app/src/core/utils/utils_date.dart';
 import 'package:ecored_app/src/core/utils/utils_size.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/finance/data/models/model_index.dart';
@@ -42,7 +43,6 @@ class _PageRechargeState extends State<PageRecharge> {
   Widget build(BuildContext context) {
     final provider = context.watch<FinanceProvider>();
     final rechargeData = provider.rechargeData;
-    print('RECHARGE DATA: $rechargeData');
 
     return Scaffold(
       // backgroundColor: const Color(0xFF0A0A0A),
@@ -61,10 +61,12 @@ class _PageRechargeState extends State<PageRecharge> {
               status: rechargeData!.status,
               subtitle: '+ \$${rechargeData.value}',
               subtitleColor: Colors.greenAccent,
-              // leftText: rechargeData.statusCreated,
               leftText: 'Recargado con éxito',
               leftTextColor: grayInputColor(),
               rightText: rechargeData.createdAt,
+              // rightText: UtilsDate.formatLocal(
+              //   rechargeData.createdAt.toString(),
+              // ),
               rightTextColor: Colors.white.withOpacity(0.65),
             ),
 
@@ -133,7 +135,6 @@ class _PageRechargeState extends State<PageRecharge> {
 
   Future<void> _loadData(ModelTransaction args) async {
     final provider = context.read<FinanceProvider>();
-    print('ARGUMENTS RECARGA: ${args.recharge}');
     await provider.getRechargeData({'id': args.recharge});
   }
 }

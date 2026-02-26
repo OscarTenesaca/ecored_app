@@ -32,4 +32,12 @@ class FinanceServices {
   Future<int> postRecharge(Map<String, dynamic> body) {
     return repository.postRecharge(body);
   }
+
+  Future<int> postOrder(Map<String, dynamic> body) {
+    return repository.postOrder(body);
+  }
+
+  Future<int> postOrderPayment(Map<String, dynamic> body) {
+    return repository.postOrderPayment(body);
+  }
 }
