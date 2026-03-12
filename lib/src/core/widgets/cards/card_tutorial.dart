@@ -39,7 +39,7 @@ class CardTutorial extends StatelessWidget {
               child: Image.asset(
                 image,
                 width: 220,
-                height: 100,
+                height: 80,
                 fit: BoxFit.cover,
               ),
             ),

@@ -586,7 +586,9 @@ class _PageStationState extends State<PageStation> {
                         child: CustomInput(
                           hintText: 'Voltaje (V)',
                           textEditingController: c["voltage"],
-                          textInputType: TextInputType.number,
+                          textInputType: TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           validator:
                               (v) => v!.isEmpty ? '* Ingrese el nombre' : null,
                         ),
@@ -596,7 +598,9 @@ class _PageStationState extends State<PageStation> {
                         child: CustomInput(
                           hintText: 'Intensidad (A)',
                           textEditingController: c["intensity"],
-                          textInputType: TextInputType.number,
+                          textInputType: TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           validator: null,
                         ),
                       ),
@@ -610,7 +614,9 @@ class _PageStationState extends State<PageStation> {
                         child: CustomInput(
                           hintText: 'Carga (kW)',
                           textEditingController: c["powerKw"],
-                          textInputType: TextInputType.number,
+                          textInputType: TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           validator:
                               (v) => v!.isEmpty ? '* Ingrese el nombre' : null,
                         ),
@@ -620,7 +626,9 @@ class _PageStationState extends State<PageStation> {
                         child: CustomInput(
                           hintText: 'Precio (kWh)',
                           textEditingController: c["priceWithTipeConnector"],
-                          textInputType: TextInputType.number,
+                          textInputType: TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           validator: null,
                         ),
                       ),

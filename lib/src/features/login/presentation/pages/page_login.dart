@@ -13,12 +13,15 @@ class PageLogin extends StatelessWidget {
     return Scaffold(
       backgroundColor: primaryColor(),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            CustomAssetImg(width: 200, height: 100),
-            _LoginBody(),
-          ],
+        child: SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              CustomAssetImg(width: 200, height: 100),
+              _LoginBody(),
+            ],
+          ),
         ),
       ),
     );

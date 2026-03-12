@@ -1,4 +1,4 @@
-package com.example.ecored_app
+package ec.com.ecored
 
 import io.flutter.embedding.android.FlutterActivity
 

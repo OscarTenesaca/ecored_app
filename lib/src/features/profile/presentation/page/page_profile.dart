@@ -2,7 +2,6 @@ import 'package:ecored_app/src/core/routes/routes_name.dart';
 import 'package:ecored_app/src/core/theme/theme_colors.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
-import 'package:ecored_app/src/core/widgets/alerts/snackbar.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/login/presentation/provider/login_provider.dart';
 import 'package:flutter/cupertino.dart';
@@ -25,7 +24,9 @@ class PageProfile extends StatelessWidget {
           return Center(
             child: Container(
               padding: UtilSize.paddingMain(),
-              child: Column(
+              child: ListView(
+                shrinkWrap: true,
+                physics: BouncingScrollPhysics(),
                 children: <Widget>[
                   _personInformation(context),
                   Padding(
@@ -59,11 +60,10 @@ class PageProfile extends StatelessWidget {
     final user = Preferences().getUser();
     return Column(
       children: <Widget>[
-        SizedBox(height: UtilSize.appBarHeight()),
+        // SizedBox(height: UtilSize.appBarHeight()),
         CustomHiveImg(
-          img:
-              'http://10.0.2.2:3000/api/v1/files/user/6d8d77e7-04f6-4dc3-a4ba-5bb44cec2370.jpeg',
-          // img: user?.img ?? '',
+          // img:
+          img: user?.img ?? '',
           size: 120,
           alignment: Alignment.center,
           onTap: () {

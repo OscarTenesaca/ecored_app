@@ -94,9 +94,7 @@ class __FormState extends State<_Form> {
         children: [
           SizedBox(height: 15),
           CustomHiveImg(
-            img:
-                'http://10.0.2.2:3000/api/v1/files/user/6d8d77e7-04f6-4dc3-a4ba-5bb44cec2370.jpeg',
-            // img: img,
+            img: img,
             size: 120,
             alignment: Alignment.center,
             onTap: () => _onChangeImg(context),

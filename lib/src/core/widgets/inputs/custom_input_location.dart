@@ -199,7 +199,7 @@ class _CustomInputLocationState extends State<CustomInputLocation> {
                 style: const TextStyle(color: Colors.white),
               ),
             ),
-            const Icon(Icons.arrow_drop_down, color: Colors.white),
+            // const Icon(Icons.arrow_drop_down, color: Colors.white),
           ],
         ),
       ),
