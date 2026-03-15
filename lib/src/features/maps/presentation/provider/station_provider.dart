@@ -35,7 +35,6 @@ class StationProvider extends ChangeNotifier {
     try {
       chargers = await services.findAllChargers(query);
     } catch (e) {
-      log('Error in StationProvider findAllChargers: $e');
       errorMessage = e.toString();
     } finally {
       isLoading = false;

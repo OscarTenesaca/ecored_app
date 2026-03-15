@@ -13,7 +13,7 @@ class ModelRecharge {
   String id;
   String statusCreated;
   String status;
-  int value;
+  double value;
   String devReference;
   String authorizationCode;
   String transactionId;
@@ -38,7 +38,7 @@ class ModelRecharge {
     id: json["_id"],
     statusCreated: json["statusCreated"],
     status: json["status"],
-    value: json["value"],
+    value: json["value"].toDouble(),
     devReference: json["devReference"],
     authorizationCode: json["authorizationCode"],
     transactionId: json["transactionId"],

@@ -1,98 +1,3 @@
-// import 'package:ecored_app/src/core/provider/permissiongps_provider.dart';
-// import 'package:ecored_app/src/core/widgets/maps/map_permission.dart';
-// import 'package:ecored_app/src/features/maps/presentation/provider/station_provider.dart';
-// import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
-
-// import 'package:ecored_app/src/core/theme/theme_index.dart';
-
-// class PageMaps extends StatefulWidget {
-//   const PageMaps({super.key});
-
-//   @override
-//   State<PageMaps> createState() => _PageMapsState();
-// }
-
-// class _PageMapsState extends State<PageMaps> {
-//   @override
-//   void initState() {
-//     super.initState();
-
-//     WidgetsBinding.instance.addPostFrameCallback((_) async {
-//       final gps = context.read<PermissionGpsProvider>();
-//       final station = context.read<StationProvider>();
-
-//       // ⏳ esperar inicialización del provider
-//       while (gps.isLoading) {
-//         await Future.delayed(const Duration(milliseconds: 100));
-//       }
-
-//       // ❌ permisos o GPS no listos
-//       if (!gps.isAllGranted) {
-//         print('❌ GPS o permisos no listos');
-//         return;
-//       }
-
-//       // ✅ obtener ubicación
-//       final position = await gps.getCurrentPosition();
-//       print('📍 posición actual: $position');
-
-//       await station.findAllStations({});
-//       gps.startTracking(); // opcional
-//     });
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: primaryColor(),
-//       body: Consumer2<PermissionGpsProvider, StationProvider>(
-//         builder: (context, gps, station, _) {
-//           if (gps.isLoading) {
-//             return const Center(child: CircularProgressIndicator());
-//           }
-
-//           if (!gps.isGpsEnabled || !gps.isPermissionGranted) {
-//             return MapPermission(
-//               isAllGranted: gps.isAllGranted,
-//               onPressed: gps.openSettings,
-//             );
-//           }
-
-//           if (gps.currentPosition == null) {
-//             return const Center(
-//               child: Column(
-//                 mainAxisSize: MainAxisSize.min,
-//                 children: [
-//                   CircularProgressIndicator(),
-//                   SizedBox(height: 12),
-//                   Text('Obteniendo ubicación GPS...'),
-//                 ],
-//               ),
-//             );
-//           }
-
-//           final position = gps.currentPosition!;
-
-//           // ✅ YA NO SE QUEDA AQUÍ
-//           return Stack(
-//             children: [
-//               Center(
-//                 child: Text(
-//                   'MAPA → ${position.latitude}, ${position.longitude}',
-//                 ),
-//               ),
-
-//               if (station.isLoading)
-//                 const Center(child: CircularProgressIndicator()),
-//             ],
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
-
 import 'package:ecored_app/src/core/routes/routes_name.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:flutter/material.dart';
@@ -131,7 +36,7 @@ class _PageMapsState extends State<PageMaps> {
 
       // ❌ permisos o GPS no listos
       if (!_gps.isAllGranted) {
-        print('❌ GPS o permisos no listos');
+        // print('❌ GPS o permisos no listos');
         return;
       }
 
@@ -157,7 +62,7 @@ class _PageMapsState extends State<PageMaps> {
       backgroundColor: primaryColor(),
       body: Consumer2<PermissionGpsProvider, StationProvider>(
         builder: (context, gps, station, _) {
-          debugPrint('🔄station ${station.chargers}');
+          // debugPrint('🔄station ${station.chargers}');
           if (gps.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -201,7 +106,7 @@ class _PageMapsState extends State<PageMaps> {
                       icon: Icons.local_gas_station_sharp,
                       color: primaryColor(),
                       onPressed: () async {
-                        print('add new station');
+                        // print('add new station');
                         Navigator.pushNamed(context, RouteNames.pageStation);
                       },
                     ),
@@ -211,7 +116,7 @@ class _PageMapsState extends State<PageMaps> {
                       color: primaryColor(),
                       onPressed: () async {
                         final pos = await gps.getCurrentPosition();
-                        print('📍 posición actual (botón): $pos');
+                        // print('📍 posición actual (botón): $pos');
                       },
                     ),
                   ],

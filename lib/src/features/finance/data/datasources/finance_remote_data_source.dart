@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:ecored_app/src/core/adapter/adapter_http.dart';
 import 'package:ecored_app/src/core/models/nuvei_model.dart';
-import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/features/finance/data/models/model_index.dart';
 
 abstract class FinanceRemoteDataSource {
@@ -63,13 +62,11 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
   Future<ModelOrder> getOrderData(Map<String, dynamic> params) async {
     final String endpoint = '$url/api/v1/orders/${params['id']}';
     final response = await httpAdapter.get(endpoint);
-
     if (response.statusCode != 200) {
       throw ('Ocurrió un problema, intente más tarde');
     }
-    print('ORDER RESPONSE DATA: ${response.data['data']}');
+    // print('ORDER RESPONSE DATA: ${response.data['data']}');
     final respModelOrder = ModelOrder.fromJson(response.data['data']);
-
     return respModelOrder;
   }
 
@@ -111,7 +108,6 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
   Future<int> postOrder(Map<String, dynamic> body) async {
     final String endpoint = '$url/api/v1/orders';
     final resp = await httpAdapter.post(endpoint, data: body);
-    // Logger.logDev('POST ORDER RESPONSE: ${resp.data}');
     return resp.statusCode!;
   }
 

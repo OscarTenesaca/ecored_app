@@ -35,6 +35,9 @@ class _MapCardInfomationState extends State<MapCardInfomation> {
 
   @override
   void initState() {
+    debugPrint(
+      '🔄 Cargando cargadores para estación ${widget.stationData.name}...',
+    );
     _loadMarkers();
     super.initState();
   }
@@ -66,7 +69,8 @@ class _MapCardInfomationState extends State<MapCardInfomation> {
           ),
           height: 700,
           child: ListView(
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 0),
+            // padding: EdgeInsets.symmetric(vertical: 16, horizontal: 0),
+            padding: EdgeInsets.only(top: 16, bottom: 80, left: 0, right: 0),
             shrinkWrap: true,
             children: [
               Row(
@@ -182,55 +186,6 @@ class _MapCardInfomationState extends State<MapCardInfomation> {
                 runSpacing: 12,
                 children: chargerData.map((c) => _chargerChip(c)).toList(),
               ),
-
-              // LabelTitle(
-              //   title: 'Precios por kWh',
-              //   fontSize: 16,
-              //   fontWeight: FontWeight.bold,
-              // ),
-              // const SizedBox(height: 10),
-              // GridView.builder(
-              //   shrinkWrap: true,
-              //   physics: const NeverScrollableScrollPhysics(),
-              //   itemCount: priceWithTipeConnector.length,
-              //   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              //     crossAxisCount: 2,
-              //     childAspectRatio: 3.5,
-              //     crossAxisSpacing: 10,
-              //     mainAxisSpacing: 10,
-              //   ),
-              //   itemBuilder: (context, index) {
-              //     final key = priceWithTipeConnector.keys.elementAt(index);
-              //     final value = priceWithTipeConnector[key]!;
-              //     return Container(
-              //       padding: const EdgeInsets.symmetric(
-              //         vertical: 6,
-              //         horizontal: 10,
-              //       ),
-              //       decoration: BoxDecoration(
-              //         color: Colors.white.withOpacity(0.08),
-              //         borderRadius: BorderRadius.circular(12),
-              //         border: Border.all(color: Colors.white24, width: 1),
-              //       ),
-              //       child: Row(
-              //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //         children: [
-              //           Text(
-              //             key,
-              //             style: const TextStyle(
-              //               fontWeight: FontWeight.w600,
-              //               color: Colors.white,
-              //             ),
-              //           ),
-              //           Text(
-              //             "\$${value.toStringAsFixed(2)}",
-              //             style: const TextStyle(color: Colors.greenAccent),
-              //           ),
-              //         ],
-              //       ),
-              //     );
-              //   },
-              // ),
             ],
           ),
         ),
@@ -352,5 +307,6 @@ class _MapCardInfomationState extends State<MapCardInfomation> {
     final provider = context.read<StationProvider>();
     await provider.findAllChargers({'station': widget.stationData.id});
     chargerData = provider.chargers!;
+    print('*************Cargadores encontrados: ${chargerData.length}');
   }
 }

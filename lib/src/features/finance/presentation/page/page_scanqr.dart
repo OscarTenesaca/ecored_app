@@ -103,63 +103,66 @@ class _PageScanQrState extends State<PageScanQr> {
                       size: 28,
                     ),
                     onPressed: () async {
-                      qrCodeNotifier.value = '';
+                      // qrCodeNotifier.value = '';
 
-                      try {
-                        qrCodeNotifier.value = await showPopUpWithChildren(
-                          context: context,
-                          title: 'Scanner QR',
-                          subTitle:
-                              'Escanea el código QR para verificar el ticket',
-                          textButton: 'Cancelar',
-                          children: [BarCodeScanner(qrCode: qrCodeNotifier)],
+                      // try {
+                      //   qrCodeNotifier.value = await showPopUpWithChildren(
+                      //     context: context,
+                      //     title: 'Scanner QR',
+                      //     subTitle:
+                      //         'Escanea el código QR para verificar el ticket',
+                      //     textButton: 'Cancelar',
+                      //     children: [BarCodeScanner(qrCode: qrCodeNotifier)],
+                      //   );
+                      // } on PlatformException {
+                      //   qrCodeNotifier.value =
+                      //       'Failed to get platform version.';
+                      // }
+                      // if (!mounted) return;
+
+                      // if (qrCodeNotifier.value.isNotEmpty) {
+                      //   final scannedData = qrCodeNotifier.value;
+                      //   final scannedId =
+                      //       scannedData.split('/scanner/').last.trim();
+
+                      //   if (!isValidMongoId(scannedId)) {
+                      //     showSnackbar(
+                      //       context,
+                      //       'Código QR inválido. Asegúrate de escanear un código válido.',
+                      //       SnackbarStatus.error,
+                      //     );
+                      //     return;
+                      //   }
+
+                      // await financeProvider.findOneCharger(scannedId);
+                      await financeProvider.findOneCharger(
+                        '69af8cbcdf22874ed6a4cde7',
+                      );
+
+                      if (financeProvider.chargerData != null) {
+                        charger = financeProvider.chargerData!;
+
+                        // Calculamos kWh automáticamente con el monto por defecto
+                        final defaultAmount =
+                            double.tryParse(cashCtrl.text) ?? 5;
+                        kWhCtrl.text = (defaultAmount /
+                                charger!.priceWithTipeConnector)
+                            .toStringAsFixed(2);
+
+                        Logger.logDev(
+                          'Charger encontrado: ${charger!.toJson()}',
                         );
-                      } on PlatformException {
-                        qrCodeNotifier.value =
-                            'Failed to get platform version.';
-                      }
-                      if (!mounted) return;
-
-                      if (qrCodeNotifier.value.isNotEmpty) {
-                        final scannedData = qrCodeNotifier.value;
-                        final scannedId =
-                            scannedData.split('/scanner/').last.trim();
-
-                        if (!isValidMongoId(scannedId)) {
-                          showSnackbar(
-                            context,
-                            'Código QR inválido. Asegúrate de escanear un código válido.',
-                            SnackbarStatus.error,
-                          );
-                          return;
-                        }
-
-                        await financeProvider.findOneCharger(scannedId);
-
-                        if (financeProvider.chargerData != null) {
-                          charger = financeProvider.chargerData!;
-
-                          // Calculamos kWh automáticamente con el monto por defecto
-                          final defaultAmount =
-                              double.tryParse(cashCtrl.text) ?? 5;
-                          kWhCtrl.text = (defaultAmount /
-                                  charger!.priceWithTipeConnector)
-                              .toStringAsFixed(2);
-
-                          Logger.logDev(
-                            'Charger encontrado: ${charger!.toJson()}',
-                          );
-                        } else {
-                          qrCodeNotifier.value = '';
-                          financeProvider.chargerData = null;
-                          showSnackbar(
-                            context,
-                            'El cargador no existe',
-                            SnackbarStatus.error,
-                          );
-                        }
+                      } else {
+                        qrCodeNotifier.value = '';
+                        financeProvider.chargerData = null;
+                        showSnackbar(
+                          context,
+                          'El cargador no existe',
+                          SnackbarStatus.error,
+                        );
                       }
                     },
+                    // },
                   ),
                 ],
               ),

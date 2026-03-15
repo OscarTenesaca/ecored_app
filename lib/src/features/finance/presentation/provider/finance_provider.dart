@@ -1,5 +1,4 @@
 import 'package:ecored_app/src/core/models/nuvei_model.dart';
-import 'package:ecored_app/src/core/utils/utils_logger.dart';
 import 'package:ecored_app/src/features/finance/data/models/model_index.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
 import 'package:ecored_app/src/features/maps/domain/usecases/station_services.dart';
@@ -12,8 +11,6 @@ class FinanceProvider extends ChangeNotifier {
 
   bool isLoading = false;
   ModelFinance? financeData;
-  ModelOrder? orderData;
-  ModelRecharge? rechargeData;
   ModelCharger? chargerData; // <-- para almacenar el charger
   List<ModelTransaction>? transactionData;
   String? errorMessage;
@@ -53,27 +50,30 @@ class FinanceProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> getOrderData(Map<String, dynamic> params) async {
+  Future<ModelOrder> getOrderData(Map<String, dynamic> params) async {
     isLoading = true;
 
     try {
-      orderData = await services.getOrderData(params);
-      print('ORDER DATA FETCHED: ${orderData}');
+      ModelOrder orderData = await services.getOrderData(params);
+      return orderData;
     } catch (e) {
       errorMessage = e.toString();
+      return Future.error(e);
     } finally {
       isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> getRechargeData(Map<String, dynamic> params) async {
+  Future<ModelRecharge> getRechargeData(Map<String, dynamic> params) async {
     isLoading = true;
 
     try {
-      rechargeData = await services.getRechargeData(params);
+      ModelRecharge rechargeData = await services.getRechargeData(params);
+      return rechargeData;
     } catch (e) {
       errorMessage = e.toString();
+      return Future.error(e);
     } finally {
       isLoading = false;
       notifyListeners();

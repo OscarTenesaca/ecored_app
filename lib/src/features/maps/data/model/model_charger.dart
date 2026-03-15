@@ -49,7 +49,13 @@ class ModelCharger {
     typeCharger: json["typeCharger"],
     priceWithTipeConnector: json["priceWithTipeConnector"]?.toDouble(),
     station:
-        json["station"] == null ? null : ModelStation.fromJson(json["station"]),
+        json["station"] == null
+            ? null
+            : json["station"] is String
+            ? null
+            : ModelStation.fromJson(json["station"]),
+    // station:
+    //     json["station"] == null ? null : ModelStation.fromJson(json["station"]),
   );
 
   Map<String, dynamic> toJson() => {

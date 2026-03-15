@@ -29,8 +29,6 @@ class StationsRemoteDataSourceImpl implements StationsRemoteDataSource {
     if (response.statusCode == 200) {
       final responseStation = response.data['data'];
 
-      print('**(**** ): ${responseStation}');
-
       List<ModelStation> stations =
           (responseStation as List)
               .map((stationJson) => ModelStation.fromJson(stationJson))
@@ -51,6 +49,7 @@ class StationsRemoteDataSourceImpl implements StationsRemoteDataSource {
     final response = await httpAdapter.get(endpoint, queryParams: query);
 
     if (response.statusCode == 200) {
+      debugPrint('🔄 Response findAllChargers: ${response.data['data']}');
       final responseChargers = response.data['data'];
 
       List<ModelCharger> chargers =
