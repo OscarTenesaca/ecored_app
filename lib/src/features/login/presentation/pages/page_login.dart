@@ -84,8 +84,8 @@ class _FormState extends State<_Form> {
   @override
   void initState() {
     //init only stagging
-    _emailController.text = 'tenesaca.999@gmail.com';
-    _passwordController.text = '12345';
+    // _emailController.text = 'tenesaca.999@gmail.com';
+    // _passwordController.text = '12345';
     super.initState();
   }
 

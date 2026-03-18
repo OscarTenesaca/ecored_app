@@ -1,5 +1,6 @@
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomInput extends StatefulWidget {
   final TextInputType textInputType;
@@ -67,6 +68,16 @@ class _CustomInputState extends State<CustomInput> {
       cursorColor: accentColor(),
       keyboardType: widget.textInputType,
       textCapitalization: widget.textCapitalization,
+      inputFormatters: [
+        if (widget.textInputType == TextInputType.number ||
+            widget.textInputType ==
+                const TextInputType.numberWithOptions(decimal: true)) ...[
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+          TextInputFormatter.withFunction((oldValue, newValue) {
+            return newValue.copyWith(text: newValue.text.replaceAll(',', '.'));
+          }),
+        ],
+      ],
       style: TextStyle(
         color: whiteColor(),
         fontSize: 14,

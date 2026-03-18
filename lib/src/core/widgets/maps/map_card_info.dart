@@ -243,7 +243,7 @@ class _MapCardInfomationState extends State<MapCardInfomation> {
 
     return Container(
       padding: const EdgeInsets.all(12),
-      width: 130,
+      width: 140,
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(14),

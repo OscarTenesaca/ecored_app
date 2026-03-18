@@ -586,9 +586,10 @@ class _PageStationState extends State<PageStation> {
                         child: CustomInput(
                           hintText: 'Voltaje (V)',
                           textEditingController: c["voltage"],
-                          textInputType: TextInputType.numberWithOptions(
+                          textInputType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
+
                           validator:
                               (v) => v!.isEmpty ? '* Ingrese el nombre' : null,
                         ),

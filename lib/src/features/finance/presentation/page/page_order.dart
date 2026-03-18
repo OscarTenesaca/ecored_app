@@ -123,7 +123,7 @@ Widget _infoCard(IconData icon, String label, String value) {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: Colors.white, size: 30),
+        Icon(icon, color: Colors.white, size: 25),
         const SizedBox(height: 14),
         Text(
           value,

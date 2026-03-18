@@ -135,9 +135,49 @@ class _PageScanQrState extends State<PageScanQr> {
                       //   }
 
                       // await financeProvider.findOneCharger(scannedId);
-                      await financeProvider.findOneCharger(
-                        '69af8cbcdf22874ed6a4cde7',
-                      );
+
+                      //! solo para mi email
+
+                      if (Preferences().getUser()?.email ==
+                          'tenesaca.999@gmail.com') {
+                        await financeProvider.findOneCharger(
+                          '69af8cbcdf22874ed6a4cde7',
+                        );
+                      } else {
+                        qrCodeNotifier.value = '';
+
+                        try {
+                          qrCodeNotifier.value = await showPopUpWithChildren(
+                            context: context,
+                            title: 'Scanner QR',
+                            subTitle:
+                                'Escanea el código QR para verificar el ticket',
+                            textButton: 'Cancelar',
+                            children: [BarCodeScanner(qrCode: qrCodeNotifier)],
+                          );
+                        } on PlatformException {
+                          qrCodeNotifier.value =
+                              'Failed to get platform version.';
+                        }
+                        if (!mounted) return;
+
+                        if (qrCodeNotifier.value.isNotEmpty) {
+                          final scannedData = qrCodeNotifier.value;
+                          final scannedId =
+                              scannedData.split('/scanner/').last.trim();
+
+                          if (!isValidMongoId(scannedId)) {
+                            showSnackbar(
+                              context,
+                              'Código QR inválido. Asegúrate de escanear un código válido.',
+                              SnackbarStatus.error,
+                            );
+                            return;
+                          }
+
+                          await financeProvider.findOneCharger(scannedId);
+                        }
+                      }
 
                       if (financeProvider.chargerData != null) {
                         charger = financeProvider.chargerData!;
