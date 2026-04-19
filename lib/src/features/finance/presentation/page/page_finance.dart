@@ -80,18 +80,11 @@ class _PageFinanceState extends State<PageFinance> {
                       icon: const Icon(Icons.add_circle),
                       label: const Text("Recargar"),
                     ),
-
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pushNamed(context, RouteNames.pageScanQr);
-                      },
-                      icon: const Icon(Icons.add_circle),
-                      label: const Text("ecanear qr"),
-                    ),
                   ],
                 ),
               ),
             ),
+
             const SizedBox(height: 24),
 
             /// 🔹 Transacciones

@@ -19,7 +19,6 @@ class AccessServicesDataSourceImpl implements AccessServicesDataSource {
     final response = await httpAdapter.get(endpoint);
 
     if (response.statusCode == 200) {
-      print('update data user');
       return response.statusCode ?? 200;
     } else {
       prefs.clearUser();

@@ -36,7 +36,8 @@ class _CustomMapState extends State<CustomMap> {
     _mapController = MapController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fitBounds();
+      // _fitBounds();
+      _moveToUser();
     });
   }
 
@@ -46,7 +47,7 @@ class _CustomMapState extends State<CustomMap> {
     // Cuando cambia la lista de estaciones, ajustar el mapa
     if (widget.latLngMarkers != oldWidget.latLngMarkers &&
         widget.latLngMarkers.isNotEmpty) {
-      _fitBounds();
+      // _fitBounds();
     }
   }
 
@@ -73,6 +74,15 @@ class _CustomMapState extends State<CustomMap> {
         padding: const EdgeInsets.all(50),
         maxZoom: 17,
       ),
+    );
+  }
+
+  void _moveToUser() {
+    if (widget.userMarker == null) return;
+
+    _mapController.move(
+      widget.userMarker!,
+      widget.initialZoom, // o un zoom fijo como 16-18
     );
   }
 

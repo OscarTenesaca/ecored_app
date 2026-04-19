@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 
 class HttpAdapter {

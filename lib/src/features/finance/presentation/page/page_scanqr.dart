@@ -1,3 +1,418 @@
+import 'package:ecored_app/src/core/theme/theme_index.dart';
+import 'package:ecored_app/src/core/utils/utils_logger.dart';
+import 'package:ecored_app/src/core/utils/utils_preferences.dart';
+import 'package:ecored_app/src/core/widgets/widget_index.dart';
+import 'package:ecored_app/src/features/finance/finance_injection.dart';
+import 'package:ecored_app/src/features/finance/presentation/provider/finance_provider.dart';
+import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import 'package:provider/provider.dart';
+
+class PageScanQr extends StatefulWidget {
+  const PageScanQr({super.key});
+
+  @override
+  State<PageScanQr> createState() => _PageScanQrState();
+}
+
+class _PageScanQrState extends State<PageScanQr> {
+  // variables
+  bool _hasOpenedScanner = false;
+  int MIN_RECHARGE_AMOUNT = 1;
+  final ValueNotifier<String> qrCodeNotifier = ValueNotifier<String>('');
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // 🔥 se ejecuta una sola vez
+    if (!_hasOpenedScanner) {
+      _hasOpenedScanner = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scanQr();
+      });
+    }
+  }
+
+  Future<void> _scanQr() async {
+    final financeProvider = context.read<FinanceProvider>(); // 👈 aquí
+    await financeProvider.clearChargerData();
+
+    qrCodeNotifier.value = '';
+
+    try {
+      final result = await showPopUpWithChildren(
+        context: context,
+        title: 'Sigue estos pasos para iniciar la recarga',
+        subTitle:
+            '• Conecta el cargador a tu vehículo\n'
+            '• Escanea el código QR\n'
+            '• Presiona "Iniciar carga"',
+        textButton: 'Cancelar',
+        children: [BarCodeScanner(qrCode: qrCodeNotifier)],
+      );
+
+      qrCodeNotifier.value = result ?? '';
+    } on PlatformException {
+      qrCodeNotifier.value = 'Error al escanear';
+    }
+
+    if (!mounted) return;
+
+    if (qrCodeNotifier.value.isNotEmpty) {
+      debugPrint('QR escaneado: ${qrCodeNotifier.value}');
+      final scannedData = qrCodeNotifier.value;
+      // final scannedId = '69e17aaa58ca6e73f01cb51d';
+      final scannedId = scannedData.split('/scanner/').last.trim();
+
+      if (!isValidMongoId(scannedId)) {
+        showSnackbar(
+          context,
+          'Código QR inválido. Asegúrate de escanear un código válido.',
+          SnackbarStatus.error,
+        );
+        return;
+      }
+
+      await financeProvider.findOneCharger(scannedId);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final financeProvider = context.watch<FinanceProvider>();
+    final ModelCharger? charger = financeProvider.chargerData;
+
+    return Scaffold(
+      body: SafeArea(
+        child: ValueListenableBuilder<String>(
+          valueListenable: qrCodeNotifier,
+          builder: (context, qrValue, _) {
+            // 🟡 Mientras abre el scanner o está vacío
+            if (qrValue.isEmpty) {
+              return openScanner();
+            }
+
+            if (financeProvider.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (charger == null || charger.station == null) {
+              //mostrar la pantalla para escanear el QR
+              return openScanner();
+            }
+
+            // 🟢 Mostrar resultado
+            return Column(
+              spacing: 16,
+              children: [
+                SizedBox(height: 4),
+                CardStation(
+                  title: charger.station!.name,
+                  details: [charger.station!.address],
+                ),
+
+                _chargerCard(charger),
+
+                Row(
+                  children: [
+                    Flexible(
+                      child: CustomButton(
+                        textButton: 'REESCANEAR',
+                        buttonColor: grayInputColor(),
+                        textButtonColor: accentColor(),
+                        onPressed: () => _scanQr(),
+                      ),
+                    ),
+                    Flexible(
+                      child: CustomButton(
+                        textButton: 'INICIAR CARGA',
+                        buttonColor: accentColor(),
+                        textButtonColor: primaryColor(),
+                        onPressed: () => _createOrder(charger),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  //? ================= WIDGETS =================
+  Widget openScanner() {
+    return InkWell(
+      onTap: _scanQr,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 🔵 Icono principal
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.qr_code_scanner,
+                  size: 60,
+                  color: Colors.blue,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+              // 📝 Título
+              LabelTitle(
+                title: 'Escanea un código QR',
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                alignment: Alignment.center,
+              ),
+
+              const SizedBox(height: 8),
+
+              // 🧾 Subtexto
+              LabelTitle(
+                title: 'Escanea el código QR de la estacion de carga',
+                fontSize: 12,
+                textColor: Colors.grey,
+                alignment: Alignment.center,
+              ),
+
+              const SizedBox(height: 30),
+
+              // 🔘 Botón mejorado
+              LabelIconTitle(
+                icon: Icons.camera_alt_outlined,
+                title: 'Abrir cámara',
+                alignment: Alignment.center,
+                fontSize: 14,
+                iconColor: accentColor(),
+                textColor: accentColor(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ================= CHARGER CARD =================
+  Widget _chargerCard(ModelCharger charger) {
+    return Container(
+      decoration: cardDecoration(shadow: true),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: accentColor().withValues(alpha: 0.2),
+                child: Icon(Icons.flash_on, color: accentColor(), size: 32),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  charger.code,
+                  style: TextStyle(
+                    color: kWhiteColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: LabelTitle(
+                  title: "\$${charger.priceWithTipeConnector}/kWh",
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  textColor: kAccentColor,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            mainAxisSpacing: 1,
+            crossAxisSpacing: 12,
+            physics: NeverScrollableScrollPhysics(),
+            childAspectRatio: 4.2,
+            children: [
+              LabelIconTitle(
+                padding: false,
+                textAlign: TextAlign.center,
+                icon: Icons.bolt,
+                iconColor: accentColor(),
+                title: 'Potencia: ${charger!.powerKw} kW',
+                textColor: whiteColor(),
+                fontWeight: FontWeight.bold,
+              ),
+              LabelIconTitle(
+                padding: false,
+                textAlign: TextAlign.center,
+                icon: Icons.usb,
+                iconColor: accentColor(),
+                title: 'Conexión: ${charger!.typeConnection}',
+                textColor: whiteColor(),
+                fontWeight: FontWeight.bold,
+              ),
+              LabelIconTitle(
+                padding: false,
+                textAlign: TextAlign.center,
+                icon: Icons.battery_charging_full,
+                iconColor: accentColor(),
+                title: 'Voltaje: ${charger!.voltage} V',
+                textColor: whiteColor(),
+                fontWeight: FontWeight.bold,
+              ),
+              LabelIconTitle(
+                padding: false,
+                textAlign: TextAlign.center,
+                icon: Icons.speed,
+                iconColor: accentColor(),
+                title: 'Intensidad: ${charger!.intensity} A',
+                textColor: whiteColor(),
+                fontWeight: FontWeight.bold,
+              ),
+              LabelIconTitle(
+                padding: false,
+                textAlign: TextAlign.center,
+                icon: Icons.settings,
+                iconColor: accentColor(),
+                title: 'Tipo: ${charger!.typeCharger}',
+                textColor: whiteColor(),
+                fontWeight: FontWeight.bold,
+              ),
+              LabelIconTitle(
+                padding: false,
+                textAlign: TextAlign.center,
+                icon: Icons.cable,
+                iconColor: accentColor(),
+                title: 'Formato: ${charger!.format}',
+                textColor: whiteColor(),
+                fontWeight: FontWeight.bold,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================= METHODS =================
+  bool isValidMongoId(String id) {
+    final regex = RegExp(r'^[a-fA-F0-9]{24}$');
+    return regex.hasMatch(id);
+  }
+
+  Future<void> _createOrder(ModelCharger charger) async {
+    final provider = context.read<FinanceProvider>();
+    // validate if money in wallet is enough for the recharge
+
+    // await provider.getWalletData({'user': Preferences().getUser()?.id});
+    // final walletBalance = provider.financeData;
+
+    // if (walletBalance == null) {
+    //   showSnackbar(
+    //     context,
+    //     'No se pudo obtener el balance de la wallet',
+    //     SnackbarStatus.error,
+    //   );
+    //   return;
+    // }
+
+    // // validate if money in wallet is enough for the recharge
+    // if (walletBalance.balance <= MIN_RECHARGE_AMOUNT) {
+    //   showSnackbar(
+    //     context,
+    //     'Fondos insuficientes en tu billetera virtual',
+    //     SnackbarStatus.waiting,
+    //   );
+    //   return;
+    // }
+
+    Map<String, dynamic> order = {
+      "platformBuy": "APP",
+      "pricePerKwh": double.parse(
+        charger.priceWithTipeConnector.toStringAsFixed(2),
+      ),
+      "kWhCharged": 0,
+      "tax": 0,
+      "subtotal": 0,
+      "total": 0,
+      "meterStart": 0,
+      "meterStop": 0,
+      "kWhDelivered": 0,
+      "user": Preferences().getUser()?.id,
+      "stations": charger.station!.id,
+      "charger": charger.id,
+      "cpId": charger.code,
+      "connectorId": charger.connectorId,
+      "country": charger.station!.country.id,
+      "administrator": charger.station!.administrator,
+    };
+
+    final response = await provider.postOrder(order);
+
+    if (response == 201) {
+      if (!mounted) return;
+      showPopUpWithChildren(
+        context: context,
+        title: 'Pago exitoso',
+        subTitle: 'Su pago ha sido procesado correctamente.',
+        textButton: 'Aceptar',
+      );
+    } else {
+      String errorMsj = '';
+
+      switch (response) {
+        case 400:
+          errorMsj = 'No se encontro su billetera virtual.';
+          break;
+        case 409:
+          errorMsj = 'No tiene saldo suficiente en su billetera virtual.';
+          break;
+        case 403:
+          errorMsj = 'La estacion de carga no está disponible.';
+          break;
+        case 404:
+          errorMsj = 'No se encontro la estacion de carga.';
+          break;
+        case 410:
+          errorMsj =
+              'El saldo de la billetera virtual es insuficiente para esta recarga.';
+          break;
+        case 500:
+          errorMsj =
+              'Error del servidor. Por favor, inténtelo de nuevo más tarde.';
+          break;
+        default:
+          errorMsj =
+              errorMsj =
+                  'La estacion de carga no esta conectado al vehículo o hubo un error en el proceso de recarga.';
+      }
+
+      showSnackbar(context, errorMsj, SnackbarStatus.error);
+    }
+  }
+}
+
+/*
+
 import 'package:ecored_app/src/core/models/nuvei_model.dart';
 import 'package:ecored_app/src/core/models/payment_model.dart';
 import 'package:ecored_app/src/core/theme/theme_colors.dart';
@@ -563,7 +978,11 @@ class _PageScanQrState extends State<PageScanQr> {
   }
 }
 
-/*
+
+
+
+
+
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';

@@ -184,8 +184,6 @@ class _PagePlanState extends State<PagePlan> {
                   PaymentSelector(
                     title: 'Pagar',
                     onSelected: (method) {
-                      print('Método seleccionado: ${method.name}');
-
                       switch (method.name.toLowerCase()) {
                         case 'nuvei':
                           pagar(method);

@@ -70,7 +70,7 @@ class CardSummary extends StatelessWidget {
           ),
 
           const SizedBox(height: 18),
-          Row(
+          Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               LabelTitle(

@@ -133,7 +133,6 @@ class FinanceProvider extends ChangeNotifier {
   Future<void> findOneCharger(String chargerId) async {
     isLoading = true;
     notifyListeners();
-
     try {
       chargerData = await stationServices.findOneCharger({'id': chargerId});
     } catch (e) {

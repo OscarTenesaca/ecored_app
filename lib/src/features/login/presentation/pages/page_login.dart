@@ -93,56 +93,70 @@ class _FormState extends State<_Form> {
   Widget build(BuildContext context) {
     final provider = context.watch<LoginProvider>();
 
-    return Form(
-      key: _formKey,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 35.0),
-        child: Column(
-          children: <Widget>[
-            CustomInput(
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return '* Ingrese su correo!';
-                }
-                return null;
-              },
-              textInputType: TextInputType.emailAddress,
-              hintText: 'Correo',
-              textEditingController: _emailController,
+    return Stack(
+      children: [
+        Form(
+          key: _formKey,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 35.0),
+            child: Column(
+              children: <Widget>[
+                CustomInput(
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return '* Ingrese su correo!';
+                    }
+                    return null;
+                  },
+                  textInputType: TextInputType.emailAddress,
+                  hintText: 'Correo',
+                  textEditingController: _emailController,
+                ),
+
+                SizedBox(height: 20),
+
+                CustomInput(
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return '* Ingrese su contraseña!';
+                    }
+                    return null;
+                  },
+                  obscured: true,
+                  hintText: 'Contraseña',
+                  textEditingController: _passwordController,
+                  onEditingComplete: () => submit(context),
+                ),
+
+                TextButton(
+                  child: LabelTitle(
+                    title: 'Olvidé mi contraseña',
+                    fontSize: 14,
+                  ),
+                  onPressed:
+                      () => Navigator.pushNamed(context, RouteNames.pageLogin),
+                ),
+
+                SizedBox(height: 20),
+
+                CustomButton(
+                  textButton: 'Iniciar Sesión',
+                  buttonColor: accentColor(),
+                  textButtonColor: primaryColor(),
+                  onPressed: () => submit(context),
+                ),
+              ],
             ),
-
-            SizedBox(height: 20),
-
-            CustomInput(
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return '* Ingrese su contraseña!';
-                }
-                return null;
-              },
-              obscured: true,
-              hintText: 'Contraseña',
-              textEditingController: _passwordController,
-              onEditingComplete: () => submit(context),
-            ),
-
-            TextButton(
-              child: LabelTitle(title: 'Olvidé mi contraseña', fontSize: 14),
-              onPressed:
-                  () => Navigator.pushNamed(context, RouteNames.pageLogin),
-            ),
-
-            SizedBox(height: 20),
-
-            CustomButton(
-              textButton: 'Iniciar Sesión',
-              buttonColor: accentColor(),
-              textButtonColor: primaryColor(),
-              onPressed: () => submit(context),
-            ),
-          ],
+          ),
         ),
-      ),
+
+        if (provider.isLoading)
+          Positioned.fill(
+            child: Blur(
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+          ),
+      ],
     );
   }
 

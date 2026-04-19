@@ -16,7 +16,7 @@ class _CustomBottonBarState extends State<CustomBottonBar> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
       child: Blur(
         opacity: 0.5,
         borderRadius: BorderRadius.circular(25),
@@ -42,20 +42,27 @@ class _CustomBottonBarState extends State<CustomBottonBar> {
                     icon: CupertinoIcons.map,
                     index: 1,
                     isSelected: index == 1,
-                    label: 'Estaciones',
+                    label: 'Estacion',
+                  ),
+                  CustomBottomButton(
+                    indexNotifier: widget.indexNotifier,
+                    icon: CupertinoIcons.qrcode,
+                    index: 2,
+                    isSelected: index == 2,
+                    label: 'Escaner',
                   ),
                   CustomBottomButton(
                     indexNotifier: widget.indexNotifier,
                     icon: CupertinoIcons.money_dollar,
-                    index: 2,
-                    isSelected: index == 2,
-                    label: 'Finanzas',
+                    index: 3,
+                    isSelected: index == 3,
+                    label: 'Finanza',
                   ),
                   CustomBottomButton(
                     indexNotifier: widget.indexNotifier,
                     icon: CupertinoIcons.person,
-                    index: 3,
-                    isSelected: index == 3,
+                    index: 4,
+                    isSelected: index == 4,
                     label: 'Perfil',
                   ),
                 ],
