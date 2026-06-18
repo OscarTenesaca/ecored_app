@@ -85,14 +85,52 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  fonts:
-    - family: Montag
-      fonts:
-        - asset: fonts/fonnts.com-Montag_Bold.otf
-        - asset: fonts/fonnts.com-Montag_Bold.otf
-          weight: 700
+  # fonts:
+  #   - family: Jumper
+  #     fonts:
+  #       - asset: assets/fonts/JumperPERSONALUSEONLY-Thin.ttf
+  #         weight: 100
 
-          # style: italic'
+  #       - asset: assets/fonts/JumperPERSONALUSEONLY-Light.ttf
+  #         weight: 300
+
+  #       - asset: assets/fonts/JumperPERSONALUSEONLY-Regular.ttf
+  #         weight: 400
+
+  #       - asset: assets/fonts/JumperPERSONALUSEONLY-Bold.ttf
+  #         weight: 700
+
+  #       - asset: assets/fonts/JumperPERSONALUSEONLY-Extra-Bold.ttf
+  #         weight: 800
+
+  #       - asset: assets/fonts/JumperPERSONALUSEONLY-Black.ttf
+  #         weight: 900
+
+  #       - asset: assets/fonts/JumperPERSONALUSEONLY-ThinItalic.ttf
+  #         weight: 100
+  #         style: italic
+
+  #       - asset: assets/fonts/JumperPERSONALUSEONLY-LightItalic.ttf
+  #         weight: 300
+  #         style: italic
+
+  #       - asset: assets/fonts/JumperPERSONALUSEONLY-RegularItalic.ttf
+  #         weight: 400
+  #         style: italic
+
+  #       - asset: assets/fonts/JumperPERSONALUSEONLY-BoldItalic.ttf
+  #         weight: 700
+  #         style: italic
+
+  #       - asset: assets/fonts/JumperPERSONALUSEONLY-Extra-BoldItalic.ttf
+  #         weight: 800
+  #         style: italic
+
+  #       - asset: assets/fonts/JumperPERSONALUSEONLY-BlackItalic.ttf
+  #         weight: 900
+  #         style: italic
+
+  # style: italic'
 
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

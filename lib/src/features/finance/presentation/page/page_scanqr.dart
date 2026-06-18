@@ -1,8 +1,6 @@
 import 'package:ecored_app/src/core/theme/theme_index.dart';
-import 'package:ecored_app/src/core/utils/utils_logger.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
-import 'package:ecored_app/src/features/finance/finance_injection.dart';
 import 'package:ecored_app/src/features/finance/presentation/provider/finance_provider.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
 import 'package:flutter/material.dart';

@@ -7,14 +7,18 @@ class CustomInput extends StatefulWidget {
   final String hintText;
   final bool? filled;
   final bool obscured;
+  final Color? hintColor;
   final Color? filledColor;
   final Color? borderColor;
+  final Color? focusBorderColor;
+  final Color? iconColor;
   final TextEditingController? textEditingController;
   final TextCapitalization textCapitalization;
   final String? Function(String?)? validator;
   final Function? onEditingComplete;
   final Function? onChanged;
   final int? maxLines;
+  final double? fontSize;
   final bool enabled;
 
   const CustomInput({
@@ -26,11 +30,15 @@ class CustomInput extends StatefulWidget {
     this.obscured = false,
     this.textInputType = TextInputType.text,
     this.filled = true,
+    this.hintColor = Colors.white,
     this.filledColor = const Color.fromARGB(255, 130, 130, 130),
     this.borderColor = Colors.transparent,
+    this.focusBorderColor = Colors.transparent,
+    this.iconColor = Colors.grey,
     this.onEditingComplete,
     this.onChanged,
     this.maxLines,
+    this.fontSize = 14,
     this.enabled = true,
   });
 
@@ -80,17 +88,23 @@ class _CustomInputState extends State<CustomInput> {
       ],
       style: TextStyle(
         color: whiteColor(),
-        fontSize: 14,
+        fontSize: widget.fontSize,
         fontWeight: FontWeight.w300,
       ),
       decoration: InputDecoration(
+        hintStyle: TextStyle(color: widget.hintColor?.withValues(alpha: 0.35)),
         fillColor: widget.filledColor,
         border: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
+          borderRadius: BorderRadius.all(Radius.circular(18)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
+          borderRadius: const BorderRadius.all(Radius.circular(18)),
           borderSide: BorderSide(color: widget.borderColor!),
+        ),
+
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: widget.focusBorderColor!),
         ),
         filled: widget.filled,
         hintText: widget.hintText,
@@ -99,7 +113,7 @@ class _CustomInputState extends State<CustomInput> {
                 ? IconButton(
                   icon: Icon(
                     _obscured ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.grey,
+                    color: widget.iconColor,
                   ),
                   onPressed: _toggleVisibility,
                 )

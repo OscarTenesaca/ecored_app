@@ -2,8 +2,8 @@ import 'package:ecored_app/src/core/config/enviroment.dart';
 import 'package:ecored_app/src/core/routes/routes_name.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/access/datasources/access_service_data_source.dart';
+import 'package:ecored_app/src/features/charger/presentation/page/page_opt_charger.dart';
 import 'package:ecored_app/src/features/finance/presentation/page/page_finance.dart';
-import 'package:ecored_app/src/features/finance/presentation/page/page_scanqr.dart';
 import 'package:ecored_app/src/features/home/presentation/page/page_home.dart';
 import 'package:ecored_app/src/features/maps/presentation/page/page_maps.dart';
 import 'package:ecored_app/src/features/profile/presentation/page/page_profile.dart';
@@ -81,7 +81,14 @@ class _PageAccessState extends State<PageAccess> {
   }
 
   List<Widget> _getPages() {
-    return [PageHome(), PageMaps(), PageScanQr(), PageFinance(), PageProfile()];
+    return [
+      PageHome(),
+      PageMaps(),
+      PageOptCharger(),
+      PageFinance(),
+      PageProfile(),
+    ];
+    // return [PageHome(), PageMaps(), PageScanQr(), PageFinance(), PageProfile()];
   }
 }
 // class PageAccess extends StatefulWidget {

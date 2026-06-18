@@ -20,7 +20,7 @@ class RouteNames {
   static const String pageRecharge = 'routeRecharge';
   static const String pageOrder = 'routeOrder';
   static const String pagePlan = 'routePlan';
-  // static const String pageScanQr = 'routeScanQr';
+  static const String chargingVehicle = 'routeChargingVehicle';
   static const String pageScanQr = 'routeScanQr';
 
   //PROFILE

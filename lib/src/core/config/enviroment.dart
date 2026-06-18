@@ -16,6 +16,6 @@ class Environment {
       kDebugMode || kProfileMode
           ? 'http://159.223.127.104:3005'
           // ? 'http://localhost:3005'
-          // ? 'http://10.0.2.2:3005'
+          // ? 'http://192.168.18.40:3005'
           : 'http://159.223.127.104:3005';
 }

@@ -7,6 +7,7 @@ class LabelRowText extends StatelessWidget {
   final Color titleColor;
   final Color subtitleColor;
   final double fontSize;
+  final double? fontSizeValue;
 
   const LabelRowText({
     super.key,
@@ -16,6 +17,7 @@ class LabelRowText extends StatelessWidget {
     this.titleColor = Colors.white,
     this.subtitleColor = Colors.white,
     this.fontSize = 14,
+    this.fontSizeValue,
   });
 
   @override
@@ -37,7 +39,7 @@ class LabelRowText extends StatelessWidget {
             value,
             style: TextStyle(
               color: subtitleColor,
-              fontSize: fontSize,
+              fontSize: fontSizeValue ?? fontSize,
               fontWeight: FontWeight.w600,
             ),
           ),

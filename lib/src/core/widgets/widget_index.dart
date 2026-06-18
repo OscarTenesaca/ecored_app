@@ -3,6 +3,7 @@ export 'alerts/snackbar.dart';
 export 'background/background.dart';
 export 'background/background_glass.dart';
 export 'blur/blur.dart';
+export 'buttons/custom_button_animated.dart';
 export 'button_bar/custom_bottom_bar.dart';
 export 'buttons/custom_button_select.dart';
 export 'buttons/custom_button_circle.dart';

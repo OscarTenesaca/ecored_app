@@ -1,12 +1,10 @@
-import 'package:ecored_app/src/core/widgets/paymentes/paymentes_nuvei.dart';
 import 'package:ecored_app/src/features/finance/presentation/page/page_order.dart';
 import 'package:ecored_app/src/features/finance/presentation/page/page_plan.dart';
 import 'package:ecored_app/src/features/finance/presentation/page/page_recharge.dart';
-import 'package:ecored_app/src/features/finance/presentation/page/page_scanqr.dart';
 import 'package:ecored_app/src/features/login/presentation/pages/page_register.dart';
 import 'package:ecored_app/src/features/login/presentation/pages/page_user.dart';
 import 'package:ecored_app/src/features/maps/presentation/page/page_station.dart';
-import 'package:ecored_app/src/features/scanner/presentation/page/page_scanner.dart';
+import 'package:ecored_app/src/features/charger/presentation/page/page_charger.dart';
 import 'package:flutter/material.dart';
 import 'package:ecored_app/src/core/routes/routes_name.dart';
 
@@ -27,8 +25,8 @@ final Map<String, WidgetBuilder> appRoutes = {
   RouteNames.pageHome: (_) => const PageHome(),
   RouteNames.pageMap: (_) => const PageMaps(),
   RouteNames.pageStation: (_) => const PageStation(),
-  RouteNames.pageScanQr: (_) => const PageScanner(),
 
+  RouteNames.chargingVehicle: (_) => const PageCharger(),
   RouteNames.pageFinance: (_) => const PageFinance(),
   RouteNames.pageRecharge: (_) => const PageRecharge(),
   RouteNames.pageOrder: (_) => const PageOrder(),

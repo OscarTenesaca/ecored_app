@@ -97,11 +97,11 @@ Widget _infoGrid(ModelOrder order) {
     shrinkWrap: true,
     childAspectRatio: 1.35,
     children: [
-      _infoCard(
-        Icons.charging_station_rounded,
-        "Carga",
-        "${order.kWhCharged} kWh",
-      ),
+      // _infoCard(
+      //   Icons.charging_station_rounded,
+      //   "Carga",
+      //   "${order.kWhCharged} kWh",
+      // ),
       _infoCard(
         Icons.electric_bolt_rounded,
         "Tipo conector",

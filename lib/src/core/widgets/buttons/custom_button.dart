@@ -31,7 +31,7 @@ class CustomButton extends StatelessWidget {
     return Container(
       margin:
           haveMargin != null && haveMargin == true
-              ? EdgeInsets.all(UtilSize.width(context) * 5 / 100)
+              ? EdgeInsets.all(UtilSize.width(context) * 2 / 100)
               : EdgeInsets.symmetric(
                 horizontal: UtilSize.width(context) * 5 / 100,
               ),
@@ -47,7 +47,7 @@ class CustomButton extends StatelessWidget {
           foregroundColor: textButtonColor,
           side: BorderSide(color: textButtonColor),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(18),
           ),
           textStyle: TextStyle(
             letterSpacing: 1,
