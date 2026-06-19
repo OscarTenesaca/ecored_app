@@ -10,11 +10,17 @@ import 'package:intl_phone_field/phone_number.dart';
 class CustomInputPhone extends StatefulWidget {
   final TextEditingController controller;
   final ValueNotifier<String> notifier;
+  final String? hintText;
+  final Color? fillColor;
+  final double? fontSize;
 
   const CustomInputPhone({
     super.key,
     required this.controller,
     required this.notifier,
+    this.hintText = '',
+    this.fillColor = Colors.transparent,
+    this.fontSize = 14,
   });
 
   @override
@@ -38,10 +44,15 @@ class _CustomInputPhoneState extends State<CustomInputPhone> {
     return IntlPhoneField(
       disableLengthCheck: true,
       controller: widget.controller,
+
       onCountryChanged: (phone) {
         widget.notifier.value = "+${phone.dialCode}";
       },
       validator: (value) {
+        if (value == null || value.number.trim().isEmpty) {
+          return '* Ingrese su número de teléfono';
+        }
+
         final country = PhoneNumber.getCountry(value!.completeNumber);
         if (value.number.startsWith('0')) {
           return 'El número de teléfono no puede comenzar con 0';
@@ -61,45 +72,52 @@ class _CustomInputPhoneState extends State<CustomInputPhone> {
       flagsButtonMargin: const EdgeInsets.all(5),
       flagsButtonPadding: const EdgeInsets.all(8),
       showDropdownIcon: false,
-      cursorColor: whiteColor(),
+      cursorColor: accentColor(),
       decoration: InputDecoration(
         border: OutlineInputBorder(
           borderSide: BorderSide.none,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(18),
         ),
-        fillColor: grayInputColor(),
+
+        fillColor: widget.fillColor,
+        hintText: widget.hintText,
+
+        // fillColor: widget.filledColor,
         filled: true,
-        errorStyle: TextStyle(fontSize: 12, color: Colors.red.shade300),
+        errorStyle: TextStyle(
+          fontSize: widget.fontSize,
+          color: Colors.red.shade300,
+        ),
       ),
 
       initialCountryCode: initialCountryCode,
-      style: const TextStyle(
+      style: TextStyle(
         // fontFamily: 'YaroRg',
-        fontSize: 12,
+        fontSize: widget.fontSize,
       ),
-      dropdownTextStyle: const TextStyle(
+      dropdownTextStyle: TextStyle(
         // fontFamily: 'YaroRg',
-        fontSize: 12,
+        fontSize: widget.fontSize,
       ),
       pickerDialogStyle: PickerDialogStyle(
         backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
         countryCodeStyle: TextStyle(
           // fontFamily: 'YaroRg',
           color: whiteColor(),
-          fontSize: 12,
+          fontSize: widget.fontSize,
         ),
         listTileDivider: const SizedBox(height: 5),
         countryNameStyle: TextStyle(
           // fontFamily: 'YaroRg',
           color: whiteColor(),
-          fontSize: 12,
+          fontSize: widget.fontSize,
         ),
         searchFieldInputDecoration: InputDecoration(
           hintText: 'Buscar',
           hintStyle: TextStyle(
             fontFamily: 'YaroRg',
             color: whiteColor(),
-            fontSize: 12,
+            fontSize: widget.fontSize,
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),

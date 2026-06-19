@@ -11,6 +11,7 @@ const Color kflatGreen = Color.fromRGBO(106, 146, 58, 1.0); // Green
 const Color krefreshingMint = Color.fromRGBO(131, 189, 69, 1.0); // Green
 
 const Color kGreyColorTransparency = Color.fromRGBO(97, 97, 97, 0.5);
+const Color kDeepForestGreen = Color(0xFF161C18);
 
 // alert colors success, error, warning
 const Color kSuccessColor = Color.fromRGBO(76, 175, 80, 1); // Verde
@@ -24,6 +25,7 @@ Color whiteColor() => kWhiteColor;
 Color accentColor() => kAccentColor;
 Color flatGreen() => kflatGreen;
 Color refreshingMint() => krefreshingMint;
+Color deepForestGreen() => kDeepForestGreen;
 
 Color greyColorWithTransparency() => kGreyColorTransparency;
 Color successColor() => kSuccessColor;

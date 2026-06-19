@@ -55,7 +55,7 @@ class _PageLoginState extends State<PageLogin> {
                     },
                     textInputType: TextInputType.emailAddress,
                     hintText: 'Correo',
-                    filledColor: Color(0xFF161C18),
+                    filledColor: deepForestGreen(),
                     textEditingController: _emailController,
                   ),
 
@@ -71,7 +71,7 @@ class _PageLoginState extends State<PageLogin> {
                     obscured: true,
                     hintText: 'Contraseña',
                     textEditingController: _passwordController,
-                    filledColor: Color(0xFF161C18),
+                    filledColor: deepForestGreen(),
                     iconColor: greyColorWithTransparency(),
                     onEditingComplete: () => submit(context),
                   ),
@@ -86,9 +86,9 @@ class _PageLoginState extends State<PageLogin> {
                       alignment: Alignment.centerRight,
                       fontWeight: FontWeight.bold,
                     ),
-                    onPressed:
-                        () =>
-                            Navigator.pushNamed(context, RouteNames.pageLogin),
+                    onPressed: () {},
+                    // () =>
+                    // Navigator.pushNamed(context, RouteNames.pageLogin),
                   ),
 
                   const SizedBox(height: 10),
