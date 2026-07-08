@@ -1,6 +1,7 @@
 import 'package:ecored_app/src/core/adapter/adapter_launcher.dart';
 import 'package:ecored_app/src/core/theme/theme_colors.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
+import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:flutter/material.dart';
 
@@ -72,7 +73,8 @@ class PageHome extends StatelessWidget {
                             textColor: grayInputColor(),
                           ),
                           LabelTitle(
-                            title: 'Oscar',
+                            // title: 'Oscar',
+                            title: Preferences().getUser()!.name,
                             textColor: whiteColor(),
                             fontWeight: FontWeight.bold,
                             fontSize: 26,

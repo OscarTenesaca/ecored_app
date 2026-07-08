@@ -41,7 +41,7 @@ class _CustomBottomButtonState extends State<CustomBottomButton> {
               icon: Icon(
                 widget.icon,
                 size: 25,
-                color: widget.isSelected ? primaryColor() : Colors.grey[400],
+                color: widget.isSelected ? primaryColor() : grayInputColor(),
               ),
               onPressed: () {
                 widget.indexNotifier.value = widget.index;

@@ -14,6 +14,7 @@ class PageProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: primaryColor(),
       resizeToAvoidBottomInset: true,
 
       body: Consumer<LoginProvider>(

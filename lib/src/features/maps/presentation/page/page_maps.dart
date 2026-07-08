@@ -100,37 +100,36 @@ class _PageMapsState extends State<PageMaps> {
 
               /// Buscador
               // const _TopSearch(),
-
               // const _TopHeader(),
               // CONTROLLER DE POSICIÓN
-              // Positioned(
-              //   bottom: UtilSize.bottomPadding() + 80,
-              //   right: 20,
-              //   child: Column(
-              //     children: <Widget>[
-              //       CustomButtonCircle(
-              //         size: 54,
-              //         icon: Icons.ev_station,
-              //         background: primaryColor(),
-              //         onTap: () async {
-              //           // print('add new station');
-              //           Navigator.pushNamed(context, RouteNames.pageStation);
-              //         },
-              //       ),
+              Positioned(
+                bottom: UtilSize.bottomPadding() + 80,
+                right: 20,
+                child: Column(
+                  children: <Widget>[
+                    CustomButtonCircle(
+                      size: 54,
+                      icon: Icons.ev_station,
+                      background: primaryColor(),
+                      onTap: () async {
+                        // print('add new station');
+                        Navigator.pushNamed(context, RouteNames.pageStation);
+                      },
+                    ),
 
-              //       SizedBox(height: 14),
-              //       CustomButtonCircle(
-              //         size: 54,
-              //         icon: Icons.my_location,
-              //         background: primaryColor(),
-              //         onTap: () async {
-              //           final pos = await gps.getCurrentPosition();
-              //           print('📍 posición actual (botón): $pos');
-              //         },
-              //       ),
-              //     ],
-              //   ),
-              // ),
+                    SizedBox(height: 14),
+                    CustomButtonCircle(
+                      size: 54,
+                      icon: Icons.my_location,
+                      background: primaryColor(),
+                      onTap: () async {
+                        final pos = await gps.getCurrentPosition();
+                        print('📍 posición actual (botón): $pos');
+                      },
+                    ),
+                  ],
+                ),
+              ),
               if (station.isLoading)
                 Blur(child: const Center(child: CircularProgressIndicator())),
             ],
