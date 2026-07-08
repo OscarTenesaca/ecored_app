@@ -1,227 +1,285 @@
-import 'package:ecored_app/src/core/theme/theme_index.dart';
-import 'package:ecored_app/src/core/utils/utils_assets.dart';
-import 'package:ecored_app/src/core/utils/utils_preferences.dart';
-import 'package:ecored_app/src/core/utils/utils_size.dart';
-import 'package:ecored_app/src/core/widgets/cards/card_tutorial.dart';
+import 'package:ecored_app/src/core/adapter/adapter_launcher.dart';
+import 'package:ecored_app/src/core/theme/theme_colors.dart';
+import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
-import 'package:ecored_app/src/features/login/data/models/model_user.dart';
 import 'package:flutter/material.dart';
 
 class PageHome extends StatelessWidget {
   const PageHome({super.key});
 
+  static const Color accent = Color(0xFFB8F000);
+
   @override
   Widget build(BuildContext context) {
-    // final ModelUser pref = Preferences();
-    final Preferences pref = Preferences();
-    final ModelUser? user = pref.getUser();
-    final List<Map<String, String>> tips = [
+    final tips = [
       {
-        "title": "Mantén la batería entre 20% y 80%",
-        "subtitle":
+        "title": "Cuidado de batería",
+        "subtitle": "Maximiza su vida útil",
+        "popupTitle": "Mantén la batería entre 20% y 80%",
+        "popupText":
             "Evita cargar siempre al 100% o dejarla bajar de 10%. Mantenerla entre 20% y 80% alarga la vida útil, reduce el desgaste químico y ayuda a conservar la autonomía con el tiempo.",
       },
       {
-        "title": "Prefiere cargas lentas",
-        "subtitle":
+        "title": "Carga inteligente",
+        "subtitle": "Menos desgaste, más eficiencia",
+        "popupTitle": "Prefiere cargas lentas",
+        "popupText":
             "Las cargas rápidas son útiles en viajes o emergencias, pero generan mayor calor y desgaste. Cuando tengas tiempo, usa carga lenta o nivel 2 para un cuidado prolongado de la batería.",
       },
       {
-        "title": "Evita cargar con temperaturas extremas",
-        "subtitle":
-            "Si la batería está muy caliente por el sol o muy fría, espera unos minutos o deja que el vehículo regule la temperatura antes de cargar. Esto evita daños internos y mantiene un rendimiento óptimo.",
+        "title": "Temperatura ideal",
+        "subtitle": "Protege el rendimiento",
+        "popupTitle": "Evita cargar con temperaturas extremas",
+        "popupText":
+            "Si la batería está muy caliente por el sol o muy fría, espera unos minutos o deja que el vehículo regule la temperatura antes de cargar.",
       },
       {
-        "title": "Planifica tu carga según la ruta",
-        "subtitle":
-            "No siempre es necesario llegar al 100%. Para trayectos diarios, entre 60% y 70% suele ser suficiente. En viajes largos, planifica paradas estratégicas para cargas cortas y más eficientes.",
+        "title": "Planifica tu ruta",
+        "subtitle": "Viajes más eficientes",
+        "popupTitle": "Planifica tu carga según la ruta",
+        "popupText":
+            "No siempre es necesario llegar al 100%. Para trayectos diarios, entre 60% y 70% suele ser suficiente.",
       },
     ];
 
     return Scaffold(
       backgroundColor: primaryColor(),
-      body: Container(
-        margin: EdgeInsets.only(top: UtilSize.statusBarHeight()),
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Título de bienvenida
-                Expanded(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+
+              // HEADER
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    CustomButtonSquare(
+                      icon: Icons.person_outline,
+                      backgroundColor: accentColor(),
+                      iconColor: primaryColor(),
+                    ),
+
+                    const SizedBox(width: 14),
+
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          LabelTitle(
+                            title: 'Bienvenido',
+                            textColor: grayInputColor(),
+                          ),
+                          LabelTitle(
+                            title: 'Oscar',
+                            textColor: whiteColor(),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 26,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(
+                        Icons.notifications,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // HERO
+              Container(
+                // margin: const EdgeInsets.symmetric(horizontal: 20),
+                width: double.infinity,
+                height: 260,
+                decoration: BoxDecoration(
+                  // borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                  image: DecorationImage(
+                    image: AssetImage(AssetPaths.car_electric),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        primaryColor(),
+                        primaryColor().withValues(alpha: 0.70),
+                        primaryColor().withValues(alpha: 0.30),
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 0.35, 0.7, 1.0],
+                    ),
+                  ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       LabelTitle(
-                        title:
-                            'Bienvenido ${user?.name.split(' ')[0] ?? 'Usuario'},',
+                        padding: false,
+                        title: 'Energía limpia',
                         textColor: accentColor(),
-                        fontSize: 24,
-                        textAlign: TextAlign.left,
-                        alignment: Alignment.centerLeft,
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
                       ),
                       LabelTitle(
-                        title: 'Hora de recargar.',
-                        textColor: Colors.white,
-                        fontSize: 24,
+                        padding: false,
+                        title: "para tu camino",
+                        textColor: whiteColor(),
+                        fontSize: 30,
                         fontWeight: FontWeight.bold,
-                        textAlign: TextAlign.left,
-                        alignment: Alignment.centerLeft,
                       ),
                     ],
                   ),
                 ),
-
-                // Imagen de perfil en círculo
-                CircleAvatar(
-                  radius: 25,
-                  backgroundImage:
-                      user?.img != null
-                          ? NetworkImage(user!.img)
-                          : const AssetImage(AssetPaths.logo) as ImageProvider,
-                ),
-              ],
-            ),
-            const SizedBox(height: 30),
-            //asset image
-            CustomAssetImg(
-              imagePath: AssetPaths.car_electric,
-              width: double.infinity,
-              height: UtilSize.height(context) * 0.3,
-            ),
-
-            LabelTitle(
-              title:
-                  'Conduce el futuro, recarga con energía limpia y sostenible.⚡️',
-              textColor: Colors.white70,
-              fontSize: 16,
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: 30),
-            LabelTitle(
-              title: 'Tutoriales y consejos',
-              textColor: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              textAlign: TextAlign.left,
-              alignment: Alignment.centerLeft,
-            ),
-            const SizedBox(height: 15),
-            GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
               ),
-              shrinkWrap: true,
-              itemCount: tips.length,
 
-              itemBuilder: (context, index) {
-                final tip = tips[index];
+              const SizedBox(height: 40),
 
-                return Container(
-                  margin: const EdgeInsets.symmetric(vertical: 10),
-                  child: CardTutorial(
-                    image: AssetPaths.charge_station,
-                    title: tip['title']!,
-                    subtitle: tip['subtitle']!,
-                    onPressed: () {
-                      showModalChild(
-                        context: context,
-                        child: Container(
-                          margin: const EdgeInsets.all(20),
-                          padding: const EdgeInsets.all(20),
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[900],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                tip['title']!,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 15),
-                              Text(
-                                tip['subtitle']!,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                          // child: Text(
-                          //   tip['subtitle']!,
-                          //   style: const TextStyle(
-                          //     color: Colors.white,
-                          //     fontSize: 16,
-                          //   ),
-                          // ),
-                        ),
-                      );
-                    },
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24),
+                child: LabelTitle(
+                  title: "Tutoriales y consejos",
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: tips.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                    childAspectRatio: 1.05,
                   ),
-                );
-              },
-            ),
+                  itemBuilder: (_, index) {
+                    final item = tips[index];
 
-            const SizedBox(height: 30),
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(28),
+                      onTap: () {
+                        showPopUpWithChildren(
+                          context: context,
+                          title: item["popupTitle"]!,
+                          subTitle: item["popupText"]!,
+                          sizeTitle: 21,
+                          sizeSubtitle: 14,
+                          textButton: 'Cerrar',
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(22),
+                        decoration: BoxDecoration(
+                          color: deepForestGreen(),
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.05),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            LabelTitle(
+                              padding: false,
+                              title: item["title"]!,
+                              fontSize: 21,
+                              fontWeight: FontWeight.w600,
+                            ),
 
-            LabelTitle(
-              title: 'Síguenos en redes sociales',
-              textColor: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              textAlign: TextAlign.left,
-              alignment: Alignment.centerLeft,
-            ),
+                            const Spacer(),
 
-            const SizedBox(height: 15),
+                            LabelTitle(
+                              padding: false,
+                              title: item["subtitle"]!,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              textColor: grayInputColor(),
+                              textAlign: TextAlign.left,
+                            ),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                CustomButtonCircle(
-                  icon: Icons.facebook,
-                  color: Colors.blueAccent,
-                  onPressed: () {
-                    print('Facebook pressed');
+                            const SizedBox(height: 8),
+                            const Align(
+                              alignment: Alignment.bottomRight,
+                              child: Icon(
+                                Icons.arrow_outward_rounded,
+                                color: Colors.white30,
+                                size: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
                   },
                 ),
+              ),
+              const SizedBox(height: 20),
 
-                CustomButtonCircle(
-                  icon: Icons.photo_camera_back,
-                  color: Colors.purple,
-                  onPressed: () {
-                    print('Camera pressed');
-                  },
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24),
+                child: LabelTitle(
+                  title: "Síguenos en nuestras redes sociales",
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  textAlign: TextAlign.left,
                 ),
-                CustomButtonCircle(
-                  icon: Icons.tiktok,
-                  color: Colors.grey,
-                  onPressed: () {
-                    print('TikTok pressed');
-                  },
-                ),
-                CustomButtonCircle(
-                  icon: Icons.play_circle_fill,
-                  color: Colors.red,
-                  onPressed: () {
-                    print('Play pressed');
-                  },
-                ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 20),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  CustomButtonCircle(
+                    asset: AssetPaths.iconInstagram,
+                    onTap:
+                        () => AdapterLauncher().launchURL(
+                          'https://www.instagram.com',
+                        ),
+                  ),
+                  CustomButtonCircle(
+                    asset: AssetPaths.iconFacebook,
+                    onTap:
+                        () => AdapterLauncher().launchURL(
+                          'https://www.facebook.com',
+                        ),
+                  ),
+                  CustomButtonCircle(
+                    asset: AssetPaths.iconTiktok,
+                    onTap:
+                        () => AdapterLauncher().launchURL(
+                          'https://www.tiktok.com',
+                        ),
+                  ),
+                  CustomButtonCircle(
+                    asset: AssetPaths.iconYoutube,
+                    onTap:
+                        () => AdapterLauncher().launchURL(
+                          'https://www.youtube.com',
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
+            ],
+          ),
         ),
       ),
     );

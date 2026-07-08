@@ -15,108 +15,236 @@ showPopUpWithChildren({
   Function? onSubmit,
   Function? onClose,
   bool showButton = true,
+  double sizeTitle = 16,
+  double sizeSubtitle = 14,
 }) {
   return showDialog(
+    context: context,
     barrierDismissible: false,
     useSafeArea: false,
-    context: context,
-    builder: (contextBuilder) {
+    builder: (_) {
       return Material(
         color: Colors.transparent,
         child: Blur(
           intensity: Intensity.high.value,
-          blurColor: whiteColor(),
-          child: Stack(
-            alignment: Alignment.center,
-            fit: StackFit.loose,
-            children: [
-              // Fondo tocable para cerrar el pop-up
-              Positioned.fill(
-                child: GestureDetector(onTap: () => Navigator.pop(context)),
-              ),
-              // Pop-up central
-              Center(
+          blurColor: Colors.black.withOpacity(.25),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Blur(
+                intensity: Intensity.megaHigh.value,
+                blurColor: Colors.black.withOpacity(.45),
+                borderRadius: BorderRadius.circular(28),
                 child: Container(
-                  margin: const EdgeInsets.all(20),
-                  child: Blur(
-                    intensity: Intensity.megaHigh.value,
-                    blurColor: primaryColor(),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        spacing: 15,
-                        children: [
-                          // Título
-                          Text(
-                            title,
-                            style: TextStyle(
-                              fontFamily: 'YaroRg',
-                              fontSize: 14,
-                              color: accentColor(),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          // Subtítulo
-                          Text(
-                            subTitle,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontFamily: 'YaroRg',
-                              fontSize: 12,
-                            ),
-                          ),
-                          // Widgets extra (children)
-                          if (children != null && children.isNotEmpty)
-                            Column(
-                              spacing: 20,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: children,
-                            ),
-                          // Botones
-                          if (showButton || textButtonClose != null)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                if (textButtonClose != null)
-                                  Expanded(
-                                    child: CustomButton(
-                                      buttonColor: Colors.transparent,
-                                      textButtonColor: accentColor(),
-                                      textButton: textButtonClose,
-                                      onPressed: () {
-                                        onClose?.call();
-                                        Navigator.pop(context);
-                                      },
-                                    ),
-                                  ),
-                                if (showButton)
-                                  Expanded(
-                                    child: CustomButton(
-                                      buttonColor: accentColor(),
-                                      textButtonColor: primaryColor(),
-                                      textButton: textButton,
-                                      onPressed: () {
-                                        onSubmit?.call();
-                                        if (isPop) Navigator.pop(context);
-                                      },
-                                    ),
-                                  ),
-                              ],
-                            ),
-                        ],
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF111714).withOpacity(.85),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: Colors.white.withOpacity(.08)),
+                  ),
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontFamily: "YaroRg",
+                          color: Colors.white,
+                          fontSize: sizeTitle,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
+
+                      const SizedBox(height: 16),
+
+                      Text(
+                        subTitle,
+                        style: TextStyle(
+                          fontFamily: "YaroRg",
+                          color: Colors.white70,
+                          fontSize: sizeSubtitle,
+                          height: 1.5,
+                        ),
+                      ),
+
+                      if (children != null && children.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: children,
+                        ),
+                      ],
+
+                      if (showButton || textButtonClose != null) ...[
+                        const SizedBox(height: 28),
+                        Row(
+                          children: [
+                            if (textButtonClose != null)
+                              TextButton(
+                                onPressed: () {
+                                  onClose?.call();
+                                  Navigator.pop(context);
+                                },
+                                child: Text(
+                                  textButtonClose,
+                                  style: TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: sizeSubtitle,
+                                  ),
+                                ),
+                              ),
+
+                            const Spacer(),
+
+                            if (showButton)
+                              TextButton(
+                                onPressed: () {
+                                  onSubmit?.call();
+                                  if (isPop) Navigator.pop(context);
+                                },
+                                child: Text(
+                                  textButton,
+                                  style: TextStyle(
+                                    color: accentColor(),
+                                    fontSize: sizeSubtitle,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ),
-            ],
+            ),
           ),
         ),
       );
     },
   );
 }
+// showPopUpWithChildren({
+//   required BuildContext context,
+//   required String title,
+//   required String subTitle,
+//   required String textButton,
+//   String? textButtonClose,
+//   bool isPop = true,
+//   List<Widget>? children,
+//   Function? onSubmit,
+//   Function? onClose,
+//   bool showButton = true,
+// }) {
+//   return showDialog(
+//     barrierDismissible: false,
+//     useSafeArea: false,
+//     context: context,
+//     builder: (contextBuilder) {
+//       return Material(
+//         color: Colors.transparent,
+//         child: Blur(
+//           intensity: Intensity.high.value,
+//           blurColor: whiteColor(),
+//           child: Stack(
+//             alignment: Alignment.center,
+//             fit: StackFit.loose,
+//             children: [
+//               // Fondo tocable para cerrar el pop-up
+//               Positioned.fill(
+//                 child: GestureDetector(onTap: () => Navigator.pop(context)),
+//               ),
+//               // Pop-up central
+//               Center(
+//                 child: Container(
+//                   margin: const EdgeInsets.all(20),
+//                   child: Blur(
+//                     intensity: Intensity.megaHigh.value,
+//                     blurColor: primaryColor(),
+//                     child: Padding(
+//                       padding: const EdgeInsets.all(20.0),
+//                       child: Column(
+//                         mainAxisSize: MainAxisSize.min,
+//                         spacing: 15,
+//                         children: [
+//                           // Título
+//                           Text(
+//                             title,
+//                             style: TextStyle(
+//                               fontFamily: 'YaroRg',
+//                               fontSize: 14,
+//                               color: accentColor(),
+//                               fontWeight: FontWeight.bold,
+//                             ),
+//                           ),
+//                           // Subtítulo
+//                           Text(
+//                             subTitle,
+//                             textAlign: TextAlign.center,
+//                             style: const TextStyle(
+//                               fontFamily: 'YaroRg',
+//                               fontSize: 12,
+//                               height: 1.5,
+//                             ),
+//                           ),
+//                           // Widgets extra (children)
+//                           if (children != null && children.isNotEmpty)
+//                             Column(
+//                               spacing: 20,
+//                               mainAxisAlignment: MainAxisAlignment.center,
+//                               children: children,
+//                             ),
+//                           // Botones
+//                           if (showButton || textButtonClose != null)
+//                             Row(
+//                               children: [
+//                                 if (textButtonClose != null)
+//                                   TextButton(
+//                                     onPressed: () {
+//                                       onClose?.call();
+//                                       Navigator.pop(context);
+//                                     },
+//                                     child: Text(
+//                                       textButtonClose,
+//                                       style: TextStyle(
+//                                         color: grayInputColor(),
+//                                         // fontWeight: FontWeight.w500,
+//                                       ),
+//                                     ),
+//                                   ),
+
+//                                 const Spacer(),
+//                                 if (showButton)
+//                                   TextButton(
+//                                     onPressed: () {
+//                                       onSubmit?.call();
+//                                       if (isPop) Navigator.pop(context);
+//                                     },
+//                                     child: Text(
+//                                       textButton,
+//                                       style: TextStyle(
+//                                         color: accentColor(),
+//                                         fontWeight: FontWeight.bold,
+//                                       ),
+//                                     ),
+//                                   ),
+//                               ],
+//                             ),
+//                         ],
+//                       ),
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       );
+//     },
+//   );
+// }
 
 // showPopUpWithChildren({
 //   required BuildContext context,
@@ -367,3 +495,34 @@ showModalChild({required BuildContext context, required Widget child}) {
 //         ),
 //   );
 // }
+
+class DialogButton extends StatelessWidget {
+  final String text;
+  final VoidCallback? onPressed;
+  final bool primary;
+
+  const DialogButton({
+    super.key,
+    required this.text,
+    this.onPressed,
+    this.primary = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        elevation: 0,
+        minimumSize: const Size(110, 42),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: primary ? accentColor() : Colors.transparent,
+        foregroundColor: primary ? primaryColor() : accentColor(),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+      ),
+    );
+  }
+}

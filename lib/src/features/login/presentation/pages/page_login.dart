@@ -33,7 +33,7 @@ class _PageLoginState extends State<PageLogin> {
                   const SizedBox(height: 20),
 
                   // LOGO (placeholder)
-                  CustomAssetImg(width: 210, height: 100),
+                  CustomAssetImg(width: 200, height: 100),
 
                   const SizedBox(height: 20),
 

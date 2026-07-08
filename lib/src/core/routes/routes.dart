@@ -22,7 +22,7 @@ final Map<String, WidgetBuilder> appRoutes = {
   RouteNames.pageUser: (_) => const PageUser(),
 
   RouteNames.pageAccess: (_) => const PageAccess(),
-  RouteNames.pageHome: (_) => const PageHome(),
+  RouteNames.pageHome: (_) => PageHome(),
   RouteNames.pageMap: (_) => const PageMaps(),
   RouteNames.pageStation: (_) => const PageStation(),
 
