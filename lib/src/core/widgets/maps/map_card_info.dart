@@ -229,8 +229,8 @@ class _MapCardInfomationState extends State<MapCardInfomation>
                               ),
                               CustomButtonCircle(
                                 size: 60,
-                                iconSize: 65,
-                                asset: AssetPaths.iconCellphone,
+                                iconSize: 0.65,
+                                asset: AssetPaths.iconWhatsApp,
                                 background: deepForestGreen(),
 
                                 onTap:

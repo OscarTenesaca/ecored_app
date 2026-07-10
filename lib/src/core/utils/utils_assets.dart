@@ -15,6 +15,7 @@ class AssetPaths {
   static const String iconTiktok = 'assets/icons/tiktok.png';
   static const String iconYoutube = 'assets/icons/youtube.png';
   static const String iconCellphone = 'assets/icons/cellphone.png';
+  static const String iconWhatsApp = 'assets/icons/whatsapp.png';
   static const String iconPhone = 'assets/icons/phone.png';
   static const String iconPin = 'assets/icons/pin.png';
 
