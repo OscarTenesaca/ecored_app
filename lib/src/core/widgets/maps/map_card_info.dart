@@ -156,7 +156,7 @@ class _MapCardInfomationState extends State<MapCardInfomation>
                             children: [
                               LabelTitle(
                                 title: widget.stationData.name,
-                                fontSize: 25,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                               (widget.stationData.status ==
@@ -232,9 +232,8 @@ class _MapCardInfomationState extends State<MapCardInfomation>
                                 iconSize: 0.65,
                                 asset: AssetPaths.iconWhatsApp,
                                 background: deepForestGreen(),
-
                                 onTap:
-                                    () => AdapterLauncher().launchPhone(
+                                    () => AdapterLauncher().launchWhatsApp(
                                       widget.stationData.prefixCode +
                                           widget.stationData.phone,
                                     ),
@@ -245,7 +244,7 @@ class _MapCardInfomationState extends State<MapCardInfomation>
                                 asset: AssetPaths.iconPhone,
                                 background: deepForestGreen(),
                                 onTap:
-                                    () => AdapterLauncher().launchWhatsApp(
+                                    () => AdapterLauncher().launchPhone(
                                       widget.stationData.prefixCode +
                                           widget.stationData.phone,
                                     ),
@@ -256,7 +255,7 @@ class _MapCardInfomationState extends State<MapCardInfomation>
                           LabelTitle(
                             title: 'Descripción',
                             fontWeight: FontWeight.bold,
-                            fontSize: 25,
+                            fontSize: 18,
                           ),
                           const SizedBox(height: 12),
                           // LabelTitle(title: ''),
@@ -266,14 +265,14 @@ class _MapCardInfomationState extends State<MapCardInfomation>
                             style: TextStyle(
                               color: Colors.white70,
                               height: 1.6,
-                              fontSize: 15,
+                              fontSize: 12,
                             ),
                           ),
                           const SizedBox(height: 12),
                           LabelTitle(
                             title: 'Conectores disponibles',
                             fontWeight: FontWeight.bold,
-                            fontSize: 25,
+                            fontSize: 18,
                           ),
 
                           Wrap(

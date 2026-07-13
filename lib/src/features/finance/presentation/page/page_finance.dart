@@ -139,6 +139,8 @@ class _PageFinanceState extends State<PageFinance> {
                   ModelTransaction? transaction =
                       provider.transactionData?[index];
 
+                  print(transaction!.toJson().toString());
+
                   switch (transaction!.type) {
                     case 'RECHARGE':
                       return CardTransaction(

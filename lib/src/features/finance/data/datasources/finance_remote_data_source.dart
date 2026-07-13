@@ -60,6 +60,7 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
 
   @override
   Future<ModelOrder> getOrderData(Map<String, dynamic> params) async {
+    print(params);
     final String endpoint = '$url/api/v1/orders/${params['id']}';
     final response = await httpAdapter.get(endpoint);
     if (response.statusCode != 200) {
@@ -67,6 +68,7 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
     }
     // print('ORDER RESPONSE DATA: ${response.data['data']}');
     final respModelOrder = ModelOrder.fromJson(response.data['data']);
+    print(respModelOrder.toJson().toString());
     return respModelOrder;
   }
 

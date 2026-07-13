@@ -77,7 +77,7 @@ class PageHome extends StatelessWidget {
                             title: Preferences().getUser()!.name,
                             textColor: whiteColor(),
                             fontWeight: FontWeight.bold,
-                            fontSize: 26,
+                            fontSize: 18,
                           ),
                         ],
                       ),
@@ -132,14 +132,14 @@ class PageHome extends StatelessWidget {
                         padding: false,
                         title: 'Energía limpia',
                         textColor: accentColor(),
-                        fontSize: 30,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                       LabelTitle(
                         padding: false,
                         title: "para tu camino",
                         textColor: whiteColor(),
-                        fontSize: 30,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ],
@@ -147,13 +147,14 @@ class PageHome extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
 
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24),
                 child: LabelTitle(
+                  padding: false,
                   title: "Tutoriales y consejos",
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -188,7 +189,7 @@ class PageHome extends StatelessWidget {
                         );
                       },
                       child: Container(
-                        padding: EdgeInsets.all(22),
+                        padding: EdgeInsets.all(18),
                         decoration: BoxDecoration(
                           color: deepForestGreen(),
                           borderRadius: BorderRadius.circular(28),
@@ -202,7 +203,7 @@ class PageHome extends StatelessWidget {
                             LabelTitle(
                               padding: false,
                               title: item["title"]!,
-                              fontSize: 21,
+                              fontSize: 18,
                               fontWeight: FontWeight.w600,
                             ),
 
@@ -211,7 +212,7 @@ class PageHome extends StatelessWidget {
                             LabelTitle(
                               padding: false,
                               title: item["subtitle"]!,
-                              fontSize: 14,
+                              // fontSize: 11,
                               fontWeight: FontWeight.w600,
                               textColor: grayInputColor(),
                               textAlign: TextAlign.left,
@@ -239,7 +240,7 @@ class PageHome extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 24),
                 child: LabelTitle(
                   title: "Síguenos en nuestras redes sociales",
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                   textAlign: TextAlign.left,
                 ),

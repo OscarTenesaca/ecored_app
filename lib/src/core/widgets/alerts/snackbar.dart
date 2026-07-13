@@ -48,6 +48,7 @@ void showSnackbar(BuildContext context, String content, SnackbarStatus status) {
   scaffold.showSnackBar(
     SnackBar(
       backgroundColor: backgroundColor,
+      duration: const Duration(seconds: 3),
       content: Text(
         content,
         textAlign: TextAlign.center,
@@ -57,7 +58,9 @@ void showSnackbar(BuildContext context, String content, SnackbarStatus status) {
         label: 'OK',
         textColor: primaryColor(), // You can also customize this
         onPressed: () {
-          scaffold.hideCurrentSnackBar();
+          // scaffold.hideCurrentSnackBar();
+          // scaffold.clearSnackBars();
+          scaffold.removeCurrentSnackBar();
         },
       ),
     ),

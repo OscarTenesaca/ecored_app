@@ -41,7 +41,7 @@ class ModelTransaction {
         description: json["description"] ?? '',
         user: json["user"] ?? '',
         order: json["order"],
-        recharge: json["recharge"],
+        recharge: json["recharge"] ?? '',
         wallet: json["wallet"] ?? '',
         createdAt: DateTime.parse(json["createdAt"]),
       );
