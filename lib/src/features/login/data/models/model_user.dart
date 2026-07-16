@@ -50,7 +50,7 @@ class ModelUser {
     prefix: json["prefix"] ?? '',
     phone: json["phone"] ?? '',
     status: json["status"] ?? '',
-    birthdate: DateTime.parse(json["birthdate"]),
+    birthdate: DateTime.tryParse(json["birthdate"] ?? '') ?? DateTime(2000, 1, 1),
     token: json["token"] ?? '',
     province:
         json["province"] != null

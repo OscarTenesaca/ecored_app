@@ -28,9 +28,14 @@ class _PageOrderState extends State<PageOrder> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // if (snapshot.hasError) {
-          //   return Center(child: Text('Error: ${snapshot.error}'));
-          // }
+          if (snapshot.hasError || !snapshot.hasData) {
+            return Center(
+              child: Text(
+                'No se pudo cargar la orden.',
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
+              ),
+            );
+          }
 
           final orderData = snapshot.data!;
 
@@ -43,35 +48,35 @@ class _PageOrderState extends State<PageOrder> {
               right: 18,
             ),
             children: [
-              // CardSummary(
-              //   titleColor: grayInputColor(),
-              //   status: orderData.status,
-              //   subtitle: '- \$${orderData.total}',
-              //   subtitleColor: Colors.red,
-              //   leftText: orderData.country.name,
-              //   leftTextColor: grayInputColor(),
-              //   rightText: orderData.createdAt,
-              //   rightTextColor: Colors.white.withOpacity(0.65),
-              // ),
+              CardSummary(
+                titleColor: grayInputColor(),
+                status: orderData.status,
+                subtitle: '- \$${orderData.total}',
+                subtitleColor: Colors.red,
+                leftText: orderData.country.name,
+                leftTextColor: grayInputColor(),
+                rightText: orderData.createdAt,
+                rightTextColor: Colors.white.withValues(alpha: 0.65),
+              ),
 
-              // _infoGrid(orderData),
+              _infoGrid(orderData),
 
-              // CardTitleDescription(
-              //   title: 'Estación',
-              //   icon: Icons.ev_station_rounded,
-              //   rows: [
-              //     LabelRowText(label: "Nombre", value: orderData.stations.name),
-              //     LabelRowText(
-              //       label: "Dirección",
-              //       value: orderData.stations.address,
-              //     ),
-              //     LabelRowText(
-              //       label: "Teléfono",
-              //       value:
-              //           '${orderData.stations.prefixCode} ${orderData.stations.phone}',
-              //     ),
-              //   ],
-              // ),
+              CardTitleDescription(
+                title: 'Estación',
+                icon: Icons.ev_station_rounded,
+                rows: [
+                  LabelRowText(label: "Nombre", value: orderData.stations.name),
+                  LabelRowText(
+                    label: "Dirección",
+                    value: orderData.stations.address,
+                  ),
+                  LabelRowText(
+                    label: "Teléfono",
+                    value:
+                        '${orderData.stations.prefixCode} ${orderData.stations.phone}',
+                  ),
+                ],
+              ),
             ],
           );
         },
@@ -137,7 +142,7 @@ Widget _infoCard(IconData icon, String label, String value) {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             fontSize: 13.5,
           ),
         ),

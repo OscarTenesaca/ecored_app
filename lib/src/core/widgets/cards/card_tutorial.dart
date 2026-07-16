@@ -29,7 +29,7 @@ class CardTutorial extends StatelessWidget {
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: Colors.white.withOpacity(.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: .05)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

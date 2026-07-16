@@ -18,12 +18,6 @@ class WebExternal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final uriParse =
-        Uri.parse(
-          url,
-          // "https://www.google.com/maps/dir/?api=1&origin=$latUser,$lngUser&destination=$latDest,$lngDest&travelmode=driving",
-        ).toString();
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: SizedBox(

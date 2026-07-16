@@ -5,13 +5,9 @@ import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:ecored_app/src/features/maps/presentation/provider/station_provider.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
-
 import 'package:provider/provider.dart';
-import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
 
 class MapCardInfomation extends StatefulWidget {
   final ModelStation stationData;
@@ -132,7 +128,10 @@ class _MapCardInfomationState extends State<MapCardInfomation>
                           ),
                         ],
                       ),
-                      height: 700,
+                      height:
+                          UtilSize.height(context) < 700
+                              ? UtilSize.height(context) * 0.85
+                              : 700,
                       child: ListView(
                         padding: const EdgeInsets.only(top: 16, bottom: 80),
                         shrinkWrap: true,
@@ -159,38 +158,27 @@ class _MapCardInfomationState extends State<MapCardInfomation>
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
-                              (widget.stationData.status ==
-                                      ConnectionStatus.AVAILABLE.name)
-                                  ? Blur(
-                                    blurColor: accentColor(),
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 2,
-                                      ),
-                                      child: LabelTitle(
-                                        title: 'Disponible',
-                                        textColor: accentColor(),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  )
-                                  : Blur(
-                                    blurColor: errorColor(),
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 4,
-                                        vertical: 2,
-                                      ),
-                                      child: LabelTitle(
-                                        title: 'No Disponible',
-                                        textColor: Colors.red,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
+                              Blur(
+                                blurColor: stationStatusColor(
+                                  widget.stationData.status,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
                                   ),
+                                  child: LabelTitle(
+                                    title: stationStatusLabel(
+                                      widget.stationData.status,
+                                    ),
+                                    textColor: stationStatusColor(
+                                      widget.stationData.status,
+                                    ),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
 
@@ -210,22 +198,24 @@ class _MapCardInfomationState extends State<MapCardInfomation>
                             children: [
                               CustomButtonCircle(
                                 size: 60,
-                                iconSize: 65,
+                                iconSize: 0.65,
                                 asset: AssetPaths.iconPin,
                                 background: deepForestGreen(),
 
                                 onTap:
-                                    () =>
-                                        AdapterLauncher().launchMapsDirections(
-                                          latOrigin:
-                                              '${widget.userMarker!.latitude}',
-                                          lngOrigin:
-                                              '${widget.userMarker!.longitude}',
-                                          latDestination:
-                                              '${widget.stationData.lat}',
-                                          lngDestination:
-                                              '${widget.stationData.lng}',
-                                        ),
+                                    widget.userMarker == null
+                                        ? null
+                                        : () => AdapterLauncher()
+                                            .launchMapsDirections(
+                                              latOrigin:
+                                                  '${widget.userMarker!.latitude}',
+                                              lngOrigin:
+                                                  '${widget.userMarker!.longitude}',
+                                              latDestination:
+                                                  widget.stationData.lat,
+                                              lngDestination:
+                                                  widget.stationData.lng,
+                                            ),
                               ),
                               CustomButtonCircle(
                                 size: 60,
@@ -240,7 +230,7 @@ class _MapCardInfomationState extends State<MapCardInfomation>
                               ),
                               CustomButtonCircle(
                                 size: 60,
-                                iconSize: 65,
+                                iconSize: 0.65,
                                 asset: AssetPaths.iconPhone,
                                 background: deepForestGreen(),
                                 onTap:
@@ -384,8 +374,10 @@ class _MapCardInfomationState extends State<MapCardInfomation>
   Future<void> _loadMarkers() async {
     final provider = context.read<StationProvider>();
     await provider.findAllChargers({'station': widget.stationData.id});
-    chargerData = provider.chargers!;
-    print('*************Cargadores encontrados: ${chargerData.length}');
+    if (!mounted) return;
+    setState(() {
+      chargerData = provider.chargers ?? [];
+    });
   }
 }
 

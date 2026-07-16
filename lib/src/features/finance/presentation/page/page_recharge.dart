@@ -55,7 +55,7 @@ class _PageRechargeState extends State<PageRecharge> {
                 // rightText: UtilsDate.formatLocal(
                 //   rechargeData.createdAt.toString(),
                 // ),
-                rightTextColor: Colors.white.withOpacity(0.65),
+                rightTextColor: Colors.white.withValues(alpha: 0.65),
               ),
               // _mainRechargeSummary(rechargeData),
               const SizedBox(height: 18),
@@ -105,7 +105,7 @@ class _PageRechargeState extends State<PageRecharge> {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(50),
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
         ),
         child: const Center(
           child: Text(

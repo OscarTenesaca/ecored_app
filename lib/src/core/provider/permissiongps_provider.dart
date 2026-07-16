@@ -21,8 +21,6 @@ class PermissionGpsProvider extends ChangeNotifier {
 
   // 🚀 Inicialización
   Future<void> _init() async {
-    print('PermissionGpsProvider _init');
-
     final gpsInitial = await Future.wait([
       _checkGpsStatus(),
       _isPermissionsGranted(),
@@ -72,14 +70,9 @@ class PermissionGpsProvider extends ChangeNotifier {
         break;
       case LocationPermission.denied:
         isPermissionGranted = false;
-        print('Permiso de ubicación denegado, puede solicitarse nuevamente.');
         break;
       case LocationPermission.deniedForever:
         isPermissionGranted = false;
-        // await Geolocator.openAppSettings();
-        print(
-          'Permiso de ubicación denegado permanentemente. Abrir Configuración manualmente.',
-        );
         break;
       default:
         isPermissionGranted = false;
@@ -91,32 +84,24 @@ class PermissionGpsProvider extends ChangeNotifier {
   // 🔹 Obtener posición actual
   Future<Position?> getCurrentPosition() async {
     if (!isPermissionGranted || !isGpsEnabled) {
-      print('No se puede obtener la posición: permisos o GPS no activos.');
       return null;
     }
 
     try {
-      final position = await Geolocator.getCurrentPosition(
-        // desiredAccuracy: LocationAccuracy.high,
-      );
+      final position = await Geolocator.getCurrentPosition();
       currentPosition = position;
-      // print('Posición actual obtenida: $position');
       notifyListeners();
-      // _safeNotify();
       return position;
-    } catch (e) {
-      print('Error al obtener posición: $e');
+    } catch (_) {
       return null;
     }
   }
 
   // 🔹 Iniciar seguimiento continuo
   Future<void> startTracking() async {
-    print('Iniciando seguimiento de ubicación.');
     _positionStream?.cancel();
 
     if (!isPermissionGranted || !isGpsEnabled) {
-      print('No se puede iniciar tracking: permisos o GPS no habilitados.');
       return;
     }
 
@@ -130,24 +115,17 @@ class PermissionGpsProvider extends ChangeNotifier {
     ).listen(
       (Position position) {
         currentPosition = position;
-        // print('Nueva posición: $position');
         notifyListeners();
-        // _safeNotify();
-      },
-      onError: (e) {
-        print('Error en stream de ubicación: $e');
       },
     );
   }
 
-  //  only call setting to null if disposed         // await Geolocator.openAppSettings();
   void openSettings() async {
     await Geolocator.openAppSettings();
   }
 
   // 🔹 Detener seguimiento
   void stopTracking() {
-    print('Deteniendo seguimiento de ubicación.');
     _positionStream?.cancel();
     _positionStream = null;
   }
@@ -165,119 +143,3 @@ class PermissionGpsProvider extends ChangeNotifier {
     super.dispose();
   }
 }
-
-// import 'dart:async';
-// import 'package:flutter/material.dart';
-// import 'package:geolocator/geolocator.dart';
-// import 'package:permission_handler/permission_handler.dart';
-
-// class PermissionGpsProvider extends ChangeNotifier {
-//   bool isGpsEnabled = false;
-//   bool isPermissionGranted = false;
-//   bool isLoading = true;
-//   bool get isAllGranted => isGpsEnabled && isPermissionGranted;
-
-//   StreamSubscription? _gpsServiceSubscription;
-
-//   Position? currentPosition;
-//   StreamSubscription<Position>? _positionStream;
-
-//   PermissionGpsProvider() {
-//     _init();
-//   }
-
-//   // 🚀 Inicialización (similar a _init del bloc)
-//   Future<void> _init() async {
-//     print('PermissionGpsProvider _init');
-//     final gpsInitial = await Future.wait([
-//       _checkGpsStatus(),
-//       _isPermissionsGranted(),
-//     ]);
-
-//     isGpsEnabled = gpsInitial[0];
-//     isPermissionGranted = gpsInitial[1];
-
-//     if (!isPermissionGranted) {
-//       await askGpsAccess();
-//     }
-
-//     isLoading = false;
-//     notifyListeners();
-//   }
-
-//   // ✅ Verificar permisos
-//   Future<bool> _isPermissionsGranted() async {
-//     final LocationPermission permission = await Geolocator.checkPermission();
-//     return permission == LocationPermission.always ||
-//         permission == LocationPermission.whileInUse;
-//   }
-
-//   // ✅ Verificar si el GPS está activado y escuchar cambios
-//   Future<bool> _checkGpsStatus() async {
-//     final isEnable = await Geolocator.isLocationServiceEnabled();
-
-//     _gpsServiceSubscription = Geolocator.getServiceStatusStream().listen((
-//       event,
-//     ) {
-//       final enabled = (event.index == 1) ? true : false;
-
-//       isGpsEnabled = enabled;
-//       notifyListeners();
-//     });
-
-//     return isEnable;
-//   }
-
-//   // ✅ Pedir permisos
-//   Future<void> askGpsAccess() async {
-//     final status = await Geolocator.requestPermission();
-
-//     switch (status) {
-//       case LocationPermission.whileInUse:
-//       case LocationPermission.always:
-//         isPermissionGranted = true;
-//         break;
-//       case LocationPermission.denied:
-//       case LocationPermission.deniedForever:
-//       case LocationPermission.unableToDetermine:
-//         isPermissionGranted = false;
-//         openAppSettings(); // del package:permission_handler
-//         break;
-//     }
-//     notifyListeners();
-//   }
-
-//   //? add this method to get current position and start listening to position changes
-//   Future<Position> getCurrentPosition() async {
-//     final position = await Geolocator.getCurrentPosition();
-//     return position;
-//   }
-
-//   void startTracking() {
-//     _positionStream?.cancel();
-
-//     const locationSettings = LocationSettings(
-//       accuracy: LocationAccuracy.best,
-//       distanceFilter: 100, // 🔹 solo notifica si se mueve 100m o más
-//     );
-
-//     _positionStream = Geolocator.getPositionStream(
-//       locationSettings: locationSettings,
-//     ).listen((Position position) {
-//       currentPosition = position;
-//       print('New position: $position');
-//       notifyListeners(); // 🔹 actualiza widgets que consumen este provider
-//     });
-//   }
-
-//   void stopTracking() {
-//     _positionStream?.cancel();
-//     _positionStream = null;
-//   }
-
-//   @override
-//   void dispose() {
-//     _gpsServiceSubscription?.cancel();
-//     super.dispose();
-//   }
-// }

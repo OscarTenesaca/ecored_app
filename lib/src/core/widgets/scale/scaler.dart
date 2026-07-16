@@ -34,6 +34,12 @@ class _ScaleEffectState extends State<ScaleEffect>
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onPanDown: (_) => _controller.forward(),

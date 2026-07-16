@@ -25,6 +25,10 @@ class _PageAccessState extends State<PageAccess> {
   late Future<int> _validateFuture;
   bool _redirected = false; // 🔥 evita múltiples navegaciones
 
+  // Se construyen una sola vez para que cambiar de pestaña no destruya
+  // y recree cada página (evita recargas de red y fugas de recursos).
+  late final List<Widget> _pages = _getPages();
+
   @override
   void initState() {
     super.initState();
@@ -43,13 +47,12 @@ class _PageAccessState extends State<PageAccess> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // ❌ error
+          // ❌ error de red/servidor (no confirma que la sesión sea inválida)
           if (snapshot.hasError) {
-            _handleInvalidSession();
-            return const SizedBox();
+            return _buildRetryValidation();
           }
 
-          // ⚠️ token inválido
+          // ⚠️ el backend respondió que el token es inválido/expirado
           if (snapshot.hasData && snapshot.data != 200) {
             _handleInvalidSession();
             return const SizedBox();
@@ -59,12 +62,35 @@ class _PageAccessState extends State<PageAccess> {
           return ValueListenableBuilder<int>(
             valueListenable: _indexNotifier,
             builder: (context, index, child) {
-              return _getPages()[index];
+              return IndexedStack(index: index, children: _pages);
             },
           );
         },
       ),
       bottomNavigationBar: CustomBottonBar(indexNotifier: _indexNotifier),
+    );
+  }
+
+  Widget _buildRetryValidation() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'No se pudo conectar con el servidor.',
+            style: TextStyle(color: Colors.white),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _validateFuture = apiAccess.validateToken();
+              });
+            },
+            child: const Text('Reintentar'),
+          ),
+        ],
+      ),
     );
   }
 

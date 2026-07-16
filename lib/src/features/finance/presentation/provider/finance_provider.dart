@@ -101,8 +101,10 @@ class FinanceProvider extends ChangeNotifier {
   }
 
   Future<int> postOrder(Map<String, dynamic> body) async {
+    if (isLoading) return -1;
     try {
       isLoading = true;
+      notifyListeners();
       final response = await services.postOrder(body);
       isLoading = false;
       notifyListeners();
@@ -116,8 +118,10 @@ class FinanceProvider extends ChangeNotifier {
   }
 
   Future<int> postOrderPayment(Map<String, dynamic> body) async {
+    if (isLoading) return -1;
     try {
       isLoading = true;
+      notifyListeners();
       final response = await services.postOrderPayment(body);
       isLoading = false;
       notifyListeners();

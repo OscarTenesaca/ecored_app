@@ -12,7 +12,7 @@ class CustomAssetImg extends StatelessWidget {
   final double borderWidth;
 
   const CustomAssetImg({
-    Key? key,
+    super.key,
     this.width = 0,
     this.height = 0,
     this.imagePath = AssetPaths.logo_text,
@@ -20,7 +20,7 @@ class CustomAssetImg extends StatelessWidget {
     this.borderRadius = 0,
     this.borderColor,
     this.borderWidth = 0,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

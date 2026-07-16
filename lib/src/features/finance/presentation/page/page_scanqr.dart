@@ -38,6 +38,8 @@ class _PageScanQrState extends State<PageScanQr> {
     final financeProvider = context.read<FinanceProvider>(); // 👈 aquí
     await financeProvider.clearChargerData();
 
+    if (!mounted) return;
+
     qrCodeNotifier.value = '';
 
     try {
@@ -255,7 +257,7 @@ class _PageScanQrState extends State<PageScanQr> {
                 textAlign: TextAlign.center,
                 icon: Icons.bolt,
                 iconColor: accentColor(),
-                title: 'Potencia: ${charger!.powerKw} kW',
+                title: 'Potencia: ${charger.powerKw} kW',
                 textColor: whiteColor(),
                 fontWeight: FontWeight.bold,
               ),
@@ -264,7 +266,7 @@ class _PageScanQrState extends State<PageScanQr> {
                 textAlign: TextAlign.center,
                 icon: Icons.usb,
                 iconColor: accentColor(),
-                title: 'Conexión: ${charger!.typeConnection}',
+                title: 'Conexión: ${charger.typeConnection}',
                 textColor: whiteColor(),
                 fontWeight: FontWeight.bold,
               ),
@@ -273,7 +275,7 @@ class _PageScanQrState extends State<PageScanQr> {
                 textAlign: TextAlign.center,
                 icon: Icons.battery_charging_full,
                 iconColor: accentColor(),
-                title: 'Voltaje: ${charger!.voltage} V',
+                title: 'Voltaje: ${charger.voltage} V',
                 textColor: whiteColor(),
                 fontWeight: FontWeight.bold,
               ),
@@ -282,7 +284,7 @@ class _PageScanQrState extends State<PageScanQr> {
                 textAlign: TextAlign.center,
                 icon: Icons.speed,
                 iconColor: accentColor(),
-                title: 'Intensidad: ${charger!.intensity} A',
+                title: 'Intensidad: ${charger.intensity} A',
                 textColor: whiteColor(),
                 fontWeight: FontWeight.bold,
               ),
@@ -291,7 +293,7 @@ class _PageScanQrState extends State<PageScanQr> {
                 textAlign: TextAlign.center,
                 icon: Icons.settings,
                 iconColor: accentColor(),
-                title: 'Tipo: ${charger!.typeCharger}',
+                title: 'Tipo: ${charger.typeCharger}',
                 textColor: whiteColor(),
                 fontWeight: FontWeight.bold,
               ),
@@ -300,7 +302,7 @@ class _PageScanQrState extends State<PageScanQr> {
                 textAlign: TextAlign.center,
                 icon: Icons.cable,
                 iconColor: accentColor(),
-                title: 'Formato: ${charger!.format}',
+                title: 'Formato: ${charger.format}',
                 textColor: whiteColor(),
                 fontWeight: FontWeight.bold,
               ),
@@ -375,9 +377,13 @@ class _PageScanQrState extends State<PageScanQr> {
         textButton: 'Aceptar',
       );
     } else {
+      if (!mounted) return;
       String errorMsj = '';
 
       switch (response) {
+        case -1:
+          errorMsj = 'Ya se está procesando su solicitud, espere un momento.';
+          break;
         case 400:
           errorMsj = 'No se encontro su billetera virtual.';
           break;
@@ -732,7 +738,7 @@ class _PageScanQrState extends State<PageScanQr> {
                 textAlign: TextAlign.center,
                 icon: Icons.bolt,
                 iconColor: accentColor(),
-                title: 'Potencia: ${charger!.powerKw} kW',
+                title: 'Potencia: ${charger.powerKw} kW',
                 textColor: whiteColor(),
                 fontWeight: FontWeight.bold,
               ),
@@ -741,7 +747,7 @@ class _PageScanQrState extends State<PageScanQr> {
                 textAlign: TextAlign.center,
                 icon: Icons.usb,
                 iconColor: accentColor(),
-                title: 'Conexión: ${charger!.typeConnection}',
+                title: 'Conexión: ${charger.typeConnection}',
                 textColor: whiteColor(),
                 fontWeight: FontWeight.bold,
               ),
@@ -750,7 +756,7 @@ class _PageScanQrState extends State<PageScanQr> {
                 textAlign: TextAlign.center,
                 icon: Icons.battery_charging_full,
                 iconColor: accentColor(),
-                title: 'Voltaje: ${charger!.voltage} V',
+                title: 'Voltaje: ${charger.voltage} V',
                 textColor: whiteColor(),
                 fontWeight: FontWeight.bold,
               ),
@@ -759,7 +765,7 @@ class _PageScanQrState extends State<PageScanQr> {
                 textAlign: TextAlign.center,
                 icon: Icons.speed,
                 iconColor: accentColor(),
-                title: 'Intensidad: ${charger!.intensity} A',
+                title: 'Intensidad: ${charger.intensity} A',
                 textColor: whiteColor(),
                 fontWeight: FontWeight.bold,
               ),
@@ -768,7 +774,7 @@ class _PageScanQrState extends State<PageScanQr> {
                 textAlign: TextAlign.center,
                 icon: Icons.settings,
                 iconColor: accentColor(),
-                title: 'Tipo: ${charger!.typeCharger}',
+                title: 'Tipo: ${charger.typeCharger}',
                 textColor: whiteColor(),
                 fontWeight: FontWeight.bold,
               ),
@@ -777,7 +783,7 @@ class _PageScanQrState extends State<PageScanQr> {
                 textAlign: TextAlign.center,
                 icon: Icons.cable,
                 iconColor: accentColor(),
-                title: 'Formato: ${charger!.format}',
+                title: 'Formato: ${charger.format}',
                 textColor: whiteColor(),
                 fontWeight: FontWeight.bold,
               ),

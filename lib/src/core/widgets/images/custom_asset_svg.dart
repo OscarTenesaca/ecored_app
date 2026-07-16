@@ -9,12 +9,12 @@ class CustomAssetSvg extends StatelessWidget {
   final BoxFit boxFit;
 
   const CustomAssetSvg({
-    Key? key,
+    super.key,
     this.width = 0,
     this.height = 0,
     this.imagePath = AssetPaths.logo_text,
     this.boxFit = BoxFit.fill,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

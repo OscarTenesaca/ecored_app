@@ -267,12 +267,12 @@
 import 'package:ecored_app/src/core/models/nuvei_model.dart';
 import 'package:ecored_app/src/core/models/payment_model.dart';
 import 'package:ecored_app/src/core/models/plan_moder.dart';
-import 'package:ecored_app/src/core/routes/routes_name.dart';
 import 'package:ecored_app/src/core/services/paymentes_service.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class PagePlan extends StatefulWidget {
   const PagePlan({super.key});
@@ -305,13 +305,22 @@ class _PagePlanState extends State<PagePlan> {
     super.initState();
   }
 
+  static const double _minRechargeAmount = 1;
+
   void pagar(PaymentModel method) {
     final monto =
         selectedPlan == 0
             ? double.tryParse(customAmountController.text) ?? 0
             : selectedPlan;
 
-    if (monto == 0) return;
+    if (monto < _minRechargeAmount) {
+      showSnackbar(
+        context,
+        'Ingresa un monto válido (mínimo \$${_minRechargeAmount.toStringAsFixed(2)}).',
+        SnackbarStatus.error,
+      );
+      return;
+    }
 
     //********* body the nuvei *********
 
@@ -423,7 +432,14 @@ class _PagePlanState extends State<PagePlan> {
                   Expanded(
                     child: TextField(
                       controller: customAmountController,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d{0,2}'),
+                        ),
+                      ],
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: "Ingresa tu monto",
@@ -435,7 +451,7 @@ class _PagePlanState extends State<PagePlan> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide(
-                            color: kAccentColor.withOpacity(0.4),
+                            color: kAccentColor.withValues(alpha: 0.4),
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(

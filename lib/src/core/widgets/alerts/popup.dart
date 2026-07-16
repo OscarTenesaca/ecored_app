@@ -27,19 +27,21 @@ showPopUpWithChildren({
         color: Colors.transparent,
         child: Blur(
           intensity: Intensity.high.value,
-          blurColor: Colors.black.withOpacity(.25),
+          blurColor: Colors.black.withValues(alpha: .25),
           child: Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Blur(
                 intensity: Intensity.megaHigh.value,
-                blurColor: Colors.black.withOpacity(.45),
+                blurColor: Colors.black.withValues(alpha: .45),
                 borderRadius: BorderRadius.circular(28),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF111714).withOpacity(.85),
+                    color: const Color(0xFF111714).withValues(alpha: .85),
                     borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: Colors.white.withOpacity(.08)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: .08),
+                    ),
                   ),
                   padding: const EdgeInsets.all(24),
                   child: Column(

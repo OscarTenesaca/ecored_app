@@ -53,7 +53,7 @@ class _CustomInputPhoneState extends State<CustomInputPhone> {
           return '* Ingrese su número de teléfono';
         }
 
-        final country = PhoneNumber.getCountry(value!.completeNumber);
+        final country = PhoneNumber.getCountry(value.completeNumber);
         if (value.number.startsWith('0')) {
           return 'El número de teléfono no puede comenzar con 0';
         }

@@ -1,6 +1,3 @@
-import 'dart:developer';
-
-import 'package:ecored_app/src/core/utils/utils_logger.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:ecored_app/src/features/maps/domain/usecases/station_services.dart';
@@ -32,12 +29,14 @@ class StationProvider extends ChangeNotifier {
   }
 
   Future<void> findAllChargers(Map<String, dynamic> query) async {
+    // No usa el `isLoading` compartido: findAllStations también lo usa
+    // para el overlay de carga del mapa, y si ambas llamadas coinciden
+    // esta podía apagarlo antes de tiempo.
     try {
       chargers = await services.findAllChargers(query);
     } catch (e) {
       errorMessage = e.toString();
     } finally {
-      isLoading = false;
       notifyListeners();
     }
   }

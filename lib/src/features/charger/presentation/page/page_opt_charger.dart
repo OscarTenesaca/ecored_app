@@ -46,6 +46,38 @@ class _PageOptChargerState extends State<PageOptCharger> {
       return const PageCharger();
     }
 
+    // Un error real de red/servidor no es lo mismo que "no hay carga
+    // activa": no se debe mandar directo al escáner sin avisar.
+    if (provider.errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'No se pudo verificar si tienes una carga activa.',
+              style: TextStyle(color: Colors.white),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: () {
+                setState(() => _isLoading = true);
+                provider
+                    .getOrderData({
+                      'status': "PENDING",
+                      "operationStatus": "CHARGING",
+                    })
+                    .then((_) {
+                      if (mounted) setState(() => _isLoading = false);
+                    });
+              },
+              child: const Text('Reintentar'),
+            ),
+          ],
+        ),
+      );
+    }
+
     return const PageScanQr();
   }
 }

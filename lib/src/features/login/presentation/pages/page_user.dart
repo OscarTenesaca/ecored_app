@@ -4,7 +4,6 @@ import 'package:ecored_app/src/core/services/location_service.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 import 'package:ecored_app/src/core/utils/utils_size.dart';
-import 'package:ecored_app/src/core/widgets/alerts/snackbar.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/login/data/models/model_user.dart';
 import 'package:ecored_app/src/features/login/presentation/provider/login_provider.dart';
@@ -69,6 +68,11 @@ class __FormState extends State<_Form> {
   final ModelUser? user = Preferences().getUser();
   final LocationServiceImpl locationService = LocationServiceImpl();
 
+  // Evita relanzar la petición de provincias en cada rebuild del
+  // formulario: solo se vuelve a pedir cuando el país realmente cambia.
+  String? _provincesCountry;
+  Future<List<LocationModel>>? _provincesFuture;
+
   @override
   void initState() {
     img = user?.img ?? '';
@@ -86,6 +90,19 @@ class __FormState extends State<_Form> {
   }
 
   @override
+  void dispose() {
+    _ciController.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    prefixNotifier.dispose();
+    countryNotifier.dispose();
+    provinceNotifier.dispose();
+    birthdayNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Form(
       key: _formKey,
@@ -97,7 +114,7 @@ class __FormState extends State<_Form> {
             img: img,
             size: 120,
             alignment: Alignment.center,
-            onTap: () => _onChangeImg(context),
+            onTap: _onChangeImg,
           ),
 
           CustomInput(
@@ -173,8 +190,12 @@ class __FormState extends State<_Form> {
               ValueListenableBuilder<String>(
                 valueListenable: countryNotifier,
                 builder: (context, country, child) {
+                  if (_provincesCountry != country) {
+                    _provincesCountry = country;
+                    _provincesFuture = _loadProvinces(country);
+                  }
                   return FutureBuilder<List<LocationModel>>(
-                    future: _loadProvinces(country),
+                    future: _provincesFuture,
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) {
                         return const CircularProgressIndicator();
@@ -225,11 +246,20 @@ class __FormState extends State<_Form> {
                     final provider = context.read<LoginProvider>();
                     await provider.updateUser(updates);
 
+                    if (!context.mounted) return;
                     if (provider.user != null) {
+                      showSnackbar(
+                        context,
+                        'Usuario actualizado con éxito',
+                        SnackbarStatus.success,
+                      );
                     } else if (provider.errorMessage != null) {
-                      // showSnackbar(context, provider.errorMessage!);
+                      showSnackbar(
+                        context,
+                        provider.errorMessage!,
+                        SnackbarStatus.error,
+                      );
                     }
-                    // showSnackbar(context, 'Usuario actualizado con éxito');
                   } else {
                     showPopUpWithChildren(
                       context: context,
@@ -251,13 +281,13 @@ class __FormState extends State<_Form> {
     showDatePickerModal(context: context, notifier: birthdayNotifier);
   }
 
-  void _onChangeImg(BuildContext context) async {
+  void _onChangeImg() async {
     final adapter = AdapterLoadImg();
     // final base64Img = await adapter.pickImageAndConvert  Base64();
     // 📌 1. Seleccionar imagen
     final String? imgPath = await adapter.pickImagePath();
 
-    print('Base64 Image: $imgPath');
+    if (!mounted) return;
 
     if (imgPath == null) {
       showPopUpWithChildren(
@@ -271,15 +301,24 @@ class __FormState extends State<_Form> {
           openAppSettings();
         },
       );
+      return;
     }
 
-    // //send
     final provider = context.read<LoginProvider>();
-    await provider.uploadImage({'file': imgPath});
-    // if (provider.errorMessage != null) {
-    //   print('Error Message: ${provider.errorMessage}');
-    //   // showSnackbar(context, provider.errorMessage!);
-    // }
+    final String? newImg = await provider.uploadImage({'file': imgPath});
+
+    if (!mounted) return;
+
+    if (newImg != null) {
+      setState(() => img = newImg);
+      showSnackbar(
+        context,
+        'Foto de perfil actualizada',
+        SnackbarStatus.success,
+      );
+    } else if (provider.errorMessage != null) {
+      showSnackbar(context, provider.errorMessage!, SnackbarStatus.error);
+    }
   }
 
   Future<void> _loadCountries() async {

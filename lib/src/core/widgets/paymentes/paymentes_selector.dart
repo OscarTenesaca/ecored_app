@@ -226,7 +226,7 @@ class _PaymentSelectorState extends State<PaymentSelector> {
                         decoration: BoxDecoration(
                           color:
                               isSelected
-                                  ? accentColor().withOpacity(.15)
+                                  ? accentColor().withValues(alpha: .15)
                                   : const Color(0xff181D18),
 
                           borderRadius: BorderRadius.circular(18),

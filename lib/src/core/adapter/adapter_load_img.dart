@@ -10,7 +10,6 @@ class AdapterLoadImg {
     bool hasPermission = false;
 
     final status = await Permission.photos.request();
-    print('Permission status: $status');
 
     if (status.isGranted) {
       hasPermission = true;

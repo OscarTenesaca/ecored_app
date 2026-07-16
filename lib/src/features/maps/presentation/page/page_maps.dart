@@ -1,16 +1,15 @@
 import 'dart:ui';
 
-import 'package:ecored_app/src/core/routes/routes_name.dart';
-import 'package:ecored_app/src/core/utils/utils_index.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:latlong2/latlong.dart';
-
-import 'package:ecored_app/src/core/theme/theme_index.dart';
-import 'package:ecored_app/src/core/widgets/widget_index.dart';
-
 import 'package:ecored_app/src/core/provider/permissiongps_provider.dart';
+import 'package:ecored_app/src/core/routes/routes_name.dart';
+import 'package:ecored_app/src/core/theme/theme_index.dart';
+import 'package:ecored_app/src/core/utils/utils_index.dart';
+import 'package:ecored_app/src/core/widgets/widget_index.dart';
+import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:ecored_app/src/features/maps/presentation/provider/station_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
 class PageMaps extends StatefulWidget {
   const PageMaps({super.key});
@@ -20,41 +19,53 @@ class PageMaps extends StatefulWidget {
 }
 
 class _PageMapsState extends State<PageMaps> {
-  late PermissionGpsProvider _gps;
+  PermissionGpsProvider? _gps;
   late StationProvider _station;
+
+  // Se maneja aquí (y no dentro de CustomMap) para poder pintar
+  // MapCardInfomation por encima de los botones flotantes y la leyenda.
+  final ValueNotifier<ModelStation?> _selectedMarker =
+      ValueNotifier<ModelStation?>(null);
+
+  // Dispara la animación de la cámara hacia una posición puntual (botón
+  // "mi ubicación"); no se usa para el tracking pasivo de GPS.
+  final ValueNotifier<LatLng> _recenterRequest = ValueNotifier<LatLng>(
+    const LatLng(0, 0),
+  );
 
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      _gps = context.read<PermissionGpsProvider>();
+      final gps = context.read<PermissionGpsProvider>();
+      _gps = gps;
       _station = context.read<StationProvider>();
 
       // ⏳ esperar inicialización del provider
-      while (_gps.isLoading) {
+      while (gps.isLoading) {
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
       // ❌ permisos o GPS no listos
-      if (!_gps.isAllGranted) {
-        // print('❌ GPS o permisos no listos');
+      if (!gps.isAllGranted) {
         return;
       }
 
       // ✅ obtener ubicación
-      final position = await _gps.getCurrentPosition();
-      print('📍 posición actual: $position');
+      await gps.getCurrentPosition();
       await _station.findAllStations({});
 
       // 🔄 iniciar tracking
-      _gps.startTracking();
+      gps.startTracking();
     });
   }
 
   @override
   void dispose() {
-    _gps.stopTracking();
+    _gps?.stopTracking();
+    _selectedMarker.dispose();
+    _recenterRequest.dispose();
     super.dispose();
   }
 
@@ -96,6 +107,8 @@ class _PageMapsState extends State<PageMaps> {
               CustomMap(
                 latLngMarkers: station.stations ?? [],
                 userMarker: LatLng(position.latitude, position.longitude),
+                selectedMarkerNotifier: _selectedMarker,
+                recenterRequest: _recenterRequest,
               ),
 
               /// Buscador
@@ -112,7 +125,6 @@ class _PageMapsState extends State<PageMaps> {
                       icon: Icons.ev_station,
                       background: primaryColor(),
                       onTap: () async {
-                        // print('add new station');
                         Navigator.pushNamed(context, RouteNames.pageStation);
                       },
                     ),
@@ -123,8 +135,33 @@ class _PageMapsState extends State<PageMaps> {
                       icon: Icons.my_location,
                       background: primaryColor(),
                       onTap: () async {
-                        final pos = await gps.getCurrentPosition();
-                        print('📍 posición actual (botón): $pos');
+                        if (!gps.isAllGranted) {
+                          showSnackbar(
+                            context,
+                            'Activa el GPS y otorga permisos de ubicación '
+                            'para centrar el mapa.',
+                            SnackbarStatus.error,
+                          );
+                          return;
+                        }
+
+                        final newPosition = await gps.getCurrentPosition();
+
+                        if (!context.mounted) return;
+
+                        if (newPosition == null) {
+                          showSnackbar(
+                            context,
+                            'No se pudo obtener tu ubicación actual.',
+                            SnackbarStatus.error,
+                          );
+                          return;
+                        }
+
+                        _recenterRequest.value = LatLng(
+                          newPosition.latitude,
+                          newPosition.longitude,
+                        );
                       },
                     ),
                   ],
@@ -132,6 +169,66 @@ class _PageMapsState extends State<PageMaps> {
               ),
               if (station.isLoading)
                 Blur(child: const Center(child: CircularProgressIndicator())),
+
+              // Leyenda de estados de las estaciones/cargadores
+              Positioned(
+                bottom: UtilSize.bottomPadding() + 80,
+                left: 20,
+                child: Blur(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children:
+                          STATION_STATUS_LIST.map((s) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                      color: stationStatusColor(s['key']!),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    s['label']!,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Ficha de detalle de estación: va al final para pintarse
+              // por encima de los botones flotantes y la leyenda.
+              ValueListenableBuilder<ModelStation?>(
+                valueListenable: _selectedMarker,
+                builder: (context, marker, child) {
+                  if (marker == null) return const SizedBox.shrink();
+                  return MapCardInfomation(
+                    stationData: marker,
+                    userMarker: LatLng(position.latitude, position.longitude),
+                    onClose: () => _selectedMarker.value = null,
+                  );
+                },
+              ),
             ],
           );
         },
@@ -400,7 +497,7 @@ class _MapFiltersSheetState extends State<MapFiltersSheet> {
               style: TextStyle(color: Colors.white),
             ),
             value: onlyAvailable,
-            activeColor: accentColor(),
+            activeThumbColor: accentColor(),
             onChanged: (value) {
               setState(() {
                 onlyAvailable = value;
@@ -414,7 +511,7 @@ class _MapFiltersSheetState extends State<MapFiltersSheet> {
               style: TextStyle(color: Colors.white),
             ),
             value: showPrivate,
-            activeColor: accentColor(),
+            activeThumbColor: accentColor(),
             onChanged: (value) {
               setState(() {
                 showPrivate = value;

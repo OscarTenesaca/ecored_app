@@ -6,7 +6,7 @@ class ChargerServices {
 
   ChargerServices(this.repository);
 
-  Future<ModelOrder> getOrderData(Map<String, dynamic> params) {
+  Future<ModelOrder?> getOrderData(Map<String, dynamic> params) {
     return repository.getOrderData(params);
   }
 

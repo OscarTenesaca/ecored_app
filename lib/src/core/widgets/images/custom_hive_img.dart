@@ -14,14 +14,14 @@ class CustomHiveImg extends StatelessWidget {
   final Function()? onTap;
 
   const CustomHiveImg({
-    Key? key,
+    super.key,
     required this.img,
     this.title = '',
     this.size = 90,
     this.alignment = Alignment.bottomRight,
     this.color,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +74,7 @@ class CustomHiveImg extends StatelessWidget {
                               //   borderRadius: BorderRadius.circular(100),
                               //   child: const SizedBox(),
                               // );
-                              return Text("loadding...");
+                              return Text("Cargando...");
                             }
                           },
                         ),

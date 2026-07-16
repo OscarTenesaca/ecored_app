@@ -54,7 +54,11 @@ class _PageChargerState extends State<PageCharger>
   // }
 
   void toggleCharging(ModelOrder order) async {
-    isChargingNotifier.value = !isChargingNotifier.value;
+    // El backend no expone un endpoint para reanudar una carga detenida,
+    // solo para detenerla (DELETE /orders/stop) o crear una orden nueva
+    // (POST /orders). Por eso este botón solo actúa mientras se está
+    // cargando; una vez detenida queda deshabilitado (ver onPressed en build()).
+    if (!isChargingNotifier.value) return;
 
     final provider = context.read<ChargerProvider>();
     final stopData = await provider.deleteStopCharger({
@@ -63,9 +67,9 @@ class _PageChargerState extends State<PageCharger>
     });
 
     if (stopData == 200) {
-      // popup: se detuvo correctamente
+      isChargingNotifier.value = false;
     } else {
-      // error
+      // La carga no se detuvo en el backend: no se cambia el estado local.
     }
   }
 
@@ -406,7 +410,8 @@ class _PageChargerState extends State<PageCharger>
                     shadowColorB: accentColor().withValues(alpha: 0.25),
                     borderColorB: accentColor().withValues(alpha: 0.5),
 
-                    onPressed: () => toggleCharging(order),
+                    onPressed:
+                        isCharging ? () => toggleCharging(order) : null,
                   ),
                 ],
               ),

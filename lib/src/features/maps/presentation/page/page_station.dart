@@ -52,6 +52,28 @@ class _PageStationState extends State<PageStation> {
     _addCharger(); // al menos uno por defecto
   }
 
+  @override
+  void dispose() {
+    _pageController.dispose();
+    prefixNotifier.dispose();
+    stTypePnNotifier.dispose();
+    stStatusNotifier.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+    _descriptionController.dispose();
+    _addressController.dispose();
+    stLatLngNotifier.dispose();
+    countryNotifier.dispose();
+    provinceNotifier.dispose();
+    cantonNotifier.dispose();
+    for (final charger in chargers) {
+      for (final controller in charger.values) {
+        if (controller is ChangeNotifier) controller.dispose();
+      }
+    }
+    super.dispose();
+  }
+
   void _addCharger() {
     chargers.add({
       // VALUE NOTIFIERS
@@ -69,7 +91,10 @@ class _PageStationState extends State<PageStation> {
 
   void _removeCharger(int index) {
     if (chargers.length == 1) return;
-    chargers.removeAt(index);
+    final removed = chargers.removeAt(index);
+    for (final controller in removed.values) {
+      if (controller is ChangeNotifier) controller.dispose();
+    }
     setState(() {});
   }
 
@@ -142,6 +167,7 @@ class _PageStationState extends State<PageStation> {
       debugPrint('Station creada: ${station.toJson()}');
     } catch (e) {
       debugPrint('Error creating station: $e');
+      if (!mounted) return;
       showPopUpWithChildren(
         context: context,
         title: 'No se pudo completar la acción',
@@ -183,6 +209,7 @@ class _PageStationState extends State<PageStation> {
     }
 
     /// 5️⃣ RESULTADO FINAL
+    if (!mounted) return;
     if (successCount == bodyChargers.length) {
       showPopUpWithChildren(
         context: context,
@@ -244,7 +271,7 @@ class _PageStationState extends State<PageStation> {
                 child:
                     stationProv.isLoading
                         ? Container(
-                          color: Colors.black.withOpacity(0.45),
+                          color: Colors.black.withValues(alpha: 0.45),
                           child: Center(
                             child: TweenAnimationBuilder<double>(
                               tween: Tween(begin: 0.8, end: 1.0),
@@ -487,7 +514,6 @@ class _PageStationState extends State<PageStation> {
                             'lat': latLng.latitude.toString(),
                             'lng': latLng.longitude.toString(),
                           };
-                          print(stLatLngNotifier.value);
                         },
                       ),
                     ),

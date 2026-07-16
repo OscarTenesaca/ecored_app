@@ -45,9 +45,9 @@ class CardSummary extends StatelessWidget {
                   vertical: 7,
                 ),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(50),
-                  border: Border.all(color: color.withOpacity(0.40)),
+                  border: Border.all(color: color.withValues(alpha: 0.40)),
                 ),
                 child: Text(
                   status,

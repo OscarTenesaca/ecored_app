@@ -27,8 +27,8 @@ class PaymentesNuvei extends StatefulWidget {
 
 class _PaymentesNuveiState extends State<PaymentesNuvei> {
   String reference = '';
-  InAppWebViewController? _webViewController;
   bool _checkoutOpened = false;
+  bool _resultHandled = false;
 
   @override
   void initState() {
@@ -48,8 +48,6 @@ class _PaymentesNuveiState extends State<PaymentesNuvei> {
               : InAppWebView(
                 initialData: InAppWebViewInitialData(data: _htmlNuvei()),
                 onWebViewCreated: (controller) {
-                  _webViewController = controller;
-
                   // 🔥 RECIBE RESULTADO DEL PAGO
                   controller.addJavaScriptHandler(
                     handlerName: 'paymentResult',
@@ -71,6 +69,17 @@ class _PaymentesNuveiState extends State<PaymentesNuvei> {
                     );
                   }
                 },
+                shouldOverrideUrlLoading: (controller, action) async {
+                  final uri = action.request.url;
+                  final scheme = uri?.scheme.toLowerCase();
+                  // Solo se permite navegar dentro del WebView por HTTPS
+                  // (los redirects de 3DS del banco pueden ir a dominios
+                  // distintos, por eso no se restringe a una lista fija).
+                  if (scheme == 'https' || scheme == 'about') {
+                    return NavigationActionPolicy.ALLOW;
+                  }
+                  return NavigationActionPolicy.CANCEL;
+                },
               ),
     );
   }
@@ -87,6 +96,7 @@ class _PaymentesNuveiState extends State<PaymentesNuvei> {
         reference = repNuvei['data']['reference'];
       });
     } else {
+      if (!mounted) return;
       showSnackbar(
         context,
         'Error al procesar el pago: ${repNuvei['message']}',
@@ -99,7 +109,19 @@ class _PaymentesNuveiState extends State<PaymentesNuvei> {
   // CONTROL DE ESTADO PAGO
   // ========================
   Future<void> _handlePaymentResult(Map<String, dynamic> result) async {
+    if (_resultHandled) return;
+    _resultHandled = true;
+
     final transaction = result['transaction'];
+    if (transaction is! Map) {
+      if (!mounted) return;
+      showSnackbar(
+        context,
+        'No se pudo leer la respuesta del pago. Intente nuevamente.',
+        SnackbarStatus.error,
+      );
+      return;
+    }
 
     widget.bodyEcored['authorizationCode'] =
         transaction['authorization_code'] ?? '';
@@ -143,16 +165,21 @@ class _PaymentesNuveiState extends State<PaymentesNuvei> {
         subTitle: 'Su pago ha sido procesado correctamente.',
         textButton: 'Aceptar',
         onSubmit: () {
+          // Se capturan antes de navegar: tras el segundo pop esta
+          // pantalla puede quedar desmontada y su context ya no es válido.
+          final refreshProvider = context.read<FinanceProvider>();
+          final userId = Preferences().getUser()?.id;
+
           Navigator.pop(context); // Cierra el popup
           Navigator.pop(context, true); // Retorna al screen anterior
 
           // Refresca los datos de la wallet y transacciones
-          final provider = context.read<FinanceProvider>();
-          provider.getWalletData({'user': Preferences().getUser()?.id});
-          provider.getTransactionData({'user': Preferences().getUser()?.id});
+          refreshProvider.getWalletData({'user': userId});
+          refreshProvider.getTransactionData({'user': userId});
         },
       );
     } else {
+      if (!mounted) return;
       showSnackbar(
         context,
         'Pago aprobado, pero falló Ecored. Código de respuesta: $response',
@@ -178,16 +205,21 @@ class _PaymentesNuveiState extends State<PaymentesNuvei> {
         subTitle: 'Su pago ha sido procesado correctamente.',
         textButton: 'Aceptar',
         onSubmit: () {
+          // Se capturan antes de navegar: tras el segundo pop esta
+          // pantalla puede quedar desmontada y su context ya no es válido.
+          final refreshProvider = context.read<FinanceProvider>();
+          final userId = Preferences().getUser()?.id;
+
           Navigator.pop(context); // Cierra el popup
           Navigator.pop(context, true); // Retorna al screen anterior
 
           // Refresca los datos de la wallet y transacciones
-          final provider = context.read<FinanceProvider>();
-          provider.getWalletData({'user': Preferences().getUser()?.id});
-          provider.getTransactionData({'user': Preferences().getUser()?.id});
+          refreshProvider.getWalletData({'user': userId});
+          refreshProvider.getTransactionData({'user': userId});
         },
       );
     } else {
+      if (!mounted) return;
       showSnackbar(
         context,
         'Pago aprobado, pero falló Ecored. Código de respuesta: $response',

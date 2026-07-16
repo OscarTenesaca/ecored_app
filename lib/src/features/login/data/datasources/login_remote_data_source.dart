@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:ecored_app/src/core/adapter/adapter_http.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 import 'package:ecored_app/src/features/login/data/models/model_user.dart';
@@ -20,7 +18,7 @@ class LoginRemoteDataSourceImpl implements LoginRemoteDataSource {
   final Preferences prefs = Preferences();
   final HttpAdapter httpAdapter = HttpAdapter();
 
-  LoginRemoteDataSourceImpl(this.url) {}
+  LoginRemoteDataSourceImpl(this.url);
 
   @override
   Future<ModelUser> registerUser(Map<String, dynamic> userData) {
@@ -61,13 +59,15 @@ class LoginRemoteDataSourceImpl implements LoginRemoteDataSource {
   @override
   Future<int> logout() async {
     final String endpoint = '$url/api/v1/auth/user/logout';
-    final response = await httpAdapter.delete(endpoint);
-    if (response.statusCode != 200) {
-      throw ('Ocurrió un problema, intente más tarde');
+    try {
+      await httpAdapter.delete(endpoint);
+    } catch (_) {
+      // Sin conexión o el backend no respondió: se permite cerrar
+      // sesión localmente de todas formas.
     }
 
     await prefs.clearUser();
-    return response.statusCode!;
+    return 200;
   }
 
   @override
@@ -81,7 +81,6 @@ class LoginRemoteDataSourceImpl implements LoginRemoteDataSource {
     final String endpoint = '$url/api/v1/user/${prefs.getUser()?.id}';
     final response = await httpAdapter.put(endpoint, data: userData);
 
-    print('Response data: ${response.data}');
     if (response.statusCode != 200) {
       throw ('Ocurrió un problema, intente más tarde');
     }
@@ -94,10 +93,19 @@ class LoginRemoteDataSourceImpl implements LoginRemoteDataSource {
 
   @override
   Future<String> uploadImage(Map<String, dynamic> body) async {
-    log('Body upload image: $body');
-
     final String endpoint = '$url/api/v1/files/user';
+    final String filePath = body['file'];
 
-    return 'secureUrl';
+    final response = await httpAdapter.uploadFile(
+      endpoint,
+      fieldName: 'file',
+      filePath: filePath,
+    );
+
+    if (response.statusCode != 201) {
+      throw ('No se pudo subir la imagen, intente más tarde');
+    }
+
+    return response.data['secureUrl'];
   }
 }

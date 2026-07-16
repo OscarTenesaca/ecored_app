@@ -16,6 +16,9 @@ class ChargerProvider extends ChangeNotifier {
       isLoading = true;
       errorMessage = null;
       notifyListeners();
+
+      // orderData en null significa que el usuario no tiene ninguna
+      // carga activa (estado normal, no un error de red/servidor).
       orderData = await services.getOrderData(params);
 
       notifyListeners();

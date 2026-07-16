@@ -116,7 +116,7 @@ class _SelectBottomSheetState extends State<_SelectBottomSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            Container(
+            SizedBox(
               width: double.infinity,
               height: UtilSize.height(context) * 0.7,
               child: ListView.builder(

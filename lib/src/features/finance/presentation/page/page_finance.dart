@@ -96,7 +96,8 @@ class _PageFinanceState extends State<PageFinance> {
 
                     LabelTitle(
                       alignment: Alignment.centerLeft,
-                      title: "\$ ${provider.financeData?.balance}",
+                      title:
+                          "\$ ${(provider.financeData?.balance ?? 0).toStringAsFixed(2)}",
                       fontSize: 35,
                       // fontSize: 48,
                       fontWeight: FontWeight.bold,
@@ -139,13 +140,11 @@ class _PageFinanceState extends State<PageFinance> {
                   ModelTransaction? transaction =
                       provider.transactionData?[index];
 
-                  print(transaction!.toJson().toString());
-
                   switch (transaction!.type) {
                     case 'RECHARGE':
                       return CardTransaction(
                         title: "Recarga Aplicativo",
-                        amount: "+ \$ ${transaction.amount}",
+                        amount: "+ \$ ${transaction.amount.toStringAsFixed(2)}",
                         date: UtilsDate.formatLocal(
                           transaction.createdAt.toString(),
                         ),

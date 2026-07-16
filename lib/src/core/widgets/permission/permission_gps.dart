@@ -26,7 +26,7 @@ class PermissionGPS extends StatelessWidget {
 
 class _EnableGpsMessage extends StatelessWidget {
   final bool showButton;
-  const _EnableGpsMessage({Key? key, this.showButton = true}) : super(key: key);
+  const _EnableGpsMessage({super.key, this.showButton = true});
 
   @override
   Widget build(BuildContext context) {

@@ -18,12 +18,17 @@ class CustomMapPin extends StatefulWidget {
 
 class _CustomMapPinState extends State<CustomMapPin> {
   late final MapController _controller;
-  LatLng? _center;
 
   @override
   void initState() {
     super.initState();
     _controller = MapController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -39,9 +44,7 @@ class _CustomMapPinState extends State<CustomMapPin> {
             // Se ejecuta cuando el usuario deja de mover el mapa
             onMapEvent: (event) {
               if (event is MapEventMoveEnd) {
-                final center = _controller.camera.center;
-                _center = center;
-                widget.onLocationSelected(center);
+                widget.onLocationSelected(_controller.camera.center);
               }
             },
           ),

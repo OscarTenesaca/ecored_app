@@ -36,9 +36,7 @@ class CustomButton extends StatelessWidget {
                 horizontal: UtilSize.width(context) * 5 / 100,
               ),
       child: ElevatedButton(
-        onPressed: () {
-          onPressed?.call();
-        },
+        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           padding: padding,
           minimumSize:

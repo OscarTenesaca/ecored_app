@@ -8,7 +8,7 @@ class ChargerRepositoryImpl implements ChargerRepository {
   ChargerRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<ModelOrder> getOrderData(Map<String, dynamic> params) {
+  Future<ModelOrder?> getOrderData(Map<String, dynamic> params) {
     return remoteDataSource.getOrderData(params);
   }
 

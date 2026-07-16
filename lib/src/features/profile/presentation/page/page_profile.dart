@@ -166,6 +166,7 @@ class PageProfile extends StatelessWidget {
             onTap: () async {
               final provider = context.read<LoginProvider>(); // ✅ usa read aquí
               await provider.logout();
+              if (!context.mounted) return;
               if (provider.user == null) {
                 Navigator.pushReplacementNamed(context, RouteNames.pageLogin);
               } else {

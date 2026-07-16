@@ -1,6 +1,5 @@
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class CustomBottomButton extends StatefulWidget {

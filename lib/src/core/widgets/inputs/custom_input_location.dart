@@ -42,14 +42,20 @@ class _CustomInputLocationState extends State<CustomInputLocation> {
     super.didUpdateWidget(oldWidget);
 
     if (widget.initialCountry!.isNotEmpty && widget.locations.isNotEmpty) {
-      selectedCountry = widget.locations.firstWhere(
-        (country) =>
-            country.name.toUpperCase() == widget.initialCountry!.toUpperCase(),
-      );
+      selectedCountry = widget.locations
+          .cast<LocationModel?>()
+          .firstWhere(
+            (country) =>
+                country?.name.toUpperCase() ==
+                widget.initialCountry!.toUpperCase(),
+            orElse: () => null,
+          );
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.locationNotifier.value = selectedCountry!.id;
-      });
+      if (selectedCountry != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          widget.locationNotifier.value = selectedCountry!.id;
+        });
+      }
     }
 
     if (oldWidget.locations != widget.locations) {

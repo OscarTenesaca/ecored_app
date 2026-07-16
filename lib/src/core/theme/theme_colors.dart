@@ -13,10 +13,11 @@ const Color krefreshingMint = Color.fromRGBO(131, 189, 69, 1.0); // Green
 const Color kGreyColorTransparency = Color.fromRGBO(97, 97, 97, 0.5);
 const Color kDeepForestGreen = Color(0xFF161C18);
 
-// alert colors success, error, warning
+// alert colors success, error, warning, info
 const Color kSuccessColor = Color.fromRGBO(76, 175, 80, 1); // Verde
 const Color kErrorColor = Color.fromRGBO(244, 67, 54, 1); // Rojo
 const Color kWarningColor = Color.fromRGBO(255, 152, 0, 1); // Naranja
+const Color kInfoColor = Color.fromRGBO(33, 150, 243, 1); // Azul
 
 // Uso de las constantes de color en funciones si es necesario
 Color primaryColor() => kPrimaryColor;
@@ -31,3 +32,4 @@ Color greyColorWithTransparency() => kGreyColorTransparency;
 Color successColor() => kSuccessColor;
 Color errorColor() => kErrorColor;
 Color warningColor() => kWarningColor;
+Color infoColor() => kInfoColor;

@@ -18,6 +18,13 @@ class _PageLoginState extends State<PageLogin> {
   final TextEditingController _passwordController = TextEditingController();
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: primaryColor(),
@@ -48,8 +55,11 @@ class _PageLoginState extends State<PageLogin> {
 
                   CustomInput(
                     validator: (value) {
-                      if (value!.isEmpty) {
+                      if (value == null || value.isEmpty) {
                         return '* Ingrese su correo!';
+                      }
+                      if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value)) {
+                        return '* Ingrese un correo válido';
                       }
                       return null;
                     },
@@ -63,8 +73,11 @@ class _PageLoginState extends State<PageLogin> {
 
                   CustomInput(
                     validator: (value) {
-                      if (value!.isEmpty) {
+                      if (value == null || value.isEmpty) {
                         return '* Ingrese su contraseña!';
+                      }
+                      if (value.length < 5) {
+                        return '* Mínimo 5 caracteres';
                       }
                       return null;
                     },
@@ -149,7 +162,7 @@ class _PageLoginState extends State<PageLogin> {
         // 🧹 limpia snackbars antes de navegar
         ScaffoldMessenger.of(context).clearSnackBars();
 
-        Navigator.pushNamed(context, RouteNames.pageAccess);
+        Navigator.pushReplacementNamed(context, RouteNames.pageAccess);
       } else if (provider.errorMessage != null) {
         showSnackbar(context, provider.errorMessage!, SnackbarStatus.error);
       }

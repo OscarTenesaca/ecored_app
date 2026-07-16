@@ -38,16 +38,16 @@ class ModelCharger {
 
   factory ModelCharger.fromJson(Map<String, dynamic> json) => ModelCharger(
     id: json["_id"],
-    code: json["code"],
-    typeConnection: json["typeConnection"],
-    connectorId: json["connectorId"]?.toInt(),
-    powerKw: json["powerKw"]?.toDouble(),
-    intensity: json["intensity"]?.toDouble(),
-    voltage: json["voltage"]?.toDouble(),
-    format: json["format"],
-    status: json["status"],
-    typeCharger: json["typeCharger"],
-    priceWithTipeConnector: json["priceWithTipeConnector"]?.toDouble(),
+    code: json["code"] ?? '',
+    typeConnection: json["typeConnection"] ?? '',
+    connectorId: json["connectorId"]?.toInt() ?? 0,
+    powerKw: json["powerKw"]?.toDouble() ?? 0,
+    intensity: json["intensity"]?.toDouble() ?? 0,
+    voltage: json["voltage"]?.toDouble() ?? 0,
+    format: json["format"] ?? '',
+    status: json["status"] ?? '',
+    typeCharger: json["typeCharger"] ?? '',
+    priceWithTipeConnector: json["priceWithTipeConnector"]?.toDouble() ?? 0,
     station:
         json["station"] == null
             ? null

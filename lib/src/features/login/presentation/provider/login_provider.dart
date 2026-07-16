@@ -1,3 +1,4 @@
+import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 import 'package:ecored_app/src/features/login/data/models/model_user.dart';
 import 'package:ecored_app/src/features/login/domain/usecases/login_services.dart';
 import 'package:flutter/material.dart';
@@ -53,13 +54,11 @@ class LoginProvider extends ChangeNotifier {
       notifyListeners();
 
       final int result = await loginServices.logout();
-      print('Logout result: $result');
 
       if (result == 200) {
         user = null;
       }
     } catch (e) {
-      print('Error during logout: $e');
       errorMessage = e.toString();
     } finally {
       isLoading = false;
@@ -82,16 +81,29 @@ class LoginProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> uploadImage(Map<String, dynamic> body) async {
+  // Devuelve la nueva URL de la imagen si la subida fue exitosa, o null
+  // si falló (ver errorMessage). El backend ya persiste el cambio en el
+  // usuario al subir el archivo, así que aquí solo se actualiza la copia
+  // local en Preferences para que no quede desincronizada.
+  Future<String?> uploadImage(Map<String, dynamic> body) async {
     try {
       isLoading = true;
       errorMessage = null;
       notifyListeners();
 
-      final String result = await loginServices.uploadImage(body);
-      print('Upload Image result: $result');
+      final String secureUrl = await loginServices.uploadImage(body);
+
+      final cachedUser = Preferences().getUser();
+      if (cachedUser != null) {
+        cachedUser.img = secureUrl;
+        await Preferences().saveUser(cachedUser);
+      }
+      user?.img = secureUrl;
+
+      return secureUrl;
     } catch (e) {
       errorMessage = e.toString();
+      return null;
     } finally {
       isLoading = false;
       notifyListeners();

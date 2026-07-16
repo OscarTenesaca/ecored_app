@@ -1,5 +1,4 @@
 import 'package:ecored_app/src/core/models/location_model.dart';
-import 'package:ecored_app/src/core/routes/routes_name.dart';
 import 'package:ecored_app/src/core/services/location_service.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
@@ -12,44 +11,6 @@ class PageRegister extends StatefulWidget {
 
   @override
   State<PageRegister> createState() => _PageRegisterState();
-
-  static Widget _buildField({
-    required String hint,
-    required Color fieldColor,
-    bool obscureText = false,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return TextField(
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(
-          color: Colors.white.withOpacity(.35),
-          fontSize: 15,
-        ),
-        filled: true,
-        fillColor: fieldColor,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 22,
-          vertical: 20,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: Colors.white.withOpacity(.04)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFFB6FF00), width: 1.2),
-        ),
-      ),
-    );
-  }
 }
 
 class _PageRegisterState extends State<PageRegister> {
@@ -70,23 +31,34 @@ class _PageRegisterState extends State<PageRegister> {
   List<LocationModel> provinces = [];
   final LocationServiceImpl locationService = LocationServiceImpl();
 
+  // Evita relanzar la petición de provincias en cada rebuild del
+  // formulario: solo se vuelve a pedir cuando el país realmente cambia.
+  String? _provincesCountry;
+  Future<List<LocationModel>>? _provincesFuture;
+
   @override
   void initState() {
-    // _ciController.text = '0302618251';
-    // _nameController.text = 'Oscar Tenesaca';
-    // _emailController.text = 'tenesaca.999@gmail.com';
-    // _passwordController.text = '12345';
-    // _confirmPasswordController.text = '12345';
-    // _phoneController.text = '983895402';
-
     super.initState();
     _loadCountries();
   }
 
   @override
-  Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFFB6FF00);
+  void dispose() {
+    _ciController.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _phoneController.dispose();
+    prefixNotifier.dispose();
+    countryNotifier.dispose();
+    provinceNotifier.dispose();
+    birthdayNotifier.dispose();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: primaryColor(),
       body: SafeArea(
@@ -119,12 +91,12 @@ class _PageRegisterState extends State<PageRegister> {
 
                 CustomInput(
                   validator: (value) {
-                    if (value!.isEmpty) {
+                    if (value == null || value.isEmpty) {
                       return '* Ingrese su cédula!';
                     }
                     return null;
                   },
-                  textInputType: TextInputType.emailAddress,
+                  textInputType: TextInputType.text,
                   hintText: 'Cédula o identificación',
                   filledColor: deepForestGreen(),
                   textEditingController: _ciController,
@@ -148,8 +120,11 @@ class _PageRegisterState extends State<PageRegister> {
 
                 CustomInput(
                   validator: (value) {
-                    if (value!.isEmpty) {
+                    if (value == null || value.isEmpty) {
                       return '* Ingrese su correo!';
+                    }
+                    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value)) {
+                      return '* Ingrese un correo válido';
                     }
                     return null;
                   },
@@ -163,8 +138,11 @@ class _PageRegisterState extends State<PageRegister> {
 
                 CustomInput(
                   validator: (value) {
-                    if (value!.isEmpty) {
+                    if (value == null || value.isEmpty) {
                       return '* Ingrese su contraseña!';
+                    }
+                    if (value.length < 5) {
+                      return '* Mínimo 5 caracteres';
                     }
                     return null;
                   },
@@ -178,7 +156,7 @@ class _PageRegisterState extends State<PageRegister> {
 
                 CustomInput(
                   validator: (value) {
-                    if (value!.isEmpty) {
+                    if (value == null || value.isEmpty) {
                       return '* Confirme su contraseña!';
                     }
                     if (value != _passwordController.text) {
@@ -242,8 +220,12 @@ class _PageRegisterState extends State<PageRegister> {
                     ValueListenableBuilder<String>(
                       valueListenable: countryNotifier,
                       builder: (context, country, child) {
+                        if (_provincesCountry != country) {
+                          _provincesCountry = country;
+                          _provincesFuture = _loadProvinces(country);
+                        }
                         return FutureBuilder<List<LocationModel>>(
-                          future: _loadProvinces(country),
+                          future: _provincesFuture,
                           builder: (context, snapshot) {
                             if (!snapshot.hasData) {
                               return const CircularProgressIndicator();
@@ -304,7 +286,6 @@ class _PageRegisterState extends State<PageRegister> {
 
   Future<void> submit(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      print('pasoo');
       final Map<String, dynamic> body = {
         'ci': _ciController.text,
         'name': _nameController.text,
@@ -321,11 +302,16 @@ class _PageRegisterState extends State<PageRegister> {
       final provider = context.read<LoginProvider>();
       await provider.registerUser(body);
 
+      if (!context.mounted) return;
+
       if (provider.user != null) {
         final msg = 'Registro exitoso. Por favor, inicie sesión.';
         showSnackbar(context, msg, SnackbarStatus.success);
 
-        Navigator.pushNamed(context, RouteNames.pageLogin);
+        // Ya existe una pantalla de login debajo en el stack (es la
+        // única forma de llegar a Registro), así que se vuelve a ella
+        // en vez de apilar una nueva.
+        Navigator.pop(context);
       } else if (provider.errorMessage != null) {
         final msg = provider.errorMessage!;
         showSnackbar(context, msg, SnackbarStatus.error);

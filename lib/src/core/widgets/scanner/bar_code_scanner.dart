@@ -14,26 +14,23 @@ class _BarCodeScannerState extends State<BarCodeScanner> {
   final MobileScannerController _controller = MobileScannerController();
   final ValueNotifier<bool> _isFlashEnabledNotifier = ValueNotifier(false);
 
-  Barcode? _barcode;
   bool isScanned = false;
 
   void _handleBarcode(BarcodeCapture barcodes) {
-    if (barcodes.raw != null && !isScanned) {
-      Navigator.pop(context, barcodes.barcodes.firstOrNull!.rawValue);
-    }
-    if (mounted) {
-      _barcode = barcodes.barcodes.firstOrNull;
-      if (_barcode != null) {
-        // print('Barcode found: ${_barcode!.rawValue}');
-        widget.qrCode.value = _barcode!.rawValue!;
-      }
-    }
+    final String? rawValue = barcodes.barcodes.firstOrNull?.rawValue;
+    if (rawValue == null || isScanned) return;
     isScanned = true;
+
+    if (mounted) {
+      widget.qrCode.value = rawValue;
+      Navigator.pop(context, rawValue);
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _isFlashEnabledNotifier.dispose();
     super.dispose();
   }
 

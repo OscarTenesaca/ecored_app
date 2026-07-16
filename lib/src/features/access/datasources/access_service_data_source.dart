@@ -11,7 +11,7 @@ class AccessServicesDataSourceImpl implements AccessServicesDataSource {
   final Preferences prefs = Preferences();
   final HttpAdapter httpAdapter = HttpAdapter();
 
-  AccessServicesDataSourceImpl(this.url) {}
+  AccessServicesDataSourceImpl(this.url);
 
   @override
   Future<int> validateToken() async {
@@ -21,7 +21,7 @@ class AccessServicesDataSourceImpl implements AccessServicesDataSource {
     if (response.statusCode == 200) {
       return response.statusCode ?? 200;
     } else {
-      prefs.clearUser();
+      await prefs.clearUser();
       return response.statusCode ?? 401;
     }
   }

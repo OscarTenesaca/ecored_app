@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:ecored_app/src/core/adapter/adapter_http.dart';
-import 'package:ecored_app/src/core/utils/utils_logger.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:flutter/foundation.dart';
@@ -19,7 +18,7 @@ class StationsRemoteDataSourceImpl implements StationsRemoteDataSource {
   final String url;
   final HttpAdapter httpAdapter = HttpAdapter();
 
-  StationsRemoteDataSourceImpl(this.url) {}
+  StationsRemoteDataSourceImpl(this.url);
 
   @override
   Future<List<ModelStation>> findAllStations(Map<String, dynamic> query) async {
@@ -59,7 +58,7 @@ class StationsRemoteDataSourceImpl implements StationsRemoteDataSource {
 
       return chargers;
     } else {
-      log('Error fetching chargers: ${response}');
+      log('Error fetching chargers: $response');
       return [];
     }
   }

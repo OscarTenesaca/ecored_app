@@ -33,7 +33,7 @@ class CardPlan extends StatelessWidget {
             gradient:
                 selected
                     ? LinearGradient(
-                      colors: [neonGreen, neonGreen.withOpacity(.75)],
+                      colors: [neonGreen, neonGreen.withValues(alpha: .75)],
                     )
                     : LinearGradient(
                       // colors: [Color(0xff2D2D2D), Color(0xff1C1C1C)],
@@ -49,7 +49,7 @@ class CardPlan extends StatelessWidget {
                 selected
                     ? [
                       BoxShadow(
-                        color: neonGreen.withOpacity(.35),
+                        color: neonGreen.withValues(alpha: .35),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),

@@ -73,8 +73,7 @@ class PageHome extends StatelessWidget {
                             textColor: grayInputColor(),
                           ),
                           LabelTitle(
-                            // title: 'Oscar',
-                            title: Preferences().getUser()!.name,
+                            title: Preferences().getUser()?.name ?? '',
                             textColor: whiteColor(),
                             fontWeight: FontWeight.bold,
                             fontSize: 18,

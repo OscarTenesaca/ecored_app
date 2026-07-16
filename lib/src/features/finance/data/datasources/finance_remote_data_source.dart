@@ -21,7 +21,7 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
   final String url;
   final HttpAdapter httpAdapter = HttpAdapter();
 
-  FinanceRemoteDataSourceImpl(this.url) {}
+  FinanceRemoteDataSourceImpl(this.url);
 
   @override
   Future<ModelFinance> getWalletData(Map<String, dynamic> params) async {
@@ -32,7 +32,6 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
       throw ('Ocurrió un problema, intente más tarde');
     }
 
-    print('FINANCE RESPONSE DATA: ${response.data['data'][0]}');
     final respModelFinance = ModelFinance.fromJson(response.data['data'][0]);
     return respModelFinance;
   }
@@ -60,15 +59,12 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
 
   @override
   Future<ModelOrder> getOrderData(Map<String, dynamic> params) async {
-    print(params);
     final String endpoint = '$url/api/v1/orders/${params['id']}';
     final response = await httpAdapter.get(endpoint);
     if (response.statusCode != 200) {
       throw ('Ocurrió un problema, intente más tarde');
     }
-    // print('ORDER RESPONSE DATA: ${response.data['data']}');
     final respModelOrder = ModelOrder.fromJson(response.data['data']);
-    print(respModelOrder.toJson().toString());
     return respModelOrder;
   }
 
@@ -82,7 +78,6 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
     }
 
     final respModelRecharge = ModelRecharge.fromJson(response.data['data']);
-    print('RECHARGE RESPONSE DATA: ${response.data['data']}');
     return respModelRecharge;
   }
 
@@ -118,7 +113,6 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
   Future<int> postOrderPayment(Map<String, dynamic> body) async {
     final String endpoint = '$url/api/v1/paymentes/order';
     final resp = await httpAdapter.post(endpoint, data: body);
-    print('POST ORDER PAYMENT RESPONSE: ${resp.data}');
     return resp.statusCode!;
   }
 }

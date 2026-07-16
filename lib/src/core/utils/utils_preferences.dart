@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:ecored_app/src/features/login/data/models/model_user.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Preferences {
@@ -9,16 +10,25 @@ class Preferences {
   Preferences._internal();
 
   SharedPreferences? _prefs;
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  String? _cachedToken;
+
+  static const String _tokenKey = 'user_token';
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    _cachedToken = await _secureStorage.read(key: _tokenKey);
   }
 
-  // Guardar modelo completo
+  // Guardar modelo completo (el token se guarda por separado, cifrado)
   Future<void> saveUser(ModelUser user) async {
-    final jsonString = jsonEncode(user.toJson());
-    final saved = await _prefs?.setString('user', jsonString);
-    print('User saved to preferences: ${saved}');
+    _cachedToken = user.token;
+    await _secureStorage.write(key: _tokenKey, value: user.token);
+
+    final Map<String, dynamic> userJson = user.toJson();
+    userJson['token'] = '';
+    final jsonString = jsonEncode(userJson);
+    await _prefs?.setString('user', jsonString);
   }
 
   // Obtener modelo completo
@@ -26,12 +36,15 @@ class Preferences {
     final jsonString = _prefs?.getString('user');
     if (jsonString == null) return null;
     final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
-    return ModelUser.fromJson(jsonMap);
+    final ModelUser user = ModelUser.fromJson(jsonMap);
+    user.token = _cachedToken ?? '';
+    return user;
   }
 
   // Limpiar usuario
   Future<void> clearUser() async {
-    print('Clearing user from preferences');
+    _cachedToken = null;
+    await _secureStorage.delete(key: _tokenKey);
     await _prefs?.remove('user');
   }
 
