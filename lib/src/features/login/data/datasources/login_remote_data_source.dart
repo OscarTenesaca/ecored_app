@@ -52,7 +52,7 @@ class LoginRemoteDataSourceImpl implements LoginRemoteDataSource {
     }
 
     final respModelUser = ModelUser.fromJson(response.data['data']);
-    prefs.saveUser(respModelUser);
+    await prefs.saveUser(respModelUser);
     return respModelUser;
   }
 
@@ -87,7 +87,7 @@ class LoginRemoteDataSourceImpl implements LoginRemoteDataSource {
 
     final respModelUser = ModelUser.fromJson(response.data['data']);
     respModelUser.token = prefs.getUser()?.token ?? '';
-    prefs.saveUser(respModelUser);
+    await prefs.saveUser(respModelUser);
     return respModelUser;
   }
 

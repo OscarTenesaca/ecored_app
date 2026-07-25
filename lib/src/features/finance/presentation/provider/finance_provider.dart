@@ -1,9 +1,9 @@
 import 'package:ecored_app/src/core/models/nuvei_model.dart';
 import 'package:ecored_app/src/features/finance/data/models/model_index.dart';
+import 'package:ecored_app/src/features/finance/domain/usecases/finance_services.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
 import 'package:ecored_app/src/features/maps/domain/usecases/station_services.dart';
 import 'package:flutter/material.dart';
-import 'package:ecored_app/src/features/finance/domain/usecases/finance_services.dart';
 
 class FinanceProvider extends ChangeNotifier {
   final FinanceServices services;
@@ -138,7 +138,8 @@ class FinanceProvider extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
-      chargerData = await stationServices.findOneCharger({'id': chargerId});
+      // chargerData = await stationServices.findOneCharger({'id': chargerId});
+      chargerData = await stationServices.findOneCharger({'code': chargerId});
     } catch (e) {
       errorMessage = 'Error fetching charger: $e';
     } finally {

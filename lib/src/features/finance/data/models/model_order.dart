@@ -36,6 +36,7 @@ class ModelOrder {
   String idTag;
   String createdAt;
   int ocppTransactionId;
+  double currentPowerKw;
 
   ModelOrder({
     required this.id,
@@ -64,6 +65,7 @@ class ModelOrder {
     required this.idTag,
     required this.createdAt,
     required this.ocppTransactionId,
+    this.currentPowerKw = 0,
   });
 
   factory ModelOrder.fromJson(Map<String, dynamic> json) => ModelOrder(
@@ -103,6 +105,7 @@ class ModelOrder {
     idTag: json["idTag"],
     createdAt: json["createdAt"],
     ocppTransactionId: json["ocppTransactionId"],
+    currentPowerKw: (json["currentPowerKw"] ?? 0).toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -132,7 +135,49 @@ class ModelOrder {
     "idTag": idTag,
     "createdAt": createdAt,
     "ocppTransactionId": ocppTransactionId,
+    "currentPowerKw": currentPowerKw,
   };
+
+  /// Aplica una actualización parcial (p. ej. proveniente del evento de
+  /// socket `orderUpdate`) sobre este pedido, devolviendo una copia.
+  ///
+  /// El backend emite ese evento con `Order.findByIdAndUpdate(...)` SIN
+  /// `.populate()`, así que `user`/`stations`/`charger`/`country` llegan
+  /// como IDs planos, no como los objetos completos que sí devuelve el
+  /// endpoint REST normal. Por eso aquí solo se toman del payload los
+  /// campos que realmente cambian mientras se carga (energía, potencia,
+  /// costos, estado); todo lo demás se conserva del pedido ya cargado.
+  ModelOrder applyProgress(Map<String, dynamic> json) {
+    return ModelOrder(
+      id: id,
+      platformBuy: platformBuy,
+      status: json["status"] ?? status,
+      operationStatus: json["operationStatus"] ?? operationStatus,
+      pricePerKwh: json["pricePerKwh"]?.toDouble() ?? pricePerKwh,
+      tax: json["tax"]?.toDouble() ?? tax,
+      subtotal: json["subtotal"]?.toDouble() ?? subtotal,
+      total: json["total"]?.toDouble() ?? total,
+      discount: discount,
+      discountTotal: discountTotal,
+      user: user,
+      stations: stations,
+      charger: charger,
+      connectorId: connectorId,
+      country: country,
+      administrator: administrator,
+      meterStart: json["meterStart"] ?? meterStart,
+      meterStop: json["meterStop"] ?? meterStop,
+      kWhDelivered: json["kWhDelivered"]?.toDouble() ?? kWhDelivered,
+      socStart: socStart,
+      soc: json["soc"]?.toDouble() ?? soc,
+      batteryCapacityKwh: batteryCapacityKwh,
+      stopReason: json["stopReason"] ?? stopReason,
+      idTag: idTag,
+      createdAt: createdAt,
+      ocppTransactionId: ocppTransactionId,
+      currentPowerKw: json["currentPowerKw"]?.toDouble() ?? currentPowerKw,
+    );
+  }
 }
 
 class Charger {

@@ -1,6 +1,7 @@
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
+import 'package:ecored_app/src/features/charger/presentation/provider/charger_provider.dart';
 import 'package:ecored_app/src/features/finance/presentation/provider/finance_provider.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
 import 'package:flutter/material.dart';
@@ -77,6 +78,24 @@ class _PageScanQrState extends State<PageScanQr> {
       }
 
       await financeProvider.findOneCharger(scannedId);
+
+      if (!mounted) return;
+
+      final fetchedCharger = financeProvider.chargerData;
+      if (fetchedCharger == null) {
+        showSnackbar(
+          context,
+          financeProvider.errorMessage ??
+              'No se pudo obtener la información del cargador.',
+          SnackbarStatus.error,
+        );
+      } else if (fetchedCharger.station == null) {
+        showSnackbar(
+          context,
+          'La estación asociada a este cargador ya no está disponible.',
+          SnackbarStatus.error,
+        );
+      }
     }
   }
 
@@ -375,6 +394,17 @@ class _PageScanQrState extends State<PageScanQr> {
         title: 'Pago exitoso',
         subTitle: 'Su pago ha sido procesado correctamente.',
         textButton: 'Aceptar',
+        onSubmit: () {
+          // Al presionar "Aceptar": carga la orden activa. PageOptCharger
+          // (que envuelve esta pantalla en la pestaña "Cargar") lo
+          // detecta y cambia automáticamente de PageScanQr a PageCharger
+          // — el mismo mecanismo reactivo que ya se usa para volver a
+          // PageScanQr cuando la carga finaliza.
+          context.read<ChargerProvider>().getOrderData({
+            'status': "PENDING",
+            "operationStatus": "CHARGING",
+          });
+        },
       );
     } else {
       if (!mounted) return;

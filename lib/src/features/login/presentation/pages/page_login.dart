@@ -58,7 +58,9 @@ class _PageLoginState extends State<PageLogin> {
                       if (value == null || value.isEmpty) {
                         return '* Ingrese su correo!';
                       }
-                      if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value)) {
+                      if (!RegExp(
+                        r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                      ).hasMatch(value)) {
                         return '* Ingrese un correo válido';
                       }
                       return null;

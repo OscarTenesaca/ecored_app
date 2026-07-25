@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
@@ -15,11 +14,18 @@ class PageCharger extends StatefulWidget {
   State<PageCharger> createState() => _PageChargerState();
 }
 
+// Estados terminales de OperationStatus (ver también charger_provider.dart):
+// al llegar cualquiera de estos, la sesión de carga ya no está activa.
+const List<String> _terminalOperationStatuses = ['FINISHED', 'FAILED', 'CANCELLED'];
+
 class _PageChargerState extends State<PageCharger>
     with SingleTickerProviderStateMixin {
-  Timer? _timer;
   final ValueNotifier<bool> isChargingNotifier = ValueNotifier(true);
   late AnimationController _rotationController;
+
+  // Evita programar la salida más de una vez si llegan varias
+  // actualizaciones con estado terminal seguidas.
+  bool _exitScheduled = false;
 
   @override
   void initState() {
@@ -31,16 +37,56 @@ class _PageChargerState extends State<PageCharger>
     )..repeat();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      startPolling();
+      final provider = context.read<ChargerProvider>();
+      // Ya hay una orden activa (page_opt_charger.dart la cargó antes de
+      // mostrar esta pantalla): conecta el socket para recibir su
+      // progreso en tiempo real. Si ya estaba conectado, no hace nada.
+      provider.connectChargeSocket();
+      // Refleja en el botón/anillo el estado real que reporta el
+      // servidor (además del flujo manual de "Detener Carga").
+      provider.addListener(_syncChargingStateFromOrder);
+      _syncChargingStateFromOrder();
     });
   }
 
   @override
   void dispose() {
+    context.read<ChargerProvider>().removeListener(_syncChargingStateFromOrder);
+    // Se sale de la pantalla de carga: cierra el socket y quita sus
+    // listeners para no dejar fugas de memoria ni seguir recibiendo
+    // eventos que ya nadie va a mostrar.
+    context.read<ChargerProvider>().disconnectChargeSocket();
     _rotationController.dispose();
     isChargingNotifier.dispose();
-    stopPolling();
     super.dispose();
+  }
+
+  void _syncChargingStateFromOrder() {
+    final provider = context.read<ChargerProvider>();
+    final order = provider.orderData;
+    if (order == null) return;
+
+    final bool isTerminal = _terminalOperationStatuses.contains(
+      order.operationStatus,
+    );
+    final bool stillCharging = !isTerminal;
+
+    if (isChargingNotifier.value != stillCharging) {
+      isChargingNotifier.value = stillCharging;
+    }
+
+    // El backend confirmó que la sesión realmente terminó (no la mera
+    // aceptación del RemoteStop, sino el operationStatus final que llega
+    // por socket tras el StopTransaction). Se espera un margen de
+    // cortesía en la UI y luego se limpia la orden: PageOptCharger
+    // reacciona solo y vuelve a mostrar PageScanQr.
+    if (isTerminal && !_exitScheduled) {
+      _exitScheduled = true;
+      Future.delayed(const Duration(seconds: 5), () {
+        if (!mounted) return;
+        context.read<ChargerProvider>().clearOrderData();
+      });
+    }
   }
 
   // void toggleCharging() {
@@ -68,6 +114,21 @@ class _PageChargerState extends State<PageCharger>
 
     if (stopData == 200) {
       isChargingNotifier.value = false;
+
+      // El 200 solo confirma que el backend envió el RemoteStop al
+      // cargador, no que la sesión ya terminó realmente (el backend
+      // recién marca la orden STOPPING y espera el StopTransaction; si
+      // nunca llega, su propia reconciliación la fuerza a FINISHED en
+      // segundo plano, hasta ~90s después). Esperar esa confirmación en
+      // pantalla dejaba al usuario "atascado" viendo la sesión en pausa.
+      // Por eso, al pedir detener, se sale de inmediato a PageScanQr:
+      // primero se desconecta el socket (con el id de la orden todavía
+      // disponible) y luego se limpia la orden para que PageOptCharger
+      // vuelva a mostrar el escáner.
+      if (!mounted) return;
+      final provider = context.read<ChargerProvider>();
+      provider.disconnectChargeSocket();
+      provider.clearOrderData();
     } else {
       // La carga no se detuvo en el backend: no se cambia el estado local.
     }
@@ -85,6 +146,23 @@ class _PageChargerState extends State<PageCharger>
     final duration = DateTime.now().difference(startedAt);
     final hours = duration.inHours;
     final minutes = duration.inMinutes % 60;
+    return "${hours}h ${minutes}m";
+  }
+
+  /// Estimado a partir de la potencia actual reportada por el socket.
+  /// Devuelve null si no hay suficiente información para calcularlo
+  /// (potencia en 0 o batería ya llena) — no se muestra en ese caso.
+  String? remainingTime(ModelOrder order) {
+    if (order.currentPowerKw <= 0 || order.batteryCapacityKwh <= 0) {
+      return null;
+    }
+
+    final remainingKwh = order.batteryCapacityKwh - order.kWhDelivered;
+    if (remainingKwh <= 0) return null;
+
+    final totalMinutes = (remainingKwh / order.currentPowerKw * 60).round();
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
     return "${hours}h ${minutes}m";
   }
 
@@ -329,6 +407,28 @@ class _PageChargerState extends State<PageCharger>
                     ],
                   ),
 
+                  const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildInfoCard(
+                          icon: Icons.flash_on,
+                          title: "${order.currentPowerKw.toStringAsFixed(1)} kW",
+                          subtitle: "Potencia actual",
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildInfoCard(
+                          icon: Icons.hourglass_bottom,
+                          title: remainingTime(order) ?? "--",
+                          subtitle: "Tiempo restante",
+                        ),
+                      ),
+                    ],
+                  ),
+
                   const SizedBox(height: 24),
 
                   /// BILLING
@@ -468,22 +568,6 @@ class _PageChargerState extends State<PageCharger>
     );
   }
 
-  void startPolling() {
-    final provider = context.read<ChargerProvider>();
-
-    // Primera carga inmediata
-    provider.getOrderData({'status': "PENDING", "operationStatus": "CHARGING"});
-
-    // Luego cada 5 segundos
-    _timer = Timer.periodic(const Duration(seconds: 5), (_) async {
-      await provider.getOrderData({
-        'status': "PENDING",
-        "operationStatus": "CHARGING",
-      });
-    });
-  }
-
-  void stopPolling() => _timer?.cancel();
 }
 
 // import 'dart:async';

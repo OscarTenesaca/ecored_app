@@ -29,10 +29,28 @@ class _PageAccessState extends State<PageAccess> {
   // y recree cada página (evita recargas de red y fugas de recursos).
   late final List<Widget> _pages = _getPages();
 
+  // Cada pestaña solo se "infla" la primera vez que el usuario la
+  // visita; antes de eso se muestra un placeholder vacío. Sin esto,
+  // IndexedStack construye TODAS las pestañas de entrada (incluida la
+  // de "Cargar"), y PageOptCharger/PageScanQr disparan el escáner QR
+  // automáticamente apenas se montan, aunque el usuario esté en Home.
+  final Set<int> _visitedIndices = {0};
+
   @override
   void initState() {
     super.initState();
     _validateFuture = apiAccess.validateToken();
+    _indexNotifier.addListener(_markVisited);
+  }
+
+  void _markVisited() {
+    _visitedIndices.add(_indexNotifier.value);
+  }
+
+  @override
+  void dispose() {
+    _indexNotifier.removeListener(_markVisited);
+    super.dispose();
   }
 
   @override
@@ -62,7 +80,14 @@ class _PageAccessState extends State<PageAccess> {
           return ValueListenableBuilder<int>(
             valueListenable: _indexNotifier,
             builder: (context, index, child) {
-              return IndexedStack(index: index, children: _pages);
+              return IndexedStack(
+                index: index,
+                children: List.generate(_pages.length, (i) {
+                  return _visitedIndices.contains(i)
+                      ? _pages[i]
+                      : const SizedBox.shrink();
+                }),
+              );
             },
           );
         },
