@@ -352,6 +352,8 @@ class _PageStationState extends State<PageStation> {
                 hintText: 'Nombre de la estación',
                 textEditingController: _nameController,
                 validator: (v) => v!.isEmpty ? '* Ingrese el nombre' : null,
+                                    filledColor: deepForestGreen(),
+
               ),
 
               CustomInputPhone(

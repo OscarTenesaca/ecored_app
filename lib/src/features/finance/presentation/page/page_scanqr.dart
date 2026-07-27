@@ -6,7 +6,6 @@ import 'package:ecored_app/src/features/finance/presentation/provider/finance_pr
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import 'package:provider/provider.dart';
 
 class PageScanQr extends StatefulWidget {
@@ -68,14 +67,14 @@ class _PageScanQrState extends State<PageScanQr> {
       // final scannedId = '69e17aaa58ca6e73f01cb51d';
       final scannedId = scannedData.split('/scanner/').last.trim();
 
-      if (!isValidMongoId(scannedId)) {
-        showSnackbar(
-          context,
-          'Código QR inválido. Asegúrate de escanear un código válido.',
-          SnackbarStatus.error,
-        );
-        return;
-      }
+      // if (!isValidMongoId(scannedId)) {
+      //   showSnackbar(
+      //     context,
+      //     'Código QR inválido. Asegúrate de escanear un código válido.',
+      //     SnackbarStatus.error,
+      //   );
+      //   return;
+      // }
 
       await financeProvider.findOneCharger(scannedId);
 

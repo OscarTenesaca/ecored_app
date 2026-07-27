@@ -138,8 +138,7 @@ class FinanceProvider extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
-      // chargerData = await stationServices.findOneCharger({'id': chargerId});
-      chargerData = await stationServices.findOneCharger({'code': chargerId});
+      chargerData = await stationServices.findOneCharger({'id': chargerId});
     } catch (e) {
       errorMessage = 'Error fetching charger: $e';
     } finally {
