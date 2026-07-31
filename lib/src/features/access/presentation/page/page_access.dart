@@ -135,7 +135,7 @@ class _PageAccessState extends State<PageAccess> {
     return [
       PageHome(),
       PageMaps(),
-      PageOptCharger(),
+      PageOptCharger(tabIndexNotifier: _indexNotifier, ownTabIndex: 2),
       PageFinance(),
       PageProfile(),
     ];

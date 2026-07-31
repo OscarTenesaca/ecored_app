@@ -375,18 +375,25 @@ class _PagePlanState extends State<PagePlan> {
             : selectedPlan;
     return Scaffold(
       backgroundColor: primaryColor(),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: accentColor()),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: LabelTitle(
+          title: "Elige un plan",
+          fontSize: 26,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              LabelTitle(
-                title: "Elige un plan",
-                fontSize: 26,
-                fontWeight: FontWeight.w700,
-              ),
-
               const SizedBox(height: 24),
 
               Expanded(

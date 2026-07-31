@@ -190,7 +190,7 @@ class Charger {
   factory Charger.fromJson(Map<String, dynamic> json) => Charger(
     id: json["_id"],
     typeConnection: json["typeConnection"],
-    code: json["code"],
+    code: json["code"] ?? '',
   );
 
   Map<String, dynamic> toJson() => {

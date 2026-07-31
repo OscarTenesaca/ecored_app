@@ -18,6 +18,14 @@ class PageUser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: accentColor()),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Container(
         height: double.infinity,
         width: double.infinity,

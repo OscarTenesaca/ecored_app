@@ -8,8 +8,8 @@ import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:ecored_app/src/features/maps/presentation/provider/station_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
 class PageStation extends StatefulWidget {
   const PageStation({super.key});
@@ -239,29 +239,38 @@ class _PageStationState extends State<PageStation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: accentColor()),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: _buildStepIndicator(),
+        actions: const [SizedBox(width: 56)],
+      ),
+
       body: Consumer<StationProvider>(
         builder: (context, stationProv, _) {
           return Stack(
             children: [
-              Padding(
-                padding: EdgeInsets.only(top: UtilSize.appBarHeight()),
-                child: Column(
-                  children: [
-                    _buildStepIndicator(),
-                    Expanded(
-                      child: PageView(
-                        controller: _pageController,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: [
-                          _stepBasic(),
-                          _stepLocation(),
-                          _stepChargers(),
-                        ],
-                      ),
+              Column(
+                children: [
+                  // _buildStepIndicator(),
+                  Expanded(
+                    child: PageView(
+                      controller: _pageController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        _stepBasic(),
+                        _stepLocation(),
+                        _stepChargers(),
+                      ],
                     ),
-                    // _buildNavigationButtons(),
-                  ],
-                ),
+                  ),
+                  // _buildNavigationButtons(),
+                ],
               ),
 
               /// LOADING ANIMADO
@@ -352,32 +361,46 @@ class _PageStationState extends State<PageStation> {
                 hintText: 'Nombre de la estación',
                 textEditingController: _nameController,
                 validator: (v) => v!.isEmpty ? '* Ingrese el nombre' : null,
-                                    filledColor: deepForestGreen(),
-
+                filledColor: deepForestGreen(),
+                icon: Icons.store_mall_directory_outlined,
+                iconColor: accentColor(),
               ),
 
               CustomInputPhone(
                 controller: _phoneController,
                 notifier: prefixNotifier,
+                hintText: 'Celular',
+                fillColor: deepForestGreen(),
               ),
 
               CustomButtonSelect(
                 title: 'Seleccionar tipo de punto',
                 selectNotifier: stTypePnNotifier,
                 optionsList: STATION_TYPE_POINTS_LIST,
+                backgroundColor: deepForestGreen(),
+                textColor: grayInputColor(),
+                icon: Icons.location_on_outlined,
+                iconColor: accentColor(),
               ),
 
               CustomButtonSelect(
                 title: 'Seleccionar estado',
                 selectNotifier: stStatusNotifier,
                 optionsList: STATION_STATUS_LIST,
+                backgroundColor: deepForestGreen(),
+                textColor: grayInputColor(),
+                icon: Icons.check_circle_outline,
+                iconColor: accentColor(),
               ),
               CustomInput(
                 hintText: 'Descripción',
                 textEditingController: _descriptionController,
-                maxLines: 3,
+                maxLines: 6,
                 validator:
                     (v) => v!.isEmpty ? '* Ingrese la descripción' : null,
+                filledColor: deepForestGreen(),
+                icon: Icons.notes,
+                iconColor: accentColor(),
               ),
             ],
           ),
@@ -401,6 +424,9 @@ class _PageStationState extends State<PageStation> {
                 hintText: 'Dirección',
                 textEditingController: _addressController,
                 validator: (v) => v!.isEmpty ? '* Ingrese la dirección' : null,
+                filledColor: deepForestGreen(),
+                icon: Icons.location_on_outlined,
+                iconColor: accentColor(),
               ),
 
               Row(
@@ -430,6 +456,9 @@ class _PageStationState extends State<PageStation> {
                           locationNotifier: countryNotifier,
                           title: 'País',
                           initialCountry: 'ECUADOR',
+                          filledColor: deepForestGreen(),
+                          icon: Icons.outlined_flag,
+                          iconColor: accentColor(),
                         );
                       },
                     ),
@@ -453,6 +482,9 @@ class _PageStationState extends State<PageStation> {
                               locations: snapshot.data!,
                               locationNotifier: provinceNotifier,
                               title: 'Provincia',
+                              filledColor: deepForestGreen(),
+                              icon: Icons.location_on_outlined,
+                              iconColor: accentColor(),
                             ),
                           );
                         },
@@ -479,6 +511,9 @@ class _PageStationState extends State<PageStation> {
                         locations: snapshot.data!,
                         locationNotifier: cantonNotifier,
                         title: 'Ciudad',
+                        filledColor: deepForestGreen(),
+                        icon: Icons.holiday_village_outlined,
+                        iconColor: accentColor(),
                       );
                     },
                   );
@@ -538,23 +573,38 @@ class _PageStationState extends State<PageStation> {
           final index = entry.key;
           final c = entry.value;
 
-          return Card(
+          return Container(
             margin: const EdgeInsets.only(bottom: 16),
-            color: greyColorWithTransparency(),
+            decoration: cardDecoration(shadow: true),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 spacing: 12,
                 children: [
                   Row(
                     children: [
-                      Text(
-                        "Charger ${index + 1}",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: accentColor().withValues(alpha: 0.2),
+                        child: Icon(
+                          Icons.ev_station,
+                          color: accentColor(),
+                          size: 18,
+                        ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          "Charger ${index + 1}",
+                          style: TextStyle(
+                            color: whiteColor(),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
                       IconButton(
-                        icon: const Icon(Icons.close),
+                        icon: Icon(Icons.close, color: errorColor()),
                         onPressed: () => _removeCharger(index),
                       ),
                     ],
@@ -569,6 +619,10 @@ class _PageStationState extends State<PageStation> {
                               c["typeConnection"]
                                   as ValueNotifier<Map<String, String>?>,
                           optionsList: CONECTORS_TYPE_LIST,
+                          backgroundColor: deepForestGreen(),
+                          textColor: grayInputColor(),
+                          icon: Icons.usb,
+                          iconColor: accentColor(),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -579,6 +633,10 @@ class _PageStationState extends State<PageStation> {
                               c["status"]
                                   as ValueNotifier<Map<String, String>?>,
                           optionsList: STATION_STATUS_LIST,
+                          backgroundColor: deepForestGreen(),
+                          textColor: grayInputColor(),
+                          icon: Icons.check_circle_outline,
+                          iconColor: accentColor(),
                         ),
                       ),
                     ],
@@ -593,6 +651,10 @@ class _PageStationState extends State<PageStation> {
                               c["format"]
                                   as ValueNotifier<Map<String, String>?>,
                           optionsList: CHARGER_FORMAT_LIST,
+                          backgroundColor: deepForestGreen(),
+                          textColor: grayInputColor(),
+                          icon: Icons.cable,
+                          iconColor: accentColor(),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -603,6 +665,10 @@ class _PageStationState extends State<PageStation> {
                               c["typeCharger"]
                                   as ValueNotifier<Map<String, String>?>,
                           optionsList: CHARGER_TYPE_LIST,
+                          backgroundColor: deepForestGreen(),
+                          textColor: grayInputColor(),
+                          icon: Icons.settings,
+                          iconColor: accentColor(),
                         ),
                       ),
                     ],
@@ -617,7 +683,9 @@ class _PageStationState extends State<PageStation> {
                           textInputType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
-
+                          filledColor: deepForestGreen(),
+                          icon: Icons.battery_charging_full,
+                          iconColor: accentColor(),
                           validator:
                               (v) => v!.isEmpty ? '* Ingrese el nombre' : null,
                         ),
@@ -630,6 +698,9 @@ class _PageStationState extends State<PageStation> {
                           textInputType: TextInputType.numberWithOptions(
                             decimal: true,
                           ),
+                          filledColor: deepForestGreen(),
+                          icon: Icons.speed,
+                          iconColor: accentColor(),
                           validator: null,
                         ),
                       ),
@@ -646,6 +717,9 @@ class _PageStationState extends State<PageStation> {
                           textInputType: TextInputType.numberWithOptions(
                             decimal: true,
                           ),
+                          filledColor: deepForestGreen(),
+                          icon: Icons.bolt,
+                          iconColor: accentColor(),
                           validator:
                               (v) => v!.isEmpty ? '* Ingrese el nombre' : null,
                         ),
@@ -658,6 +732,9 @@ class _PageStationState extends State<PageStation> {
                           textInputType: TextInputType.numberWithOptions(
                             decimal: true,
                           ),
+                          filledColor: deepForestGreen(),
+                          icon: Icons.attach_money,
+                          iconColor: accentColor(),
                           validator: null,
                         ),
                       ),
@@ -668,10 +745,11 @@ class _PageStationState extends State<PageStation> {
             ),
           );
         }),
-        ElevatedButton.icon(
+        CustomButton(
+          textButton: '+ Agregar charger',
+          buttonColor: greyColorWithTransparency(),
+          textButtonColor: accentColor(),
           onPressed: _addCharger,
-          icon: const Icon(Icons.add),
-          label: const Text("Agregar charger"),
         ),
       ],
     );

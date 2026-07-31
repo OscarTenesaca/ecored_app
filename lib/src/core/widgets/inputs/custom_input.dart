@@ -20,6 +20,7 @@ class CustomInput extends StatefulWidget {
   final int? maxLines;
   final double? fontSize;
   final bool enabled;
+  final IconData? icon;
 
   const CustomInput({
     super.key,
@@ -40,6 +41,7 @@ class CustomInput extends StatefulWidget {
     this.maxLines,
     this.fontSize = 14,
     this.enabled = true,
+    this.icon,
   });
 
   @override
@@ -108,6 +110,10 @@ class _CustomInputState extends State<CustomInput> {
         ),
         filled: widget.filled,
         hintText: widget.hintText,
+        prefixIcon:
+            widget.icon != null
+                ? Icon(widget.icon, color: widget.iconColor)
+                : null,
         suffixIcon:
             widget.obscured
                 ? IconButton(

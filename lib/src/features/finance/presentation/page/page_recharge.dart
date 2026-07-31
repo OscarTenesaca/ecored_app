@@ -1,5 +1,4 @@
 import 'package:ecored_app/src/core/theme/theme_colors.dart';
-import 'package:ecored_app/src/core/utils/utils_size.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/finance/data/models/model_index.dart';
 import 'package:ecored_app/src/features/finance/presentation/provider/finance_provider.dart';
@@ -21,6 +20,14 @@ class _PageRechargeState extends State<PageRecharge> {
 
     return Scaffold(
       backgroundColor: primaryColor(),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: accentColor()),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: FutureBuilder<ModelRecharge>(
         future: _loadData(args),
         builder: (context, snapshot) {
@@ -56,11 +63,7 @@ class _PageRechargeState extends State<PageRecharge> {
             child: ListView(
               shrinkWrap: true,
               physics: BouncingScrollPhysics(),
-              padding: EdgeInsets.only(
-                top: UtilSize.appBarHeight() + 50,
-                left: 18,
-                right: 18,
-              ),
+              padding: EdgeInsets.only(left: 18, right: 18),
               children: [
                 /// -------- CARD PRINCIPAL -----------
                 CardSummary(
@@ -106,39 +109,10 @@ class _PageRechargeState extends State<PageRecharge> {
                     // ),
                   ],
                 ),
-
-                const SizedBox(height: 8),
-                _backButton(context),
-                const SizedBox(height: 35),
               ],
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _backButton(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.pop(context),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(50),
-          color: deepForestGreen(),
-          border: Border.all(color: accentColor().withValues(alpha: 0.4)),
-        ),
-        child: Center(
-          child: Text(
-            "Regresar",
-            style: TextStyle(
-              color: accentColor(),
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-            ),
-          ),
-        ),
       ),
     );
   }

@@ -10,6 +10,8 @@ class CustomInputLocation extends StatefulWidget {
   final String? initialCountry;
   final Color? filledColor;
   final String? Function(String?)? validator;
+  final IconData? icon;
+  final Color? iconColor;
 
   const CustomInputLocation({
     super.key,
@@ -19,6 +21,8 @@ class CustomInputLocation extends StatefulWidget {
     this.initialCountry = '',
     this.filledColor = const Color.fromARGB(255, 130, 130, 130),
     this.validator,
+    this.icon,
+    this.iconColor,
   });
 
   @override
@@ -35,13 +39,26 @@ class _CustomInputLocationState extends State<CustomInputLocation> {
   void initState() {
     super.initState();
     filteredCountries = widget.locations;
+    _applyInitialCountry();
   }
 
   @override
   void didUpdateWidget(covariant CustomInputLocation oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.initialCountry!.isNotEmpty && widget.locations.isNotEmpty) {
+    _applyInitialCountry();
+
+    if (oldWidget.locations != widget.locations) {
+      setState(() {
+        filteredCountries = widget.locations;
+      });
+    }
+  }
+
+  void _applyInitialCountry() {
+    if (selectedCountry == null &&
+        widget.initialCountry!.isNotEmpty &&
+        widget.locations.isNotEmpty) {
       selectedCountry = widget.locations
           .cast<LocationModel?>()
           .firstWhere(
@@ -56,12 +73,6 @@ class _CustomInputLocationState extends State<CustomInputLocation> {
           widget.locationNotifier.value = selectedCountry!.id;
         });
       }
-    }
-
-    if (oldWidget.locations != widget.locations) {
-      setState(() {
-        filteredCountries = widget.locations;
-      });
     }
   }
 
@@ -228,7 +239,9 @@ class _CustomInputLocationState extends State<CustomInputLocation> {
                           color: Colors.white,
                           fontSize: 24,
                         ),
-                      ),
+                      )
+                    else if (widget.icon != null)
+                      Icon(widget.icon, color: widget.iconColor),
 
                     const SizedBox(width: 12),
 
@@ -240,6 +253,9 @@ class _CustomInputLocationState extends State<CustomInputLocation> {
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),
+
+                    if (widget.icon != null)
+                      Icon(Icons.arrow_drop_down, color: widget.iconColor),
                   ],
                 ),
               ),

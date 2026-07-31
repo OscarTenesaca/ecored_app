@@ -4,12 +4,16 @@ import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/charger/presentation/provider/charger_provider.dart';
 import 'package:ecored_app/src/features/finance/presentation/provider/finance_provider.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 class PageScanQr extends StatefulWidget {
-  const PageScanQr({super.key});
+  final ValueListenable<int>? tabIndexNotifier;
+  final int? ownTabIndex;
+
+  const PageScanQr({super.key, this.tabIndexNotifier, this.ownTabIndex});
 
   @override
   State<PageScanQr> createState() => _PageScanQrState();
@@ -22,6 +26,12 @@ class _PageScanQrState extends State<PageScanQr> {
   final ValueNotifier<String> qrCodeNotifier = ValueNotifier<String>('');
 
   @override
+  void initState() {
+    super.initState();
+    widget.tabIndexNotifier?.addListener(_onTabIndexChanged);
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
@@ -32,6 +42,33 @@ class _PageScanQrState extends State<PageScanQr> {
         _scanQr();
       });
     }
+  }
+
+  // Esta pestaña se mantiene montada dentro del IndexedStack de
+  // PageAccess para no perder estado/red al navegar entre tabs, así que
+  // dispose() nunca se dispara solo por cambiar de pestaña. Escuchamos
+  // el índice activo para limpiar el QR/cargador escaneados apenas el
+  // usuario sale de la pestaña "Cargar", sin esperar a que la pantalla
+  // se destruya de verdad.
+  void _onTabIndexChanged() {
+    if (widget.tabIndexNotifier == null || widget.ownTabIndex == null) return;
+    final isActive = widget.tabIndexNotifier!.value == widget.ownTabIndex;
+    if (!isActive) {
+      _resetScanState();
+    }
+  }
+
+  void _resetScanState() {
+    if (!mounted) return;
+    qrCodeNotifier.value = '';
+    context.read<FinanceProvider>().clearChargerData();
+  }
+
+  @override
+  void dispose() {
+    widget.tabIndexNotifier?.removeListener(_onTabIndexChanged);
+    qrCodeNotifier.dispose();
+    super.dispose();
   }
 
   Future<void> _scanQr() async {
@@ -64,17 +101,26 @@ class _PageScanQrState extends State<PageScanQr> {
     if (qrCodeNotifier.value.isNotEmpty) {
       debugPrint('QR escaneado: ${qrCodeNotifier.value}');
       final scannedData = qrCodeNotifier.value;
-      // final scannedId = '69e17aaa58ca6e73f01cb51d';
+
+      if (!scannedData.contains('/scanner/')) {
+        showSnackbar(
+          context,
+          'Este código QR no pertenece a EcoRed.',
+          SnackbarStatus.error,
+        );
+        return;
+      }
+
       final scannedId = scannedData.split('/scanner/').last.trim();
 
-      // if (!isValidMongoId(scannedId)) {
-      //   showSnackbar(
-      //     context,
-      //     'Código QR inválido. Asegúrate de escanear un código válido.',
-      //     SnackbarStatus.error,
-      //   );
-      //   return;
-      // }
+      if (!isValidMongoId(scannedId)) {
+        showSnackbar(
+          context,
+          'Código QR inválido. Asegúrate de escanear un código válido.',
+          SnackbarStatus.error,
+        );
+        return;
+      }
 
       await financeProvider.findOneCharger(scannedId);
 

@@ -7,6 +7,8 @@ class CustomButtonSelect extends StatelessWidget {
   final String title;
   final Color backgroundColor;
   final Color textColor;
+  final IconData? icon;
+  final Color? iconColor;
 
   const CustomButtonSelect({
     super.key,
@@ -15,6 +17,8 @@ class CustomButtonSelect extends StatelessWidget {
     this.title = 'Seleccionar opción',
     this.backgroundColor = Colors.grey,
     this.textColor = Colors.white,
+    this.icon,
+    this.iconColor,
   });
 
   @override
@@ -37,6 +41,10 @@ class CustomButtonSelect extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (icon != null) ...[
+                Icon(icon, color: iconColor ?? textColor, size: 20),
+                const SizedBox(width: 12),
+              ],
               Expanded(
                 child: Text(
                   value?['label'] ?? title,

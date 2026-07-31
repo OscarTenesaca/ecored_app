@@ -61,6 +61,14 @@ class _PageRegisterState extends State<PageRegister> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: primaryColor(),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: accentColor()),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -123,7 +131,9 @@ class _PageRegisterState extends State<PageRegister> {
                     if (value == null || value.isEmpty) {
                       return '* Ingrese su correo!';
                     }
-                    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value)) {
+                    if (!RegExp(
+                      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                    ).hasMatch(value)) {
                       return '* Ingrese un correo válido';
                     }
                     return null;

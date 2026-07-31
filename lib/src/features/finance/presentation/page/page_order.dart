@@ -21,6 +21,14 @@ class _PageOrderState extends State<PageOrder> {
 
     return Scaffold(
       backgroundColor: primaryColor(),
+      appBar: AppBar(
+        backgroundColor: primaryColor(),
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: accentColor()),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: FutureBuilder<ModelOrder>(
         future: _loadData(args),
         builder: (context, snapshot) {
@@ -66,7 +74,7 @@ class _PageOrderState extends State<PageOrder> {
                 CardSummary(
                   titleColor: grayInputColor(),
                   status: orderData.status,
-                  subtitle: '- \$${orderData.total}',
+                  subtitle: '- \$${orderData.total.toStringAsFixed(2)}',
                   subtitleColor: errorColor(),
                   leftText: orderData.country.name,
                   leftTextColor: grayInputColor(),
@@ -85,7 +93,10 @@ class _PageOrderState extends State<PageOrder> {
                   icon: Icons.ev_station_rounded,
                   iconColor: accentColor(),
                   rows: [
-                    LabelRowText(label: "Nombre", value: orderData.stations.name),
+                    LabelRowText(
+                      label: "Nombre",
+                      value: orderData.stations.name,
+                    ),
                     LabelRowText(
                       label: "Dirección",
                       value: orderData.stations.address,

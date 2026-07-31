@@ -1,11 +1,19 @@
 import 'package:ecored_app/src/features/charger/presentation/page/page_charger.dart';
 import 'package:ecored_app/src/features/charger/presentation/provider/charger_provider.dart';
 import 'package:ecored_app/src/features/finance/presentation/page/page_scanqr.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class PageOptCharger extends StatefulWidget {
-  const PageOptCharger({super.key});
+  final ValueListenable<int>? tabIndexNotifier;
+  final int? ownTabIndex;
+
+  const PageOptCharger({
+    super.key,
+    this.tabIndexNotifier,
+    this.ownTabIndex,
+  });
 
   @override
   State<PageOptCharger> createState() => _PageOptChargerState();
@@ -78,6 +86,9 @@ class _PageOptChargerState extends State<PageOptCharger> {
       );
     }
 
-    return const PageScanQr();
+    return PageScanQr(
+      tabIndexNotifier: widget.tabIndexNotifier,
+      ownTabIndex: widget.ownTabIndex,
+    );
   }
 }
