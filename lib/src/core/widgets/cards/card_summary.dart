@@ -11,6 +11,7 @@ class CardSummary extends StatelessWidget {
   final Color leftTextColor;
   final String rightText;
   final Color rightTextColor;
+  final Color? statusColor;
   const CardSummary({
     super.key,
     this.title = 'Total a pagar',
@@ -22,12 +23,14 @@ class CardSummary extends StatelessWidget {
     this.leftTextColor = Colors.grey,
     required this.rightText,
     this.rightTextColor = Colors.grey,
+    this.statusColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final bool isDone = status == "DONE";
-    final color = isDone ? Colors.greenAccent : Colors.redAccent;
+    final color =
+        statusColor ?? (isDone ? Colors.greenAccent : Colors.redAccent);
 
     return Container(
       padding: const EdgeInsets.all(22),

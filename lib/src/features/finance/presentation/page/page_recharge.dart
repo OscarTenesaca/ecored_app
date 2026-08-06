@@ -47,6 +47,7 @@ class _PageRechargeState extends State<PageRecharge> {
           }
 
           final rechargeData = snapshot.data!;
+          // print(rechargeData.toJson().toString());
           return TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
             duration: const Duration(milliseconds: 450),
@@ -68,18 +69,15 @@ class _PageRechargeState extends State<PageRecharge> {
                 /// -------- CARD PRINCIPAL -----------
                 CardSummary(
                   titleColor: grayInputColor(),
-                  status: rechargeData.status,
-                  subtitle: '+ \$${rechargeData.value}',
+                  status: _rechargeStatusLabel(rechargeData.status),
+                  statusColor: _rechargeStatusColor(rechargeData.status),
+                  subtitle: '+ \$${rechargeData.value.toStringAsFixed(2)}',
                   subtitleColor: successColor(),
-                  leftText: 'Recargado con éxito',
+                  leftText: _rechargeStatusDescription(rechargeData.status),
                   leftTextColor: grayInputColor(),
                   rightText: rechargeData.createdAt,
-                  // rightText: UtilsDate.formatLocal(
-                  //   rechargeData.createdAt.toString(),
-                  // ),
                   rightTextColor: whiteColor().withValues(alpha: 0.65),
                 ),
-                // _mainRechargeSummary(rechargeData),
                 const SizedBox(height: 18),
 
                 /// -------- SECCIÓN DETALLES TRANSACCIÓN -----
@@ -96,6 +94,10 @@ class _PageRechargeState extends State<PageRecharge> {
                               : rechargeData.payment.name,
                     ),
                     LabelRowText(
+                      label: "Monto",
+                      value: '\$${rechargeData.value.toStringAsFixed(2)}',
+                    ),
+                    LabelRowText(
                       label: "Transaction ID",
                       value: rechargeData.transactionId,
                     ),
@@ -103,10 +105,22 @@ class _PageRechargeState extends State<PageRecharge> {
                       label: "Autorización",
                       value: rechargeData.authorizationCode,
                     ),
-                    // LabelRowText(
-                    //   label: "Referencia",
-                    //   value: rechargeData.devReference,
-                    // ),
+                    // if (rechargeData.devReference.isNotEmpty)
+                    //   LabelRowText(
+                    //     label: "Referencia",
+                    //     value: rechargeData.devReference,
+                    //   ),
+                    LabelRowText(
+                      label: "Tipo de recarga",
+                      value: _statusCreatedLabel(rechargeData.statusCreated),
+                    ),
+                    LabelRowText(label: "Fecha", value: rechargeData.createdAt),
+                    if (rechargeData.reason != null &&
+                        rechargeData.reason!.isNotEmpty)
+                      LabelRowText(
+                        label: "Motivo",
+                        value: rechargeData.reason!,
+                      ),
                   ],
                 ),
               ],
@@ -120,5 +134,66 @@ class _PageRechargeState extends State<PageRecharge> {
   Future<ModelRecharge> _loadData(ModelTransaction args) async {
     final provider = context.read<FinanceProvider>();
     return await provider.getRechargeData({'id': args.recharge});
+  }
+}
+
+String _rechargeStatusLabel(String status) {
+  switch (status) {
+    case 'DONE':
+      return 'Completada';
+    case 'PENDING':
+      return 'Pendiente';
+    case 'REFUND':
+      return 'Reembolsada';
+    case 'DELETED':
+      return 'Eliminada';
+    case 'EXPIRED':
+      return 'Expirada';
+    default:
+      return status;
+  }
+}
+
+String _rechargeStatusDescription(String status) {
+  switch (status) {
+    case 'DONE':
+      return 'Recargado con éxito';
+    case 'PENDING':
+      return 'Recarga pendiente de confirmación';
+    case 'REFUND':
+      return 'Recarga reembolsada';
+    case 'DELETED':
+      return 'Recarga eliminada';
+    case 'EXPIRED':
+      return 'Recarga expirada';
+    default:
+      return 'Recarga';
+  }
+}
+
+Color _rechargeStatusColor(String status) {
+  switch (status) {
+    case 'DONE':
+      return successColor();
+    case 'PENDING':
+      return warningColor();
+    case 'REFUND':
+      return infoColor();
+    case 'DELETED':
+    case 'EXPIRED':
+      return errorColor();
+    default:
+      return grayInputColor();
+  }
+}
+
+String _statusCreatedLabel(String statusCreated) {
+  switch (statusCreated) {
+    case 'AUTOMATIC':
+      return 'Automática';
+    case 'MANUAL':
+      return 'Manual';
+    default:
+      return statusCreated;
   }
 }

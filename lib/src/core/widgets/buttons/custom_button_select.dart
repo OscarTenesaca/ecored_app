@@ -23,36 +23,44 @@ class CustomButtonSelect extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Se construye con un Container + InkWell (no ElevatedButton) para
+    // igualar exactamente el mismo look de CustomInput: mismo radio (18),
+    // sin borde visible y sin sombra/elevación, en vez de aproximarlo con
+    // el estilo por defecto de un botón Material.
     return ValueListenableBuilder<Map<String, String>?>(
       valueListenable: selectNotifier,
       builder: (context, value, _) {
-        return ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            backgroundColor: backgroundColor,
-            foregroundColor: textColor,
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: Colors.grey),
-            ),
-          ),
-          onPressed: () => _openSelect(context),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, color: iconColor ?? textColor, size: 20),
-                const SizedBox(width: 12),
-              ],
-              Expanded(
-                child: Text(
-                  value?['label'] ?? title,
-                  style: const TextStyle(fontSize: 14),
-                ),
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => _openSelect(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: BorderRadius.circular(18),
               ),
-              const Icon(Icons.arrow_drop_down),
-            ],
+              child: Row(
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, color: iconColor ?? textColor, size: 20),
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    child: Text(
+                      value?['label'] ?? title,
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.arrow_drop_down, color: textColor),
+                ],
+              ),
+            ),
           ),
         );
       },

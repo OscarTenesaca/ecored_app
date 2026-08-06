@@ -59,18 +59,20 @@ class _CustomInputLocationState extends State<CustomInputLocation> {
     if (selectedCountry == null &&
         widget.initialCountry!.isNotEmpty &&
         widget.locations.isNotEmpty) {
-      selectedCountry = widget.locations
-          .cast<LocationModel?>()
-          .firstWhere(
-            (country) =>
-                country?.name.toUpperCase() ==
-                widget.initialCountry!.toUpperCase(),
-            orElse: () => null,
-          );
+      selectedCountry = widget.locations.cast<LocationModel?>().firstWhere(
+        (country) =>
+            country?.name.toUpperCase() == widget.initialCountry!.toUpperCase(),
+        orElse: () => null,
+      );
 
       if (selectedCountry != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           widget.locationNotifier.value = selectedCountry!.id;
+          // Sin esto, el FormField interno queda con su `_value` inicial
+          // (vacío, capturado antes de este callback) y un Form.validate()
+          // externo marcaría el campo como incompleto pese a que el país
+          // ya está preseleccionado visualmente.
+          _fieldState?.didChange(selectedCountry!.id);
         });
       }
     }

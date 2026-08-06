@@ -21,6 +21,8 @@ class CustomInput extends StatefulWidget {
   final double? fontSize;
   final bool enabled;
   final IconData? icon;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
 
   const CustomInput({
     super.key,
@@ -42,6 +44,8 @@ class CustomInput extends StatefulWidget {
     this.fontSize = 14,
     this.enabled = true,
     this.icon,
+    this.focusNode,
+    this.textInputAction,
   });
 
   @override
@@ -73,6 +77,8 @@ class _CustomInputState extends State<CustomInput> {
       onEditingComplete: () => widget.onEditingComplete?.call(),
       onChanged: (value) => widget.onChanged?.call(value),
       controller: widget.textEditingController,
+      focusNode: widget.focusNode,
+      textInputAction: widget.textInputAction,
       autofocus: false,
       obscureText: widget.obscured ? _obscured : false,
       cursorColor: accentColor(),

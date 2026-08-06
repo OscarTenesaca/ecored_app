@@ -20,6 +20,8 @@ class ModelRecharge {
   String user;
   Payments payment;
   String createdAt;
+  String? reason;
+  String? updatedAt;
 
   ModelRecharge({
     required this.id,
@@ -32,6 +34,8 @@ class ModelRecharge {
     required this.user,
     required this.payment,
     required this.createdAt,
+    this.reason,
+    this.updatedAt,
   });
 
   factory ModelRecharge.fromJson(Map<String, dynamic> json) => ModelRecharge(
@@ -45,6 +49,8 @@ class ModelRecharge {
     user: json["user"],
     payment: Payments.fromJson(json["payment"]),
     createdAt: json["createdAt"],
+    reason: json["reason"],
+    updatedAt: json["updatedAt"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -58,6 +64,8 @@ class ModelRecharge {
     "user": user,
     "payment": payment.toJson(),
     "createdAt": createdAt,
+    "reason": reason,
+    "updatedAt": updatedAt,
   };
 }
 

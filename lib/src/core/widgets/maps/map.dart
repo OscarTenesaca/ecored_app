@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_enums.dart';
+import 'package:ecored_app/src/core/utils/utils_preferences.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:flutter/material.dart';
@@ -217,11 +220,44 @@ class _CustomMapState extends State<CustomMap>
               initialZoom: widget.initialZoom,
             ),
             children: [
-              // Capa de mapa base (Google Maps)
+              // Capa de mapa base — opciones gratuitas/públicas de
+              // flutter_map, sin API key. Deja una sola activa (la que
+              // no está comentada) y usa las demás para probar rápido.
               TileLayer(
+                // Google Maps (estilo estándar): calles con nombres,
+                // POIs y colores por defecto de Google. Endpoint no
+                // oficial/no documentado — funcionaba, pero no tiene
+                // garantía de soporte a largo plazo.
                 urlTemplate:
                     'https://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga',
                 subdomains: ['a', 'b', 'c'],
+
+                // CartoDB Voyager: balanceado entre OSM y un estilo
+                // "de navegación" moderno, colores suaves y etiquetas
+                // muy legibles.
+                // urlTemplate:
+                //     'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                // subdomains: ['a', 'b', 'c', 'd'],
+
+                // ✅ ACTIVA — CartoDB Dark Matter (oscuro): combina con
+                // la UI dark de la app y hace resaltar mucho más los
+                // pines de color (estado de estación + avatar de
+                // usuario) que sobre un fondo claro.
+                // urlTemplate:
+                //     'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                // subdomains: ['a', 'b', 'c', 'd'],
+
+                // OpenTopoMap: mapa topográfico con curvas de nivel y
+                // relieve, útil si se necesita mostrar terreno/altitud.
+                // urlTemplate: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+                // subdomains: ['a', 'b', 'c'],
+
+                // CartoDB Positron (claro): minimalista, fondo claro y
+                // calles en gris suave, muy legible con marcadores de
+                // color encima.
+                // urlTemplate:
+                //     'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                // subdomains: ['a', 'b', 'c', 'd'],
               ),
               if (widget.latLngMarkers.isNotEmpty)
                 MarkerLayer(
@@ -229,22 +265,17 @@ class _CustomMapState extends State<CustomMap>
                       widget.latLngMarkers
                           .map(
                             (markerData) => Marker(
-                              width: 40,
-                              height: 40,
+                              width: 44,
+                              height: 44,
                               point: LatLng(
                                 double.parse(markerData.lat),
                                 double.parse(markerData.lng),
                               ),
-
-                              child: IconButton(
-                                onPressed: () {
+                              child: _StationMarker(
+                                color: stationStatusColor(markerData.status),
+                                onTap: () {
                                   selectedMarker.value = markerData;
                                 },
-                                icon: Icon(
-                                  Icons.local_gas_station,
-                                  color: stationStatusColor(markerData.status),
-                                  size: 40,
-                                ),
                               ),
                             ),
                           )
@@ -256,15 +287,11 @@ class _CustomMapState extends State<CustomMap>
                 MarkerLayer(
                   markers: [
                     Marker(
-                      width: 40,
-                      height: 40,
+                      width: 58,
+                      height: 58,
                       point: widget.userMarker!,
                       // point: widget.initLatLng,
-                      child: const Icon(
-                        Icons.person_pin_circle,
-                        color: Colors.blue,
-                        size: 35,
-                      ),
+                      child: const _UserMarker(),
                     ),
                   ],
                 ),
@@ -298,6 +325,145 @@ class _CustomMapState extends State<CustomMap>
             },
           ),
       ],
+    );
+  }
+}
+
+/// Pin moderno para una estación: insignia circular con el ícono del
+/// estado (mismo `stationStatusColor` de siempre) sobre un fondo oscuro
+/// translúcido, en vez del `Icons.local_gas_station` genérico. Solo
+/// cambia la presentación — el `onTap` sigue disparando exactamente la
+/// misma selección de marcador que antes.
+class _StationMarker extends StatelessWidget {
+  final Color color;
+  final VoidCallback onTap;
+
+  const _StationMarker({required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: primaryColor().withValues(alpha: 0.94),
+            border: Border.all(color: color.withValues(alpha: 0.9), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.35),
+                blurRadius: 10,
+                spreadRadius: 0.5,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: Icon(Icons.ev_station_rounded, color: color, size: 22),
+        ),
+      ),
+    );
+  }
+}
+
+/// Pin del usuario: avatar circular con su foto de perfil (o un ícono de
+/// respaldo si no tiene), halo difuminado con `Blur` y borde/sombra en el
+/// color de acento de la app — reemplaza el `Icons.person_pin_circle`
+/// genérico. No participa en ningún gesto ni lógica, es puramente visual.
+class _UserMarker extends StatelessWidget {
+  const _UserMarker();
+
+  @override
+  Widget build(BuildContext context) {
+    final img = Preferences().getUser()?.img ?? '';
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Halo difuminado detrás del avatar.
+        ClipOval(
+          child: Blur(
+            type: BlurType.blur,
+            intensity: 8,
+            blurColor: accentColor(),
+            opacity: 0.18,
+            borderRadius: BorderRadius.circular(100),
+            child: const SizedBox(width: 52, height: 52),
+          ),
+        ),
+        // Resplandor suave (glow) con el color de acento.
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: accentColor().withValues(alpha: 0.45),
+                blurRadius: 16,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+        ),
+        Container(
+          width: 38,
+          height: 38,
+          padding: const EdgeInsets.all(2.4),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: accentColor(),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipOval(child: _UserAvatarImage(img: img)),
+        ),
+      ],
+    );
+  }
+}
+
+class _UserAvatarImage extends StatelessWidget {
+  final String img;
+
+  const _UserAvatarImage({required this.img});
+
+  @override
+  Widget build(BuildContext context) {
+    if (img.isEmpty) return _fallback();
+
+    if (img.contains('files/user/')) {
+      return Image.network(
+        img,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => _fallback(),
+      );
+    }
+
+    try {
+      return Image.memory(base64.decode(img), fit: BoxFit.cover);
+    } catch (_) {
+      return _fallback();
+    }
+  }
+
+  Widget _fallback() {
+    return Container(
+      color: deepForestGreen(),
+      alignment: Alignment.center,
+      child: Icon(Icons.person, color: accentColor(), size: 18),
     );
   }
 }

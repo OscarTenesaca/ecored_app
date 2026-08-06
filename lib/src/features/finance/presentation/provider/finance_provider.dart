@@ -51,6 +51,7 @@ class FinanceProvider extends ChangeNotifier {
   }
 
   Future<ModelOrder> getOrderData(Map<String, dynamic> params) async {
+    print(params);
     isLoading = true;
 
     try {

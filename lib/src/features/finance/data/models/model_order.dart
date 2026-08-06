@@ -37,6 +37,11 @@ class ModelOrder {
   String createdAt;
   int ocppTransactionId;
   double currentPowerKw;
+  String? remoteStartRequestedAt;
+  String? chargingStartTime;
+  String? chargingEndTime;
+  String? finalizedAt;
+  String? paymentMethodName;
 
   ModelOrder({
     required this.id,
@@ -66,6 +71,11 @@ class ModelOrder {
     required this.createdAt,
     required this.ocppTransactionId,
     this.currentPowerKw = 0,
+    this.remoteStartRequestedAt,
+    this.chargingStartTime,
+    this.chargingEndTime,
+    this.finalizedAt,
+    this.paymentMethodName,
   });
 
   factory ModelOrder.fromJson(Map<String, dynamic> json) => ModelOrder(
@@ -106,6 +116,11 @@ class ModelOrder {
     createdAt: json["createdAt"],
     ocppTransactionId: json["ocppTransactionId"],
     currentPowerKw: (json["currentPowerKw"] ?? 0).toDouble(),
+    remoteStartRequestedAt: json["remoteStartRequestedAt"],
+    chargingStartTime: json["chargingStartTime"],
+    chargingEndTime: json["chargingEndTime"],
+    finalizedAt: json["finalizedAt"],
+    paymentMethodName: json["payment"] is Map ? json["payment"]["name"] : null,
   );
 
   Map<String, dynamic> toJson() => {
@@ -136,6 +151,10 @@ class ModelOrder {
     "createdAt": createdAt,
     "ocppTransactionId": ocppTransactionId,
     "currentPowerKw": currentPowerKw,
+    "remoteStartRequestedAt": remoteStartRequestedAt,
+    "chargingStartTime": chargingStartTime,
+    "chargingEndTime": chargingEndTime,
+    "finalizedAt": finalizedAt,
   };
 
   /// Aplica una actualización parcial (p. ej. proveniente del evento de
@@ -176,6 +195,11 @@ class ModelOrder {
       createdAt: createdAt,
       ocppTransactionId: ocppTransactionId,
       currentPowerKw: json["currentPowerKw"]?.toDouble() ?? currentPowerKw,
+      remoteStartRequestedAt: remoteStartRequestedAt,
+      chargingStartTime: chargingStartTime,
+      chargingEndTime: chargingEndTime,
+      finalizedAt: finalizedAt,
+      paymentMethodName: paymentMethodName,
     );
   }
 }

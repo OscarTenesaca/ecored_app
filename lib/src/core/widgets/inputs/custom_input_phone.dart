@@ -13,6 +13,9 @@ class CustomInputPhone extends StatefulWidget {
   final String? hintText;
   final Color? fillColor;
   final double? fontSize;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final void Function(String)? onSubmitted;
 
   const CustomInputPhone({
     super.key,
@@ -21,6 +24,9 @@ class CustomInputPhone extends StatefulWidget {
     this.hintText = '',
     this.fillColor = Colors.transparent,
     this.fontSize = 14,
+    this.focusNode,
+    this.textInputAction,
+    this.onSubmitted,
   });
 
   @override
@@ -44,6 +50,9 @@ class _CustomInputPhoneState extends State<CustomInputPhone> {
     return IntlPhoneField(
       disableLengthCheck: true,
       controller: widget.controller,
+      focusNode: widget.focusNode,
+      textInputAction: widget.textInputAction,
+      onSubmitted: widget.onSubmitted,
 
       onCountryChanged: (phone) {
         widget.notifier.value = "+${phone.dialCode}";

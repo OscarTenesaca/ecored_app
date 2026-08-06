@@ -44,11 +44,13 @@ void showSnackbar(BuildContext context, String content, SnackbarStatus status) {
       break;
   }
 
+  const duration = Duration(seconds: 3);
+
   // Show the snackbar with the determined colors
-  scaffold.showSnackBar(
+  final controller = scaffold.showSnackBar(
     SnackBar(
       backgroundColor: backgroundColor,
-      duration: const Duration(seconds: 3),
+      duration: duration,
       content: Text(
         content,
         textAlign: TextAlign.center,
@@ -57,12 +59,19 @@ void showSnackbar(BuildContext context, String content, SnackbarStatus status) {
       action: SnackBarAction(
         label: 'OK',
         textColor: primaryColor(), // You can also customize this
-        onPressed: () {
-          // scaffold.hideCurrentSnackBar();
-          // scaffold.clearSnackBars();
-          scaffold.removeCurrentSnackBar();
-        },
+        onPressed: () => scaffold.removeCurrentSnackBar(),
       ),
     ),
   );
+
+  // ScaffoldMessengerState solo agenda su temporizador interno de
+  // auto-cierre cuando, en el momento del build, la ruta dueña de este
+  // ScaffoldMessenger es la ruta "current" (ModalRoute.isCurrent). Si el
+  // snackbar se muestra mientras hay un diálogo/bottom sheet encima (que
+  // empuja una ruta nueva sobre la actual), ese temporizador interno
+  // nunca llega a agendarse y el snackbar queda visible indefinidamente
+  // hasta que el usuario lo cierra a mano. Para garantizar el auto-cierre
+  // siempre —con o sin acción visible— lo forzamos con nuestro propio
+  // temporizador, independiente del gating interno de Flutter.
+  Future.delayed(duration, controller.close);
 }

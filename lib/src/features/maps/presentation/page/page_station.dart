@@ -31,6 +31,9 @@ class _PageStationState extends State<PageStation> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _nameFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+  final _descriptionFocus = FocusNode();
 
   // ───────────────── STEP 2 ─────────────────
   final _locationFormKey = GlobalKey<FormState>();
@@ -61,6 +64,9 @@ class _PageStationState extends State<PageStation> {
     _nameController.dispose();
     _phoneController.dispose();
     _descriptionController.dispose();
+    _nameFocus.dispose();
+    _phoneFocus.dispose();
+    _descriptionFocus.dispose();
     _addressController.dispose();
     stLatLngNotifier.dispose();
     countryNotifier.dispose();
@@ -113,6 +119,18 @@ class _PageStationState extends State<PageStation> {
 
     if (_currentStep == 1 && !_locationFormKey.currentState!.validate()) return;
 
+    if (_currentStep == 1) {
+      bool isValidNotifyStep2 =
+          countryNotifier.value.isNotEmpty &&
+          provinceNotifier.value.isNotEmpty &&
+          cantonNotifier.value.isNotEmpty;
+
+      if (!isValidNotifyStep2) {
+        showSnackbar(context, msgValidation, SnackbarStatus.waiting);
+        return;
+      }
+    }
+
     if (_currentStep < 2) {
       setState(() => _currentStep++);
       _pageController.nextPage(
@@ -132,8 +150,48 @@ class _PageStationState extends State<PageStation> {
     }
   }
 
+  // ───────────────── VALIDACIÓN CHARGERS ─────────────────
+  bool _validateChargers() {
+    if (chargers.isEmpty) {
+      showSnackbar(context, msgValidation, SnackbarStatus.waiting);
+      return false;
+    }
+
+    for (final c in chargers) {
+      final typeConnection =
+          (c["typeConnection"] as ValueNotifier<Map<String, String>?>).value;
+      final status = (c["status"] as ValueNotifier<Map<String, String>?>).value;
+      final format = (c["format"] as ValueNotifier<Map<String, String>?>).value;
+      final typeCharger =
+          (c["typeCharger"] as ValueNotifier<Map<String, String>?>).value;
+      final powerKw = (c["powerKw"] as TextEditingController).text;
+      final intensity = (c["intensity"] as TextEditingController).text;
+      final voltage = (c["voltage"] as TextEditingController).text;
+      final price = (c["priceWithTipeConnector"] as TextEditingController).text;
+
+      final isComplete =
+          typeConnection != null &&
+          status != null &&
+          format != null &&
+          typeCharger != null &&
+          powerKw.isNotEmpty &&
+          intensity.isNotEmpty &&
+          voltage.isNotEmpty &&
+          price.isNotEmpty;
+
+      if (!isComplete) {
+        showSnackbar(context, msgValidation, SnackbarStatus.waiting);
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   // ───────────────── SUBMIT ─────────────────
   void _submit() async {
+    if (!_validateChargers()) return;
+
     final stationProvider = context.read<StationProvider>();
 
     /// 1️⃣ BODY DE LA STATION
@@ -364,6 +422,10 @@ class _PageStationState extends State<PageStation> {
                 filledColor: deepForestGreen(),
                 icon: Icons.store_mall_directory_outlined,
                 iconColor: accentColor(),
+                focusNode: _nameFocus,
+                textInputAction: TextInputAction.next,
+                onEditingComplete:
+                    () => FocusScope.of(context).requestFocus(_phoneFocus),
               ),
 
               CustomInputPhone(
@@ -371,6 +433,11 @@ class _PageStationState extends State<PageStation> {
                 notifier: prefixNotifier,
                 hintText: 'Celular',
                 fillColor: deepForestGreen(),
+                focusNode: _phoneFocus,
+                textInputAction: TextInputAction.next,
+                onSubmitted:
+                    (_) =>
+                        FocusScope.of(context).requestFocus(_descriptionFocus),
               ),
 
               CustomButtonSelect(
@@ -401,6 +468,12 @@ class _PageStationState extends State<PageStation> {
                 filledColor: deepForestGreen(),
                 icon: Icons.notes,
                 iconColor: accentColor(),
+                focusNode: _descriptionFocus,
+                textInputAction: TextInputAction.done,
+                onEditingComplete: () {
+                  _descriptionFocus.unfocus();
+                  _next();
+                },
               ),
             ],
           ),
@@ -459,6 +532,11 @@ class _PageStationState extends State<PageStation> {
                           filledColor: deepForestGreen(),
                           icon: Icons.outlined_flag,
                           iconColor: accentColor(),
+                          validator:
+                              (v) =>
+                                  (v == null || v.isEmpty)
+                                      ? '* Requerido'
+                                      : null,
                         );
                       },
                     ),
@@ -485,6 +563,11 @@ class _PageStationState extends State<PageStation> {
                               filledColor: deepForestGreen(),
                               icon: Icons.location_on_outlined,
                               iconColor: accentColor(),
+                              validator:
+                                  (v) =>
+                                      (v == null || v.isEmpty)
+                                          ? '* Requerido'
+                                          : null,
                             ),
                           );
                         },
@@ -514,6 +597,9 @@ class _PageStationState extends State<PageStation> {
                         filledColor: deepForestGreen(),
                         icon: Icons.holiday_village_outlined,
                         iconColor: accentColor(),
+                        validator:
+                            (v) =>
+                                (v == null || v.isEmpty) ? '* Requerido' : null,
                       );
                     },
                   );
@@ -621,8 +707,6 @@ class _PageStationState extends State<PageStation> {
                           optionsList: CONECTORS_TYPE_LIST,
                           backgroundColor: deepForestGreen(),
                           textColor: grayInputColor(),
-                          icon: Icons.usb,
-                          iconColor: accentColor(),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -635,8 +719,6 @@ class _PageStationState extends State<PageStation> {
                           optionsList: STATION_STATUS_LIST,
                           backgroundColor: deepForestGreen(),
                           textColor: grayInputColor(),
-                          icon: Icons.check_circle_outline,
-                          iconColor: accentColor(),
                         ),
                       ),
                     ],
@@ -653,8 +735,6 @@ class _PageStationState extends State<PageStation> {
                           optionsList: CHARGER_FORMAT_LIST,
                           backgroundColor: deepForestGreen(),
                           textColor: grayInputColor(),
-                          icon: Icons.cable,
-                          iconColor: accentColor(),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -667,8 +747,6 @@ class _PageStationState extends State<PageStation> {
                           optionsList: CHARGER_TYPE_LIST,
                           backgroundColor: deepForestGreen(),
                           textColor: grayInputColor(),
-                          icon: Icons.settings,
-                          iconColor: accentColor(),
                         ),
                       ),
                     ],
@@ -684,8 +762,6 @@ class _PageStationState extends State<PageStation> {
                             decimal: true,
                           ),
                           filledColor: deepForestGreen(),
-                          icon: Icons.battery_charging_full,
-                          iconColor: accentColor(),
                           validator:
                               (v) => v!.isEmpty ? '* Ingrese el nombre' : null,
                         ),
@@ -699,8 +775,6 @@ class _PageStationState extends State<PageStation> {
                             decimal: true,
                           ),
                           filledColor: deepForestGreen(),
-                          icon: Icons.speed,
-                          iconColor: accentColor(),
                           validator: null,
                         ),
                       ),
@@ -718,8 +792,6 @@ class _PageStationState extends State<PageStation> {
                             decimal: true,
                           ),
                           filledColor: deepForestGreen(),
-                          icon: Icons.bolt,
-                          iconColor: accentColor(),
                           validator:
                               (v) => v!.isEmpty ? '* Ingrese el nombre' : null,
                         ),
@@ -733,8 +805,6 @@ class _PageStationState extends State<PageStation> {
                             decimal: true,
                           ),
                           filledColor: deepForestGreen(),
-                          icon: Icons.attach_money,
-                          iconColor: accentColor(),
                           validator: null,
                         ),
                       ),
