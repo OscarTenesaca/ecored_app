@@ -200,6 +200,7 @@ class _PageRegisterState extends State<PageRegister> {
                         textEditingController: TextEditingController(
                           text: value,
                         ),
+                        textInputType: TextInputType.datetime,
                         enabled: false,
                         filledColor: deepForestGreen(),
 

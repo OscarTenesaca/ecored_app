@@ -51,7 +51,6 @@ showPopUpWithChildren({
                       Text(
                         title,
                         style: TextStyle(
-                          fontFamily: "YaroRg",
                           color: Colors.white,
                           fontSize: sizeTitle,
                           fontWeight: FontWeight.bold,
@@ -63,7 +62,6 @@ showPopUpWithChildren({
                       Text(
                         subTitle,
                         style: TextStyle(
-                          fontFamily: "YaroRg",
                           color: Colors.white70,
                           fontSize: sizeSubtitle,
                           height: 1.5,

@@ -65,11 +65,7 @@ class _EnableGpsMessage extends StatelessWidget {
                             : "Se requiere que el GPS esté activado para usar esta aplicación. Por favor, habilita el GPS en la configuración de tu dispositivo.",
                         textAlign: TextAlign.justify,
                         maxLines: 10,
-                        style: TextStyle(
-                          fontFamily: 'YaroRg',
-                          fontSize: 14,
-                          color: primaryColor(),
-                        ),
+                        style: TextStyle(fontSize: 14, color: primaryColor()),
                       ),
                     ),
                   ),

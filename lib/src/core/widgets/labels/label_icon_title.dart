@@ -14,7 +14,7 @@ class LabelIconTitle extends StatelessWidget {
   final TextOverflow overflow;
   final AlignmentGeometry alignment;
   final TextAlign textAlign;
-  final String fontFamily;
+  final String? fontFamily;
 
   const LabelIconTitle({
     super.key,
@@ -31,7 +31,7 @@ class LabelIconTitle extends StatelessWidget {
     this.overflow = TextOverflow.ellipsis,
     this.alignment = Alignment.centerLeft,
     this.textAlign = TextAlign.justify,
-    this.fontFamily = '',
+    this.fontFamily,
   });
 
   @override

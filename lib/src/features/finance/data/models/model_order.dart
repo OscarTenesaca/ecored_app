@@ -42,6 +42,18 @@ class ModelOrder {
   String? chargingEndTime;
   String? finalizedAt;
   String? paymentMethodName;
+  double? voltageL1;
+  double? voltageL2;
+  double? voltageL3;
+  double? currentL1;
+  double? currentL2;
+  double? currentL3;
+  double? currentTotalA;
+  double? temperatureC;
+  double? frequencyHz;
+  double? meterReportedSoc;
+  String? connectorStatus;
+  String? connectorErrorCode;
 
   ModelOrder({
     required this.id,
@@ -76,6 +88,18 @@ class ModelOrder {
     this.chargingEndTime,
     this.finalizedAt,
     this.paymentMethodName,
+    this.voltageL1,
+    this.voltageL2,
+    this.voltageL3,
+    this.currentL1,
+    this.currentL2,
+    this.currentL3,
+    this.currentTotalA,
+    this.temperatureC,
+    this.frequencyHz,
+    this.meterReportedSoc,
+    this.connectorStatus,
+    this.connectorErrorCode,
   });
 
   factory ModelOrder.fromJson(Map<String, dynamic> json) => ModelOrder(
@@ -121,6 +145,18 @@ class ModelOrder {
     chargingEndTime: json["chargingEndTime"],
     finalizedAt: json["finalizedAt"],
     paymentMethodName: json["payment"] is Map ? json["payment"]["name"] : null,
+    voltageL1: json["voltageL1"]?.toDouble(),
+    voltageL2: json["voltageL2"]?.toDouble(),
+    voltageL3: json["voltageL3"]?.toDouble(),
+    currentL1: json["currentL1"]?.toDouble(),
+    currentL2: json["currentL2"]?.toDouble(),
+    currentL3: json["currentL3"]?.toDouble(),
+    currentTotalA: json["currentTotalA"]?.toDouble(),
+    temperatureC: json["temperatureC"]?.toDouble(),
+    frequencyHz: json["frequencyHz"]?.toDouble(),
+    meterReportedSoc: json["meterReportedSoc"]?.toDouble(),
+    connectorStatus: json["connectorStatus"],
+    connectorErrorCode: json["connectorErrorCode"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -155,6 +191,18 @@ class ModelOrder {
     "chargingStartTime": chargingStartTime,
     "chargingEndTime": chargingEndTime,
     "finalizedAt": finalizedAt,
+    "voltageL1": voltageL1,
+    "voltageL2": voltageL2,
+    "voltageL3": voltageL3,
+    "currentL1": currentL1,
+    "currentL2": currentL2,
+    "currentL3": currentL3,
+    "currentTotalA": currentTotalA,
+    "temperatureC": temperatureC,
+    "frequencyHz": frequencyHz,
+    "meterReportedSoc": meterReportedSoc,
+    "connectorStatus": connectorStatus,
+    "connectorErrorCode": connectorErrorCode,
   };
 
   /// Aplica una actualización parcial (p. ej. proveniente del evento de
@@ -200,6 +248,18 @@ class ModelOrder {
       chargingEndTime: chargingEndTime,
       finalizedAt: finalizedAt,
       paymentMethodName: paymentMethodName,
+      voltageL1: json["voltageL1"]?.toDouble() ?? voltageL1,
+      voltageL2: json["voltageL2"]?.toDouble() ?? voltageL2,
+      voltageL3: json["voltageL3"]?.toDouble() ?? voltageL3,
+      currentL1: json["currentL1"]?.toDouble() ?? currentL1,
+      currentL2: json["currentL2"]?.toDouble() ?? currentL2,
+      currentL3: json["currentL3"]?.toDouble() ?? currentL3,
+      currentTotalA: json["currentTotalA"]?.toDouble() ?? currentTotalA,
+      temperatureC: json["temperatureC"]?.toDouble() ?? temperatureC,
+      frequencyHz: json["frequencyHz"]?.toDouble() ?? frequencyHz,
+      meterReportedSoc: json["meterReportedSoc"]?.toDouble() ?? meterReportedSoc,
+      connectorStatus: json["connectorStatus"] ?? connectorStatus,
+      connectorErrorCode: json["connectorErrorCode"] ?? connectorErrorCode,
     );
   }
 }

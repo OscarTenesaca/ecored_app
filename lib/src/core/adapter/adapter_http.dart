@@ -47,9 +47,18 @@ class HttpAdapter {
   }
 
   Future<Response> post(String endpoint, {Map<String, dynamic>? data}) async {
-    _setHeaders();
-    final response = await _dio.post(endpoint, data: data, options: dioOptions);
-    return response;
+    try {
+      _setHeaders();
+      final response = await _dio.post(
+        endpoint,
+        data: data,
+        options: dioOptions,
+      );
+      return response;
+    } catch (err) {
+      print(err);
+      rethrow;
+    }
   }
 
   // Sube un archivo como multipart/form-data (p. ej. la foto de perfil).

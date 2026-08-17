@@ -3,7 +3,6 @@ import 'package:ecored_app/src/core/models/location_model.dart';
 import 'package:ecored_app/src/core/services/location_service.dart';
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
-import 'package:ecored_app/src/core/utils/utils_size.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/login/data/models/model_user.dart';
 import 'package:ecored_app/src/features/login/presentation/provider/login_provider.dart';
@@ -18,18 +17,18 @@ class PageUser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: accentColor()),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      // appBar: AppBar(
+      //   backgroundColor: Colors.transparent,
+      //   elevation: 0,
+      //   leading: IconButton(
+      //     icon: Icon(Icons.arrow_back_ios, color: accentColor()),
+      //     onPressed: () => Navigator.pop(context),
+      //   ),
+      // ),
       body: Container(
         height: double.infinity,
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 35.0),
+        // padding: const EdgeInsets.symmetric(horizontal: 35.0),
         decoration: globalDecoration(),
         child: Consumer<LoginProvider>(
           builder: (context, provider, _) {
@@ -39,7 +38,20 @@ class PageUser extends StatelessWidget {
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Column(
-                children: [SizedBox(height: UtilSize.appBarHeight()), _Form()],
+                children: [
+                  SizedBox(height: 30),
+                  Align(
+                    alignment: AlignmentGeometry.topLeft,
+                    child: IconButton(
+                      icon: Icon(Icons.arrow_back_ios, color: accentColor()),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 35.0),
+                    child: _Form(),
+                  ),
+                ],
               ),
             );
           },
@@ -117,7 +129,6 @@ class __FormState extends State<_Form> {
       child: Column(
         spacing: 15,
         children: [
-          SizedBox(height: 15),
           CustomHiveImg(
             img: img,
             size: 120,
@@ -175,6 +186,7 @@ class __FormState extends State<_Form> {
                 return CustomInput(
                   hintText: 'Fecha de Nacimiento',
                   textEditingController: TextEditingController(text: value),
+                  textInputType: TextInputType.datetime,
                   enabled: false,
                   validator: (value) {
                     return null;

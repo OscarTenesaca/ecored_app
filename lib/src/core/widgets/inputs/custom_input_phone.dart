@@ -100,34 +100,22 @@ class _CustomInputPhoneState extends State<CustomInputPhone> {
       ),
 
       initialCountryCode: initialCountryCode,
-      style: TextStyle(
-        // fontFamily: 'YaroRg',
-        fontSize: widget.fontSize,
-      ),
-      dropdownTextStyle: TextStyle(
-        // fontFamily: 'YaroRg',
-        fontSize: widget.fontSize,
-      ),
+      style: TextStyle(fontSize: widget.fontSize),
+      dropdownTextStyle: TextStyle(fontSize: widget.fontSize),
       pickerDialogStyle: PickerDialogStyle(
         backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
         countryCodeStyle: TextStyle(
-          // fontFamily: 'YaroRg',
           color: whiteColor(),
           fontSize: widget.fontSize,
         ),
         listTileDivider: const SizedBox(height: 5),
         countryNameStyle: TextStyle(
-          // fontFamily: 'YaroRg',
           color: whiteColor(),
           fontSize: widget.fontSize,
         ),
         searchFieldInputDecoration: InputDecoration(
           hintText: 'Buscar',
-          hintStyle: TextStyle(
-            fontFamily: 'YaroRg',
-            color: whiteColor(),
-            fontSize: widget.fontSize,
-          ),
+          hintStyle: TextStyle(color: whiteColor(), fontSize: widget.fontSize),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(color: whiteColor()),

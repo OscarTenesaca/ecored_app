@@ -276,7 +276,6 @@ class _PaymentSelectorState extends State<PaymentSelector> {
 
                                   Text(
                                     "Comisión ${method.comission}%",
-
                                     style: const TextStyle(
                                       color: Colors.white60,
                                     ),

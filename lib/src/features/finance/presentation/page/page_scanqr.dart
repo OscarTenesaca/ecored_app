@@ -113,15 +113,6 @@ class _PageScanQrState extends State<PageScanQr> {
 
       final scannedId = scannedData.split('/scanner/').last.trim();
 
-      if (!isValidMongoId(scannedId)) {
-        showSnackbar(
-          context,
-          'Código QR inválido. Asegúrate de escanear un código válido.',
-          SnackbarStatus.error,
-        );
-        return;
-      }
-
       await financeProvider.findOneCharger(scannedId);
 
       if (!mounted) return;
@@ -150,6 +141,7 @@ class _PageScanQrState extends State<PageScanQr> {
     final ModelCharger? charger = financeProvider.chargerData;
 
     return Scaffold(
+      backgroundColor: primaryColor(),
       body: SafeArea(
         child: ValueListenableBuilder<String>(
           valueListenable: qrCodeNotifier,
@@ -160,7 +152,9 @@ class _PageScanQrState extends State<PageScanQr> {
             }
 
             if (financeProvider.isLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return Center(
+                child: CircularProgressIndicator(color: accentColor()),
+              );
             }
 
             if (charger == null || charger.station == null) {
@@ -169,38 +163,61 @@ class _PageScanQrState extends State<PageScanQr> {
             }
 
             // 🟢 Mostrar resultado
-            return Column(
-              spacing: 16,
-              children: [
-                SizedBox(height: 4),
-                CardStation(
-                  title: charger.station!.name,
-                  details: [charger.station!.address],
-                ),
+            return TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOut,
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, (1 - value) * 16),
+                    child: child,
+                  ),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: SingleChildScrollView(
+                  physics: BouncingScrollPhysics(),
+                  child: Column(
+                    spacing: 16,
+                    children: [
+                      const SizedBox(height: 4),
 
-                _chargerCard(charger),
+                      // Momento "hero": lo primero que se ve es el cargador
+                      // escaneado, con su estado y precio como protagonistas.
+                      _heroSummary(charger),
 
-                Row(
-                  children: [
-                    Flexible(
-                      child: CustomButton(
-                        textButton: 'REESCANEAR',
-                        buttonColor: grayInputColor(),
-                        textButtonColor: accentColor(),
-                        onPressed: () => _scanQr(),
+                      _stationStrip(charger),
+
+                      _specsSection(charger),
+
+                      Row(
+                        spacing: 12,
+                        children: [
+                          Flexible(
+                            child: CustomButton(
+                              textButton: 'REESCANEAR',
+                              buttonColor: grayInputColor(),
+                              textButtonColor: accentColor(),
+                              onPressed: () => _scanQr(),
+                            ),
+                          ),
+                          Flexible(
+                            child: CustomButton(
+                              textButton: 'INICIAR CARGA',
+                              buttonColor: accentColor(),
+                              textButtonColor: primaryColor(),
+                              onPressed: () => _createOrder(charger),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    Flexible(
-                      child: CustomButton(
-                        textButton: 'INICIAR CARGA',
-                        buttonColor: accentColor(),
-                        textButtonColor: primaryColor(),
-                        onPressed: () => _createOrder(charger),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ],
+              ),
             );
           },
         ),
@@ -218,26 +235,36 @@ class _PageScanQrState extends State<PageScanQr> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 🔵 Icono principal
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.qr_code_scanner,
-                  size: 60,
-                  color: Colors.blue,
+              // 🔵 Marco de escaneo con ícono principal
+              _ScanFrame(
+                child: Container(
+                  padding: const EdgeInsets.all(22),
+                  decoration: BoxDecoration(
+                    color: deepForestGreen(),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: accentColor().withValues(alpha: 0.28),
+                        blurRadius: 26,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.qr_code_scanner_rounded,
+                    size: 54,
+                    color: accentColor(),
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
               // 📝 Título
               LabelTitle(
                 title: 'Escanea un código QR',
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                textColor: whiteColor(),
                 alignment: Alignment.center,
               ),
 
@@ -246,21 +273,34 @@ class _PageScanQrState extends State<PageScanQr> {
               // 🧾 Subtexto
               LabelTitle(
                 title: 'Escanea el código QR de la estacion de carga',
-                fontSize: 12,
-                textColor: Colors.grey,
+                fontSize: 13,
+                textColor: grayInputColor(),
                 alignment: Alignment.center,
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 32),
 
               // 🔘 Botón mejorado
-              LabelIconTitle(
-                icon: Icons.camera_alt_outlined,
-                title: 'Abrir cámara',
-                alignment: Alignment.center,
-                fontSize: 14,
-                iconColor: accentColor(),
-                textColor: accentColor(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: deepForestGreen(),
+                  borderRadius: BorderRadius.circular(50),
+                  border: Border.all(
+                    color: accentColor().withValues(alpha: 0.35),
+                  ),
+                ),
+                child: LabelIconTitle(
+                  icon: Icons.camera_alt_outlined,
+                  title: 'Abrir cámara',
+                  alignment: Alignment.center,
+                  fontSize: 14,
+                  iconColor: accentColor(),
+                  textColor: accentColor(),
+                ),
               ),
             ],
           ),
@@ -269,108 +309,244 @@ class _PageScanQrState extends State<PageScanQr> {
     );
   }
 
-  // ================= CHARGER CARD =================
-  Widget _chargerCard(ModelCharger charger) {
+  // ================= HERO: cargador escaneado =================
+  // Tarjeta protagonista con degradado, ícono circular con glow, estado
+  // y precio en grande — el "momento" principal de la pantalla.
+  Widget _heroSummary(ModelCharger charger) {
+    final statusColor = stationStatusColor(charger.status);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [deepForestGreen(), primaryColor()],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accentColor().withValues(alpha: 0.22)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accentColor().withValues(alpha: 0.14),
+              border: Border.all(color: accentColor(), width: 1.6),
+              boxShadow: [
+                BoxShadow(
+                  color: accentColor().withValues(alpha: 0.3),
+                  blurRadius: 14,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.ev_station_rounded,
+              color: accentColor(),
+              size: 26,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LabelTitle(
+                  title: charger.code,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  textColor: whiteColor(),
+                  padding: false,
+                ),
+                const SizedBox(height: 6),
+                _statusPill(charger.status, statusColor),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              LabelTitle(
+                title: "\$${charger.priceWithTipeConnector.toStringAsFixed(2)}",
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                textColor: accentColor(),
+                padding: false,
+              ),
+              LabelTitle(
+                title: '/kWh',
+                fontSize: 11,
+                textColor: grayInputColor(),
+                padding: false,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusPill(String status, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.circle, size: 8, color: color),
+          const SizedBox(width: 6),
+          LabelTitle(
+            title: stationStatusLabel(status),
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            textColor: color,
+            padding: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================= ESTACIÓN (franja compacta) =================
+  Widget _stationStrip(ModelCharger charger) {
+    final station = charger.station!;
+    final phone = '${station.prefixCode} ${station.phone}'.trim();
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: cardDecoration(shadow: true),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accentColor().withValues(alpha: 0.14),
+            ),
+            alignment: Alignment.center,
+            child: Icon(Icons.location_on, color: accentColor(), size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LabelTitle(
+                  title: station.name,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  textColor: whiteColor(),
+                  padding: false,
+                ),
+                const SizedBox(height: 2),
+                LabelTitle(
+                  title: station.address,
+                  fontSize: 12,
+                  textColor: grayInputColor(),
+                  padding: false,
+                ),
+                if (station.phone.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  LabelTitle(
+                    title: phone,
+                    fontSize: 12,
+                    textColor: grayInputColor(),
+                    padding: false,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================= ESPECIFICACIONES (ficha técnica) =================
+  Widget _specsSection(ModelCharger charger) {
     return Container(
       decoration: cardDecoration(shadow: true),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: accentColor().withValues(alpha: 0.2),
-                child: Icon(Icons.flash_on, color: accentColor(), size: 32),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  charger.code,
-                  style: TextStyle(
-                    color: kWhiteColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: LabelTitle(
-                  title: "\$${charger.priceWithTipeConnector}/kWh",
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  textColor: kAccentColor,
-                ),
+              Icon(Icons.receipt_long_rounded, color: accentColor(), size: 20),
+              const SizedBox(width: 8),
+              LabelTitle(
+                title: 'Especificaciones',
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                textColor: whiteColor(),
+                padding: false,
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
+          const SizedBox(height: 6),
+          _specRow(Icons.power, 'Conector', '#${charger.connectorId}'),
+          _specRow(Icons.usb, 'Tipo de conexión', charger.typeConnection),
+          _specRow(Icons.bolt, 'Potencia', '${charger.powerKw} kW'),
+          _specRow(
+            Icons.battery_charging_full,
+            'Voltaje',
+            '${charger.voltage} V',
+          ),
+          _specRow(Icons.speed, 'Intensidad', '${charger.intensity} A'),
+          _specRow(Icons.settings, 'Tipo de cargador', charger.typeCharger),
+          _specRow(Icons.cable, 'Formato', charger.format, isLast: true),
+        ],
+      ),
+    );
+  }
 
-          const SizedBox(height: 16),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            mainAxisSpacing: 1,
-            crossAxisSpacing: 12,
-            physics: NeverScrollableScrollPhysics(),
-            childAspectRatio: 4.2,
-            children: [
-              LabelIconTitle(
-                padding: false,
-                textAlign: TextAlign.center,
-                icon: Icons.bolt,
-                iconColor: accentColor(),
-                title: 'Potencia: ${charger.powerKw} kW',
-                textColor: whiteColor(),
-                fontWeight: FontWeight.bold,
-              ),
-              LabelIconTitle(
-                padding: false,
-                textAlign: TextAlign.center,
-                icon: Icons.usb,
-                iconColor: accentColor(),
-                title: 'Conexión: ${charger.typeConnection}',
-                textColor: whiteColor(),
-                fontWeight: FontWeight.bold,
-              ),
-              LabelIconTitle(
-                padding: false,
-                textAlign: TextAlign.center,
-                icon: Icons.battery_charging_full,
-                iconColor: accentColor(),
-                title: 'Voltaje: ${charger.voltage} V',
-                textColor: whiteColor(),
-                fontWeight: FontWeight.bold,
-              ),
-              LabelIconTitle(
-                padding: false,
-                textAlign: TextAlign.center,
-                icon: Icons.speed,
-                iconColor: accentColor(),
-                title: 'Intensidad: ${charger.intensity} A',
-                textColor: whiteColor(),
-                fontWeight: FontWeight.bold,
-              ),
-              LabelIconTitle(
-                padding: false,
-                textAlign: TextAlign.center,
-                icon: Icons.settings,
-                iconColor: accentColor(),
-                title: 'Tipo: ${charger.typeCharger}',
-                textColor: whiteColor(),
-                fontWeight: FontWeight.bold,
-              ),
-              LabelIconTitle(
-                padding: false,
-                textAlign: TextAlign.center,
-                icon: Icons.cable,
-                iconColor: accentColor(),
-                title: 'Formato: ${charger.format}',
-                textColor: whiteColor(),
-                fontWeight: FontWeight.bold,
-              ),
-            ],
+  Widget _specRow(
+    IconData icon,
+    String label,
+    String value, {
+    bool isLast = false,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(top: 10, bottom: isLast ? 0 : 0),
+      child: Row(
+        children: [
+          Icon(icon, color: accentColor(), size: 17),
+          const SizedBox(width: 10),
+          Expanded(
+            child: LabelTitle(
+              title: label,
+              fontSize: 13,
+              textColor: grayInputColor(),
+              padding: false,
+            ),
+          ),
+          LabelTitle(
+            title: value,
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            textColor: whiteColor(),
+            padding: false,
           ),
         ],
       ),
@@ -385,29 +561,6 @@ class _PageScanQrState extends State<PageScanQr> {
 
   Future<void> _createOrder(ModelCharger charger) async {
     final provider = context.read<FinanceProvider>();
-    // validate if money in wallet is enough for the recharge
-
-    // await provider.getWalletData({'user': Preferences().getUser()?.id});
-    // final walletBalance = provider.financeData;
-
-    // if (walletBalance == null) {
-    //   showSnackbar(
-    //     context,
-    //     'No se pudo obtener el balance de la wallet',
-    //     SnackbarStatus.error,
-    //   );
-    //   return;
-    // }
-
-    // // validate if money in wallet is enough for the recharge
-    // if (walletBalance.balance <= MIN_RECHARGE_AMOUNT) {
-    //   showSnackbar(
-    //     context,
-    //     'Fondos insuficientes en tu billetera virtual',
-    //     SnackbarStatus.waiting,
-    //   );
-    //   return;
-    // }
 
     Map<String, dynamic> order = {
       "platformBuy": "APP",
@@ -479,6 +632,11 @@ class _PageScanQrState extends State<PageScanQr> {
           errorMsj =
               'Error del servidor. Por favor, inténtelo de nuevo más tarde.';
           break;
+        case 503:
+          errorMsj =
+              'El cargador no respondió a tiempo al iniciar la carga. '
+              'Verifica que esté bien conectado e inténtalo de nuevo.';
+          break;
         default:
           errorMsj =
               errorMsj =
@@ -490,1093 +648,79 @@ class _PageScanQrState extends State<PageScanQr> {
   }
 }
 
-/*
+/// Marco decorativo tipo "escáner" (4 esquinas resaltadas en el color de
+/// acento) alrededor del ícono central de `openScanner()`. Puramente
+/// visual — no agrega gestos ni lógica propia, así que no interfiere con
+/// el `InkWell` que ya maneja el tap en el widget padre.
+class _ScanFrame extends StatelessWidget {
+  final Widget child;
 
-import 'package:ecored_app/src/core/models/nuvei_model.dart';
-import 'package:ecored_app/src/core/models/payment_model.dart';
-import 'package:ecored_app/src/core/theme/theme_colors.dart';
-import 'package:ecored_app/src/core/utils/utils_index.dart';
-import 'package:ecored_app/src/core/utils/utils_preferences.dart';
-import 'package:ecored_app/src/core/widgets/widget_index.dart';
-import 'package:ecored_app/src/features/finance/presentation/provider/finance_provider.dart';
-import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-
-class PageScanQr extends StatefulWidget {
-  const PageScanQr({super.key});
-
-  @override
-  State<PageScanQr> createState() => _PageScanQrState();
-}
-
-class _PageScanQrState extends State<PageScanQr> {
-  ModelCharger? charger;
-  PaymentModel? paymentesMethod;
-
-  final double tax = 1.5;
-  final TextEditingController kWhCtrl = TextEditingController();
-  final TextEditingController cashCtrl = TextEditingController(text: "5");
-  final ValueNotifier<String> qrCodeNotifier = ValueNotifier<String>('');
-
-  // ==================== CÁLCULOS ====================
-  double get kWh {
-    final kwh = double.tryParse(kWhCtrl.text) ?? 0;
-    return kwh;
-  }
-
-  double get dinero {
-    final dinero = double.tryParse(cashCtrl.text) ?? 5;
-    return dinero;
-  }
-
-  double get subtotal {
-    if (dinero > 0) return dinero;
-    return charger != null ? kWh * charger!.priceWithTipeConnector : 0;
-  }
-
-  double get total => subtotal + tax;
-
-  double get kWhFromDinero {
-    return charger != null && charger!.priceWithTipeConnector > 0
-        ? dinero / charger!.priceWithTipeConnector
-        : 0;
-  }
-
-  double get dineroFromKWh {
-    return charger != null ? kWh * charger!.priceWithTipeConnector : 0;
-  }
-
-  bool get recargaMinimaValida => dineroFromKWh >= 4.99;
-
-  bool isValidMongoId(String id) {
-    final regex = RegExp(r'^[a-fA-F0-9]{24}$');
-    return regex.hasMatch(id);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      paymentesMethod = null;
-      final financeProvider = context.read<FinanceProvider>();
-      financeProvider.clearChargerData();
-    });
-  }
+  const _ScanFrame({required this.child});
 
   @override
   Widget build(BuildContext context) {
-    final financeProvider = context.watch<FinanceProvider>();
+    final color = accentColor().withValues(alpha: 0.6);
+    const double size = 156;
+    const double corner = 30;
+    const double thickness = 3;
+    const double radius = 16;
 
-    return Scaffold(
-      backgroundColor: primaryColor(),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsetsGeometry.only(
-            top: 16,
-            left: 16,
-            right: 16,
-            bottom: UtilSize.bottomPadding(),
-          ),
-          child: Column(
-            children: [
-              // ================= HEADER =================
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  LabelTitle(
-                    title: 'Nueva recarga',
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.qr_code_scanner,
-                      color: accentColor(),
-                      size: 28,
-                    ),
-                    onPressed: () async {
-                      // qrCodeNotifier.value = '';
-
-                      // try {
-                      //   qrCodeNotifier.value = await showPopUpWithChildren(
-                      //     context: context,
-                      //     title: 'Scanner QR',
-                      //     subTitle:
-                      //         'Escanea el código QR para verificar el ticket',
-                      //     textButton: 'Cancelar',
-                      //     children: [BarCodeScanner(qrCode: qrCodeNotifier)],
-                      //   );
-                      // } on PlatformException {
-                      //   qrCodeNotifier.value =
-                      //       'Failed to get platform version.';
-                      // }
-                      // if (!mounted) return;
-
-                      // if (qrCodeNotifier.value.isNotEmpty) {
-                      //   final scannedData = qrCodeNotifier.value;
-                      //   final scannedId =
-                      //       scannedData.split('/scanner/').last.trim();
-
-                      //   if (!isValidMongoId(scannedId)) {
-                      //     showSnackbar(
-                      //       context,
-                      //       'Código QR inválido. Asegúrate de escanear un código válido.',
-                      //       SnackbarStatus.error,
-                      //     );
-                      //     return;
-                      //   }
-
-                      // await financeProvider.findOneCharger(scannedId);
-
-                      //! solo para mi email
-
-                      if (Preferences().getUser()?.email ==
-                          'tenesaca.999@gmail.com') {
-                        await financeProvider.findOneCharger(
-                          '69af8cbcdf22874ed6a4cde7',
-                        );
-                      } else {
-                        qrCodeNotifier.value = '';
-
-                        try {
-                          qrCodeNotifier.value = await showPopUpWithChildren(
-                            context: context,
-                            title: 'Scanner QR',
-                            subTitle:
-                                'Escanea el código QR para verificar el ticket',
-                            textButton: 'Cancelar',
-                            children: [BarCodeScanner(qrCode: qrCodeNotifier)],
-                          );
-                        } on PlatformException {
-                          qrCodeNotifier.value =
-                              'Failed to get platform version.';
-                        }
-                        if (!mounted) return;
-
-                        if (qrCodeNotifier.value.isNotEmpty) {
-                          final scannedData = qrCodeNotifier.value;
-                          final scannedId =
-                              scannedData.split('/scanner/').last.trim();
-
-                          if (!isValidMongoId(scannedId)) {
-                            showSnackbar(
-                              context,
-                              'Código QR inválido. Asegúrate de escanear un código válido.',
-                              SnackbarStatus.error,
-                            );
-                            return;
-                          }
-
-                          await financeProvider.findOneCharger(scannedId);
-                        }
-                      }
-
-                      if (financeProvider.chargerData != null) {
-                        charger = financeProvider.chargerData!;
-
-                        // Calculamos kWh automáticamente con el monto por defecto
-                        final defaultAmount =
-                            double.tryParse(cashCtrl.text) ?? 5;
-                        kWhCtrl.text = (defaultAmount /
-                                charger!.priceWithTipeConnector)
-                            .toStringAsFixed(2);
-
-                        Logger.logDev(
-                          'Charger encontrado: ${charger!.toJson()}',
-                        );
-                      } else {
-                        qrCodeNotifier.value = '';
-                        financeProvider.chargerData = null;
-                        showSnackbar(
-                          context,
-                          'El cargador no existe',
-                          SnackbarStatus.error,
-                        );
-                      }
-                    },
-                    // },
-                  ),
-                ],
-              ),
-
-              // ================= INSTRUCCIONES =================
-              if (qrCodeNotifier.value.isEmpty ||
-                  financeProvider.chargerData == null ||
-                  financeProvider.errorMessage != null)
-                Card(
-                  color: Colors.white.withOpacity(0.1),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Text(
-                      'Para realizar una recarga, primero escanea el código QR del cargador. '
-                      'Después de escanear, se mostrará la información del cargador y podrás proceder a recargar. '
-                      'El monto mínimo permitido es de 5 dólares. Asegúrate de tener fondos suficientes.',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-
-              // ================= CONTENIDO =================
-              if (financeProvider.chargerData != null && charger != null)
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: BouncingScrollPhysics(),
-                    child: Column(
-                      spacing: 16,
-                      children: [
-                        SizedBox(height: 4),
-                        CardStation(
-                          title: charger!.station!.name,
-                          details: [charger!.station!.address],
-                        ),
-                        _chargerCard(),
-                        _energyInput(),
-                        _summaryCard(),
-                        PaymentSelector(
-                          title: 'Seleccione método de pago',
-                          type: PaymentSelectorType.card,
-                          onSelected: (payment) {
-                            paymentesMethod = payment;
-                          },
-                        ),
-                        CustomButton(
-                          textButton: 'Confirmar Recarga',
-                          buttonColor: accentColor(),
-                          textButtonColor: primaryColor(),
-                          onPressed: () => _createOrder(),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
+    Widget bracket({required bool top, required bool left}) {
+      return Positioned(
+        top: top ? 0 : null,
+        bottom: top ? null : 0,
+        left: left ? 0 : null,
+        right: left ? null : 0,
+        child: Container(
+          width: corner,
+          height: corner,
+          decoration: BoxDecoration(
+            border: Border(
+              top:
+                  top
+                      ? BorderSide(color: color, width: thickness)
+                      : BorderSide.none,
+              bottom:
+                  !top
+                      ? BorderSide(color: color, width: thickness)
+                      : BorderSide.none,
+              left:
+                  left
+                      ? BorderSide(color: color, width: thickness)
+                      : BorderSide.none,
+              right:
+                  !left
+                      ? BorderSide(color: color, width: thickness)
+                      : BorderSide.none,
+            ),
+            borderRadius: BorderRadius.only(
+              topLeft:
+                  top && left ? const Radius.circular(radius) : Radius.zero,
+              topRight:
+                  top && !left ? const Radius.circular(radius) : Radius.zero,
+              bottomLeft:
+                  !top && left ? const Radius.circular(radius) : Radius.zero,
+              bottomRight:
+                  !top && !left ? const Radius.circular(radius) : Radius.zero,
+            ),
           ),
         ),
-      ),
-    );
-  }
-
-  // ================= CHARGER CARD =================
-  Widget _chargerCard() {
-    return Container(
-      decoration: cardDecoration(shadow: true),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: accentColor().withValues(alpha: 0.2),
-                child: Icon(Icons.flash_on, color: accentColor(), size: 32),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  charger!.code,
-                  style: TextStyle(
-                    color: kWhiteColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: LabelTitle(
-                  title: "\$${charger!.priceWithTipeConnector}/kWh",
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  textColor: kAccentColor,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            mainAxisSpacing: 1,
-            crossAxisSpacing: 12,
-            physics: NeverScrollableScrollPhysics(),
-            childAspectRatio: 4.2,
-            children: [
-              LabelIconTitle(
-                padding: false,
-                textAlign: TextAlign.center,
-                icon: Icons.bolt,
-                iconColor: accentColor(),
-                title: 'Potencia: ${charger.powerKw} kW',
-                textColor: whiteColor(),
-                fontWeight: FontWeight.bold,
-              ),
-              LabelIconTitle(
-                padding: false,
-                textAlign: TextAlign.center,
-                icon: Icons.usb,
-                iconColor: accentColor(),
-                title: 'Conexión: ${charger.typeConnection}',
-                textColor: whiteColor(),
-                fontWeight: FontWeight.bold,
-              ),
-              LabelIconTitle(
-                padding: false,
-                textAlign: TextAlign.center,
-                icon: Icons.battery_charging_full,
-                iconColor: accentColor(),
-                title: 'Voltaje: ${charger.voltage} V',
-                textColor: whiteColor(),
-                fontWeight: FontWeight.bold,
-              ),
-              LabelIconTitle(
-                padding: false,
-                textAlign: TextAlign.center,
-                icon: Icons.speed,
-                iconColor: accentColor(),
-                title: 'Intensidad: ${charger.intensity} A',
-                textColor: whiteColor(),
-                fontWeight: FontWeight.bold,
-              ),
-              LabelIconTitle(
-                padding: false,
-                textAlign: TextAlign.center,
-                icon: Icons.settings,
-                iconColor: accentColor(),
-                title: 'Tipo: ${charger.typeCharger}',
-                textColor: whiteColor(),
-                fontWeight: FontWeight.bold,
-              ),
-              LabelIconTitle(
-                padding: false,
-                textAlign: TextAlign.center,
-                icon: Icons.cable,
-                iconColor: accentColor(),
-                title: 'Formato: ${charger.format}',
-                textColor: whiteColor(),
-                fontWeight: FontWeight.bold,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ================= INPUT =================
-  Widget _energyInput() {
-    return Container(
-      decoration: cardDecoration(shadow: true),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Flexible(
-                child: CustomInput(
-                  hintText: 'Monto',
-                  textEditingController: cashCtrl,
-                  textInputType: TextInputType.number,
-                  filledColor: greyColorWithTransparency(),
-                  borderColor: Colors.transparent,
-                  validator: null,
-                  onChanged: (val) {
-                    setState(() {
-                      if (val.isNotEmpty && charger != null) {
-                        final d = double.tryParse(val) ?? 0;
-                        kWhCtrl.text = (d / charger!.priceWithTipeConnector)
-                            .toStringAsFixed(2);
-                      } else {
-                        kWhCtrl.text = '';
-                      }
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(width: 16),
-              Flexible(
-                child: CustomInput(
-                  hintText: 'kWh',
-                  textEditingController: kWhCtrl,
-                  textInputType: TextInputType.number,
-                  filledColor: greyColorWithTransparency(),
-                  validator: null,
-                  onChanged: (val) {
-                    setState(() {
-                      if (val.isNotEmpty && charger != null) {
-                        final k = double.tryParse(val) ?? 0;
-                        cashCtrl.text = (k * charger!.priceWithTipeConnector)
-                            .toStringAsFixed(2);
-                      } else {
-                        cashCtrl.text = '';
-                      }
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          if (!recargaMinimaValida)
-            Text(
-              "La recarga mínima es \$5",
-              style: TextStyle(color: Colors.redAccent, fontSize: 12),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryCard() {
-    return Container(
-      decoration: cardDecoration(shadow: true),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          LabelRowText(label: 'Subtotal', value: subtotal.toStringAsFixed(2)),
-          LabelRowText(label: 'Impuestos', value: tax.toStringAsFixed(2)),
-          Divider(color: greyColorWithTransparency(), height: 32),
-          LabelRowText(
-            label: 'TOTAL',
-            value: total.toStringAsFixed(2),
-            fontSize: 18,
-            titleColor: accentColor(),
-            subtitleColor: accentColor(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _createOrder() async {
-    final provider = context.read<FinanceProvider>();
-
-    if (paymentesMethod == null) {
-      showSnackbar(
-        context,
-        'Seleccione un método de pago',
-        SnackbarStatus.waiting,
       );
-      return;
     }
 
-    Map<String, dynamic> order = {
-      "platformBuy": "APP",
-      "kWhCharged": kWh,
-      "tax": tax,
-      "subtotal": subtotal,
-      "total": total,
-      "user": Preferences().getUser()?.id,
-      "stations": charger?.station!.id,
-      "charger": charger?.id,
-      "cpId": charger?.code,
-      "connectorId": charger?.connectorId,
-      "payment": paymentesMethod?.id,
-      "country": charger?.station!.country!.id,
-      "administrator": charger?.station!.administrator,
-    };
-
-    switch (paymentesMethod?.name.toUpperCase()) {
-      case 'NUVEI':
-        final devReference =
-            "REF${Preferences().getUser()!.id}-${DateTime.now().millisecondsSinceEpoch}";
-        final body = ModelNuvei(
-          userId: Preferences().getUser()!.id,
-          email: Preferences().getUser()!.email,
-          phone: Preferences().getUser()!.phone,
-          description: "Recarga de saldo Ecored",
-          amount: total,
-          vat: 0,
-          devReference: devReference,
-        );
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (_) => PaymentesNuvei(
-                  status: PaymentStatus.order,
-                  bodyNuvei: body,
-                  bodyEcored: order,
-                ),
-          ),
-        );
-        break;
-      case "WALLET":
-        await provider.getWalletData({'user': Preferences().getUser()?.id});
-        final walletBalance = provider.financeData;
-        if (walletBalance == null) {
-          showSnackbar(
-            context,
-            'No se pudo obtener el balance de la wallet',
-            SnackbarStatus.error,
-          );
-        } else if (walletBalance.balance >= total) {
-          final response = await provider.postOrder(order);
-          if (response == 201) {
-            if (!mounted) return;
-            showPopUpWithChildren(
-              context: context,
-              title: 'Pago exitoso',
-              subTitle: 'Su pago ha sido procesado correctamente.',
-              textButton: 'Aceptar',
-              onSubmit: () {
-                Navigator.pop(context, true);
-                final provider = context.read<FinanceProvider>();
-                provider.getWalletData({'user': Preferences().getUser()?.id});
-                provider.getTransactionData({
-                  'user': Preferences().getUser()?.id,
-                });
-              },
-            );
-          } else {
-            showSnackbar(
-              context,
-              'Pago aprobado, pero falló Ecored. Código de respuesta: $response',
-              SnackbarStatus.error,
-            );
-          }
-        } else {
-          showSnackbar(
-            context,
-            'Fondos insuficientes en tu billetera virtual',
-            SnackbarStatus.waiting,
-          );
-        }
-        break;
-      default:
-        debugPrint('método de pago no soportado');
-    }
-  }
-}
-
-
-
-
-
-
-import 'package:ecored_app/src/core/theme/theme_index.dart';
-import 'package:ecored_app/src/core/utils/utils_preferences.dart';
-import 'package:ecored_app/src/core/widgets/widget_index.dart';
-import 'package:ecored_app/src/features/finance/presentation/provider/finance_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter/material.dart';
-
-class PageScanQr extends StatefulWidget {
-  const PageScanQr({super.key});
-
-  @override
-  State<PageScanQr> createState() => _PageScanQrState();
-}
-
-class _PageScanQrState extends State<PageScanQr> {
-  final Map<String, dynamic> charger = {
-    "_id": "696aed28e2e674004780a7dc",
-    "status": "AVAILABLE",
-    "code": "AC1-1768615208178-74004780A7D8",
-    "typeConnection": "CCS2",
-    "powerKw": 24,
-    "intensity": 5,
-    "voltage": 12,
-    "format": "CABLE",
-    "typeCharger": "AC1",
-    "priceWithTipeConnector": 0.33,
-    "station": {
-      "_id": "696aed28e2e674004780a7d8",
-      "name": "Estación Central",
-      "location": "Calle Falsa 123",
-    },
-  };
-
-  final TextEditingController kWhCtrl = TextEditingController(text: "5");
-  final TextEditingController dineroCtrl = TextEditingController();
-
-  final double tax = 1.5;
-
-  // Colores locales
-  static const Color _cardColor = Color(0xff111111);
-  static const Color _borderColor = Color(0xff2A2A2A);
-  static const Color _textSecondary = Color(0xffB0B0B0);
-  static const Color _inputColor = Color(0xff1C1C1C);
-
-  // ==================== CÁLCULOS ====================
-  double get kWh {
-    final kwh = double.tryParse(kWhCtrl.text) ?? 0;
-    return kwh;
-  }
-
-  double get dinero {
-    final dinero = double.tryParse(dineroCtrl.text) ?? 0;
-    return dinero;
-  }
-
-  double get subtotal {
-    if (dinero > 0) return dinero;
-    return kWh * charger["priceWithTipeConnector"];
-  }
-
-  double get total => subtotal + tax;
-
-  double get kWhFromDinero {
-    return charger["priceWithTipeConnector"] > 0
-        ? dinero / charger["priceWithTipeConnector"]
-        : 0;
-  }
-
-  double get dineroFromKWh {
-    return kWh * charger["priceWithTipeConnector"];
-  }
-
-  bool get recargaMinimaValida => dineroFromKWh >= 5;
-
-  // ==================== BUILD ====================
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kPrimaryColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _header(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _stationCard(),
-                    const SizedBox(height: 16),
-                    _chargerCard(),
-                    const SizedBox(height: 20),
-                    _energyInput(),
-                    const SizedBox(height: 20),
-                    _summaryCard(),
-                    const SizedBox(height: 32),
-                    _confirmButton(),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ================= HEADER =================
-  Widget _header() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Nueva recarga",
-                style: TextStyle(
-                  color: kWhiteColor,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(Icons.ev_station, color: kAccentColor, size: 18),
-                  const SizedBox(width: 6),
-                  Text(
-                    charger["status"],
-                    style: TextStyle(
-                      color: kAccentColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const Spacer(),
-          Icon(Icons.qr_code_scanner, color: kAccentColor, size: 28),
-        ],
-      ),
-    );
-  }
-
-  // ================= STATION CARD =================
-  Widget _stationCard() {
-    final station = charger["station"];
-    return Container(
-      decoration: _cardDecoration(shadow: true),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Icon(Icons.location_on, color: kAccentColor, size: 40),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  station["name"],
-                  style: TextStyle(
-                    color: kWhiteColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  station["location"],
-                  style: TextStyle(color: _textSecondary),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ================= CHARGER CARD =================
-  Widget _chargerCard() {
-    return Container(
-      decoration: _cardDecoration(shadow: true),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: kAccentColor.withOpacity(0.2),
-                child: Icon(Icons.flash_on, color: kAccentColor, size: 32),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  charger["code"],
-                  style: TextStyle(
-                    color: kWhiteColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              Text(
-                "\$${charger["priceWithTipeConnector"]}/kWh",
-                style: TextStyle(
-                  color: kAccentColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            physics: NeverScrollableScrollPhysics(),
-            childAspectRatio: 3.2,
-            children: [
-              _modernInfoCard(
-                Icons.bolt,
-                "Potencia",
-                "${charger["powerKw"]} kW",
-              ),
-              _modernInfoCard(Icons.usb, "Conexión", charger["typeConnection"]),
-              _modernInfoCard(
-                Icons.battery_charging_full,
-                "Voltaje",
-                "${charger["voltage"]} V",
-              ),
-              _modernInfoCard(
-                Icons.speed,
-                "Intensidad",
-                "${charger["intensity"]} A",
-              ),
-              _modernInfoCard(Icons.settings, "Tipo", charger["typeCharger"]),
-              _modernInfoCard(Icons.cable, "Formato", charger["format"]),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _modernInfoCard(IconData icon, String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: _inputColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: kAccentColor, size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              "$label: $value",
-              style: TextStyle(
-                color: kWhiteColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ================= INPUT =================
-  Widget _energyInput() {
-    return Container(
-      decoration: _cardDecoration(shadow: true),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Campo kWh
-          TextField(
-            controller: kWhCtrl,
-            keyboardType: TextInputType.number,
-            onChanged: (val) {
-              setState(() {
-                if (val.isNotEmpty) {
-                  final k = double.tryParse(val) ?? 0;
-                  dineroCtrl.text = (k * charger["priceWithTipeConnector"])
-                      .toStringAsFixed(2);
-                } else {
-                  dineroCtrl.text = '';
-                }
-              });
-            },
-            style: TextStyle(color: kWhiteColor),
-            decoration: InputDecoration(
-              labelText: "Energía a cargar",
-              labelStyle: TextStyle(color: _textSecondary),
-              suffixText: "kWh",
-              suffixStyle: TextStyle(color: _textSecondary),
-              prefixIcon: Icon(Icons.bolt, color: kAccentColor),
-              filled: true,
-              fillColor: _inputColor,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (!recargaMinimaValida)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "La recarga mínima es \$5",
-                style: TextStyle(color: Colors.redAccent, fontSize: 12),
-              ),
-            ),
-
-          const SizedBox(height: 12),
-
-          // Campo dinero
-          TextField(
-            controller: dineroCtrl,
-            keyboardType: TextInputType.number,
-            onChanged: (val) {
-              setState(() {
-                if (val.isNotEmpty) {
-                  final d = double.tryParse(val) ?? 0;
-                  kWhCtrl.text = (d / charger["priceWithTipeConnector"])
-                      .toStringAsFixed(2);
-                } else {
-                  kWhCtrl.text = '';
-                }
-              });
-            },
-            style: TextStyle(color: kWhiteColor),
-            decoration: InputDecoration(
-              labelText: "Monto a recargar",
-              labelStyle: TextStyle(color: _textSecondary),
-              suffixText: "\$",
-              suffixStyle: TextStyle(color: _textSecondary),
-              prefixIcon: Icon(Icons.attach_money, color: kAccentColor),
-              filled: true,
-              fillColor: _inputColor,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ================= SUMMARY =================
-  Widget _summaryCard() {
-    return Container(
-      decoration: _cardDecoration(shadow: true),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          _row("Subtotal", subtotal),
-          _row("Impuestos", tax),
-          Divider(color: _borderColor, height: 32),
-          _row("TOTAL", total, isTotal: true),
-        ],
-      ),
-    );
-  }
-
-  Widget _row(String label, double value, {bool isTotal = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: isTotal ? kWhiteColor : _textSecondary,
-              fontSize: isTotal ? 18 : 14,
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
-            ),
-          ),
-          Text(
-            "\$${value.toStringAsFixed(2)}",
-            style: TextStyle(
-              color: isTotal ? kAccentColor : kWhiteColor,
-              fontSize: isTotal ? 20 : 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ================= BUTTON =================
-  Widget _confirmButton() {
     return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: kAccentColor,
-          foregroundColor: kPrimaryColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        onPressed: () {
-          if (!recargaMinimaValida) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                backgroundColor: Colors.redAccent,
-                content: Text(
-                  "La recarga mínima es \$5",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            );
-            return;
-          }
-          _createOrder();
-        },
-        child: const Text(
-          "CONFIRMAR RECARGA",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          child,
+          bracket(top: true, left: true),
+          bracket(top: true, left: false),
+          bracket(top: false, left: true),
+          bracket(top: false, left: false),
+        ],
       ),
     );
   }
-
-  // ================= HELPERS =================
-  BoxDecoration _cardDecoration({bool shadow = false}) {
-    return BoxDecoration(
-      color: _cardColor,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: _borderColor),
-      boxShadow:
-          shadow
-              ? [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 6,
-                  offset: Offset(0, 3),
-                ),
-              ]
-              : null,
-    );
-  }
-
-  Future<void> _createOrder() async {
-    final provider = context.read<FinanceProvider>();
-
-    Map<String, dynamic> order = {
-      "platformBuy": "APP",
-      "kWhCharged": kWh,
-      "tax": tax,
-      "subtotal": subtotal,
-      "total": total,
-      "user": Preferences().getUser()?.id,
-      "stations": charger["station"]["_id"],
-      "charger": charger["_id"],
-      "country": "689543d901241bbba2d6e8e6",
-      "payment": "689a67ef29035fc0c5fe5acc",
-      "administrator": "688fd96fd9b0281c0160f8e2",
-      "recharge": "6971ae69c195a239d2dca1f8",
-    };
-
-    debugPrint("ORDER JSON:");
-    debugPrint(order.toString());
-
-    final response = await provider.postOrder(order);
-
-    if (response == 201) {
-      if (!mounted) return;
-      showPopUpWithChildren(
-        context: context,
-        title: 'Pago exitoso',
-        subTitle: 'Su pago ha sido procesado correctamente.',
-        textButton: 'Aceptar',
-        onSubmit: () {
-          Navigator.pop(context, true); // Retorna al screen anterior
-
-          // Refresca los datos de la wallet y transacciones
-          final provider = context.read<FinanceProvider>();
-          provider.getWalletData({'user': Preferences().getUser()?.id});
-          provider.getTransactionData({'user': Preferences().getUser()?.id});
-        },
-      );
-    } else {
-      showSnackbar(
-        context,
-        'Pago aprobado, pero falló Ecored. Código de respuesta: $response',
-        SnackbarStatus.error,
-      );
-    }
-  }
 }
-
-*/

@@ -104,6 +104,7 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
   @override
   Future<int> postOrder(Map<String, dynamic> body) async {
     final String endpoint = '$url/api/v1/orders';
+    print(body);
     final resp = await httpAdapter.post(endpoint, data: body);
     return resp.statusCode!;
   }

@@ -1,11 +1,12 @@
 import 'dart:math';
+
 import 'package:ecored_app/src/core/theme/theme_index.dart';
 import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/charger/presentation/provider/charger_provider.dart';
+import 'package:ecored_app/src/features/finance/data/models/model_index.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:ecored_app/src/features/finance/data/models/model_index.dart';
 
 class PageCharger extends StatefulWidget {
   const PageCharger({super.key});
@@ -16,7 +17,11 @@ class PageCharger extends StatefulWidget {
 
 // Estados terminales de OperationStatus (ver también charger_provider.dart):
 // al llegar cualquiera de estos, la sesión de carga ya no está activa.
-const List<String> _terminalOperationStatuses = ['FINISHED', 'FAILED', 'CANCELLED'];
+const List<String> _terminalOperationStatuses = [
+  'FINISHED',
+  'FAILED',
+  'CANCELLED',
+];
 
 class _PageChargerState extends State<PageCharger>
     with SingleTickerProviderStateMixin {
@@ -330,15 +335,16 @@ class _PageChargerState extends State<PageCharger>
                               size: 26,
                             ),
                             const SizedBox(height: 6),
-                            Text(
-                              "${(level * 100).toInt()}%",
-                              style: TextStyle(
-                                fontSize: 34,
-                                fontWeight: FontWeight.bold,
-                                color:
-                                    isCharging ? accentColor() : errorColor(),
-                              ),
-                            ),
+
+                            // Text( remove
+                            //   "${(level * 100).toInt()}%",
+                            //   style: TextStyle(
+                            //     fontSize: 34,
+                            //     fontWeight: FontWeight.bold,
+                            //     color:
+                            //         isCharging ? accentColor() : errorColor(),
+                            //   ),
+                            // ),
                             const SizedBox(height: 4),
                             Text(
                               "${order.kWhDelivered.toStringAsFixed(1)} kWh",
@@ -414,7 +420,8 @@ class _PageChargerState extends State<PageCharger>
                       Expanded(
                         child: _buildInfoCard(
                           icon: Icons.flash_on,
-                          title: "${order.currentPowerKw.toStringAsFixed(1)} kW",
+                          title:
+                              "${order.currentPowerKw.toStringAsFixed(1)} kW",
                           subtitle: "Potencia actual",
                         ),
                       ),
@@ -493,6 +500,30 @@ class _PageChargerState extends State<PageCharger>
                     ),
                   ),
 
+                  if (_hasTelemetry(order)) ...[
+                    const SizedBox(height: 18),
+
+                    /// TELEMETRÍA (voltaje/corriente/temperatura/etc. del
+                    /// cargador — solo se muestra lo que el cargador
+                    /// efectivamente reporta por MeterValues).
+                    _buildSectionContainer(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Telemetría",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ..._telemetryRows(order),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 22),
 
                   /// BUTTON
@@ -510,8 +541,7 @@ class _PageChargerState extends State<PageCharger>
                     shadowColorB: accentColor().withValues(alpha: 0.25),
                     borderColorB: accentColor().withValues(alpha: 0.5),
 
-                    onPressed:
-                        isCharging ? () => toggleCharging(order) : null,
+                    onPressed: isCharging ? () => toggleCharging(order) : null,
                   ),
                 ],
               ),
@@ -520,6 +550,86 @@ class _PageChargerState extends State<PageCharger>
         );
       },
     );
+  }
+
+  bool _hasTelemetry(ModelOrder order) {
+    return order.voltageL1 != null ||
+        order.voltageL2 != null ||
+        order.voltageL3 != null ||
+        order.currentL1 != null ||
+        order.currentL2 != null ||
+        order.currentL3 != null ||
+        order.currentTotalA != null ||
+        order.temperatureC != null ||
+        order.frequencyHz != null ||
+        order.meterReportedSoc != null ||
+        order.connectorStatus != null ||
+        order.connectorErrorCode != null;
+  }
+
+  List<Widget> _telemetryRows(ModelOrder order) {
+    final rows = <MapEntry<String, String>>[];
+
+    if (order.connectorStatus != null) {
+      rows.add(MapEntry('Estado conector', order.connectorStatus!));
+    }
+    if (order.connectorErrorCode != null &&
+        order.connectorErrorCode != 'NoError') {
+      rows.add(MapEntry('Error conector', order.connectorErrorCode!));
+    }
+    if (order.meterReportedSoc != null) {
+      rows.add(
+        MapEntry(
+          'SoC (medidor)',
+          '${order.meterReportedSoc!.toStringAsFixed(0)}%',
+        ),
+      );
+    }
+    if (order.temperatureC != null) {
+      rows.add(
+        MapEntry(
+          'Temperatura',
+          '${order.temperatureC!.toStringAsFixed(1)} °C',
+        ),
+      );
+    }
+    if (order.frequencyHz != null) {
+      rows.add(
+        MapEntry('Frecuencia', '${order.frequencyHz!.toStringAsFixed(1)} Hz'),
+      );
+    }
+    if (order.voltageL1 != null ||
+        order.voltageL2 != null ||
+        order.voltageL3 != null) {
+      final parts = [order.voltageL1, order.voltageL2, order.voltageL3]
+          .where((v) => v != null)
+          .map((v) => v!.toStringAsFixed(0))
+          .join(' / ');
+      rows.add(MapEntry('Voltaje (L1/L2/L3)', '$parts V'));
+    }
+    if (order.currentL1 != null ||
+        order.currentL2 != null ||
+        order.currentL3 != null) {
+      final parts = [order.currentL1, order.currentL2, order.currentL3]
+          .where((v) => v != null)
+          .map((v) => v!.toStringAsFixed(1))
+          .join(' / ');
+      rows.add(MapEntry('Corriente (L1/L2/L3)', '$parts A'));
+    } else if (order.currentTotalA != null) {
+      rows.add(
+        MapEntry(
+          'Corriente total',
+          '${order.currentTotalA!.toStringAsFixed(1)} A',
+        ),
+      );
+    }
+
+    return [
+      for (int i = 0; i < rows.length; i++) ...[
+        if (i > 0) const SizedBox(height: 10),
+        LabelRowText(label: rows[i].key, value: rows[i].value, fontSize: 13),
+      ],
+    ];
   }
 
   Widget _buildSectionContainer({required Widget child}) {
@@ -567,7 +677,6 @@ class _PageChargerState extends State<PageCharger>
       ),
     );
   }
-
 }
 
 // import 'dart:async';
