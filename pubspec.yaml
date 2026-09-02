@@ -53,11 +53,10 @@ dependencies:
   socket_io_client: ^3.1.6
   flutter_launcher_icons: ^0.14.4
 
-
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/logos/logo.png"
+  image_path: "assets/logos/icon_app.png"
 
 dev_dependencies:
   flutter_test:

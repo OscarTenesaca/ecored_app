@@ -94,16 +94,6 @@ class _PageChargerState extends State<PageCharger>
     }
   }
 
-  // void toggleCharging() {
-  //   isChargingNotifier.value = !isChargingNotifier.value;
-
-  //   if (isChargingNotifier.value) {
-  //     _rotationController.repeat();
-  //   } else {
-  //     _rotationController.stop();
-  //   }
-  // }
-
   void toggleCharging(ModelOrder order) async {
     // El backend no expone un endpoint para reanudar una carga detenida,
     // solo para detenerla (DELETE /orders/stop) o crear una orden nueva
@@ -178,7 +168,10 @@ class _PageChargerState extends State<PageCharger>
     final order = provider.orderData;
 
     if (order == null) {
-      return const Center(child: CircularProgressIndicator());
+      return Container(
+        color: primaryColor(),
+        child: Center(child: CircularProgressIndicator(color: accentColor())),
+      );
     }
 
     return ValueListenableBuilder<bool>(
@@ -186,364 +179,105 @@ class _PageChargerState extends State<PageCharger>
       builder: (context, isCharging, _) {
         final level = batteryLevel(order);
         final duration = formattedDuration(order);
+        final remaining = remainingTime(order);
+        final meta = _operationStatusMeta(order.operationStatus, isCharging);
+        final hasConnectorError =
+            order.connectorErrorCode != null &&
+            order.connectorErrorCode != 'NoError';
 
         return Scaffold(
           backgroundColor: primaryColor(),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                children: [
-                  /// HEADER
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const LabelTitle(
-                        title: "Charging Session",
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              isCharging
-                                  ? accentColor().withValues(alpha: 0.10)
-                                  : errorColor().withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(
-                            color:
-                                isCharging
-                                    ? accentColor().withValues(alpha: 0.25)
-                                    : errorColor().withValues(alpha: 0.25),
-                          ),
-                        ),
-                        child: LabelIconTitle(
-                          icon: isCharging ? Icons.bolt : Icons.pause,
-                          iconColor: isCharging ? accentColor() : errorColor(),
-                          title: isCharging ? "Cargando" : "Pausado",
-                          textColor: isCharging ? accentColor() : errorColor(),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  /// MAIN RING
-                  SizedBox(
-                    width: 230,
-                    height: 230,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 600),
-                          width: 170,
-                          height: 170,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    isCharging
-                                        ? accentColor().withValues(alpha: 0.18)
-                                        : errorColor().withValues(alpha: 0.12),
-                                blurRadius: 35,
-                                spreadRadius: 4,
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        if (isCharging)
-                          AnimatedBuilder(
-                            animation: _rotationController,
-                            builder: (_, child) {
-                              return Transform.rotate(
-                                angle: _rotationController.value * 2 * pi,
-                                child: child,
-                              );
-                            },
-                            child: Container(
-                              width: 190,
-                              height: 190,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: SweepGradient(
-                                  colors: [
-                                    accentColor().withValues(alpha: 0.0),
-                                    accentColor().withValues(alpha: 0.8),
-                                    accentColor().withValues(alpha: 0.0),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-
-                        Container(
-                          width: 165,
-                          height: 165,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white12),
-                          ),
-                        ),
-
-                        SizedBox(
-                          width: 165,
-                          height: 165,
-                          child: TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0, end: level),
-                            duration: const Duration(seconds: 2),
-                            builder: (_, value, __) {
-                              return CircularProgressIndicator(
-                                value: value,
-                                strokeWidth: 8,
-                                backgroundColor: Colors.white10,
-                                valueColor: AlwaysStoppedAnimation(
-                                  isCharging ? accentColor() : errorColor(),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-
-                        Container(
-                          width: 140,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF1A1D25), Color(0xFF111318)],
-                            ),
-                          ),
-                        ),
-
-                        // CENTER TEXT
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.bolt_rounded,
-                              color: isCharging ? accentColor() : errorColor(),
-                              size: 26,
-                            ),
-                            const SizedBox(height: 6),
-
-                            // Text( remove
-                            //   "${(level * 100).toInt()}%",
-                            //   style: TextStyle(
-                            //     fontSize: 34,
-                            //     fontWeight: FontWeight.bold,
-                            //     color:
-                            //         isCharging ? accentColor() : errorColor(),
-                            //   ),
-                            // ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "${order.kWhDelivered.toStringAsFixed(1)} kWh",
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: whiteColor(),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              isCharging ? "Charging..." : "Paused",
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: whiteColor().withValues(alpha: 0.55),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
+              physics: const BouncingScrollPhysics(),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 420),
+                curve: Curves.easeOut,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, (1 - value) * 14),
+                      child: child,
                     ),
-                  ),
+                  );
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _Header(meta: meta),
 
-                  const SizedBox(height: 24),
-
-                  /// INFO GRID
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildInfoCard(
-                          icon: Icons.bolt,
-                          title: "${order.kWhDelivered.toStringAsFixed(1)} kWh",
-                          subtitle: "Energy Delivered",
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildInfoCard(
-                          icon: Icons.attach_money,
-                          title: currency.format(order.total),
-                          subtitle: "Current Total",
-                        ),
+                    if (provider.errorMessage != null) ...[
+                      const SizedBox(height: 12),
+                      _AlertBanner(
+                        icon: Icons.wifi_off_rounded,
+                        color: errorColor(),
+                        message: provider.errorMessage!,
                       ),
                     ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildInfoCard(
-                          icon: Icons.schedule,
-                          title: duration,
-                          subtitle: "Charging Time",
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildInfoCard(
-                          icon: Icons.local_gas_station,
-                          title: "${currency.format(order.pricePerKwh)}/kWh",
-                          subtitle: "Energy Price",
-                        ),
+                    if (hasConnectorError) ...[
+                      const SizedBox(height: 12),
+                      _AlertBanner(
+                        icon: Icons.warning_amber_rounded,
+                        color: warningColor(),
+                        message:
+                            'El cargador reportó un error: ${order.connectorErrorCode}',
                       ),
                     ],
-                  ),
 
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildInfoCard(
-                          icon: Icons.flash_on,
-                          title:
-                              "${order.currentPowerKw.toStringAsFixed(1)} kW",
-                          subtitle: "Potencia actual",
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildInfoCard(
-                          icon: Icons.hourglass_bottom,
-                          title: remainingTime(order) ?? "--",
-                          subtitle: "Tiempo restante",
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  /// BILLING
-                  _buildSectionContainer(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Billing Summary",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        LabelRowText(
-                          label: 'Energia',
-                          value: currency.format(order.subtotal),
-                          fontSize: 14,
-                        ),
-                        LabelRowText(
-                          label: 'IVA',
-                          value: currency.format(order.tax),
-                          fontSize: 14,
-                        ),
-                        const Divider(color: Colors.white12, height: 28),
-                        LabelRowText(
-                          label: 'Total',
-                          value: currency.format(order.total),
-                          fontSize: 16,
-                          fontSizeValue: 22,
-                          subtitleColor: accentColor(),
-                        ),
-                      ],
+                    /// PROTAGONISTA: anillo + métricas compactas a los lados
+                    _RingSection(
+                      order: order,
+                      isCharging: isCharging,
+                      level: level,
+                      meta: meta,
+                      pulseController: _rotationController,
+                      duration: duration,
+                      remaining: remaining,
+                      currency: currency,
                     ),
-                  ),
 
-                  const SizedBox(height: 18),
+                    const SizedBox(height: 26),
 
-                  /// SESSION INFO
-                  _buildSectionContainer(
-                    child: Column(
-                      children: [
-                        LabelRowText(
-                          label: "Transacción",
-                          value: "#${order.ocppTransactionId}",
-                          fontSize: 13,
-                        ),
-                        const SizedBox(height: 10),
-                        LabelRowText(
-                          label: "Connector",
-                          value: "Connector ${order.connectorId}",
-                          fontSize: 13,
-                        ),
-                        const SizedBox(height: 10),
-                        LabelRowText(
-                          label: "Platform",
-                          value: order.platformBuy,
-                          fontSize: 13,
-                        ),
-                      ],
-                    ),
-                  ),
+                    /// COSTO ESTIMADO (compacto, expandible)
+                    _CostCard(order: order, currency: currency),
 
-                  if (_hasTelemetry(order)) ...[
                     const SizedBox(height: 18),
 
-                    /// TELEMETRÍA (voltaje/corriente/temperatura/etc. del
-                    /// cargador — solo se muestra lo que el cargador
-                    /// efectivamente reporta por MeterValues).
-                    _buildSectionContainer(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Telemetría",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ..._telemetryRows(order),
-                        ],
-                      ),
+                    /// CONECTOR / ESTACIÓN / TRANSACCIÓN
+                    _SessionDetailCard(order: order),
+
+                    if (_hasCompactTelemetry(order)) ...[
+                      const SizedBox(height: 22),
+                      _TelemetryStrip(order: order),
+                    ],
+
+                    const SizedBox(height: 26),
+
+                    /// ACCIÓN PRINCIPAL
+                    CustomButtonAnimated(
+                      isChargingNotifier: isChargingNotifier,
+                      titleA: 'Detener Carga',
+                      backgroundColorA: const Color(0xFF2A1616),
+                      textColorA: Colors.redAccent,
+                      shadowColorA: errorColor().withValues(alpha: 0.20),
+                      borderColorA: errorColor().withValues(alpha: 0.4),
+
+                      titleB: 'Reanudar Carga',
+                      backgroundColorB: accentColor(),
+                      textColorB: primaryColor(),
+                      shadowColorB: accentColor().withValues(alpha: 0.25),
+                      borderColorB: accentColor().withValues(alpha: 0.5),
+
+                      onPressed:
+                          isCharging ? () => toggleCharging(order) : null,
                     ),
                   ],
-
-                  const SizedBox(height: 22),
-
-                  /// BUTTON
-                  CustomButtonAnimated(
-                    isChargingNotifier: isChargingNotifier,
-                    titleA: 'Detener Carga',
-                    backgroundColorA: const Color(0xFF2A1616),
-                    textColorA: Colors.redAccent,
-                    shadowColorA: errorColor().withValues(alpha: 0.20),
-                    borderColorA: errorColor().withValues(alpha: 0.4),
-
-                    titleB: 'Reanudar Carga',
-                    backgroundColorB: accentColor(),
-                    textColorB: primaryColor(),
-                    shadowColorB: accentColor().withValues(alpha: 0.25),
-                    borderColorB: accentColor().withValues(alpha: 0.5),
-
-                    onPressed: isCharging ? () => toggleCharging(order) : null,
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -551,126 +285,170 @@ class _PageChargerState extends State<PageCharger>
       },
     );
   }
+}
 
-  bool _hasTelemetry(ModelOrder order) {
-    return order.voltageL1 != null ||
-        order.voltageL2 != null ||
-        order.voltageL3 != null ||
-        order.currentL1 != null ||
-        order.currentL2 != null ||
-        order.currentL3 != null ||
-        order.currentTotalA != null ||
-        order.temperatureC != null ||
-        order.frequencyHz != null ||
-        order.meterReportedSoc != null ||
-        order.connectorStatus != null ||
-        order.connectorErrorCode != null;
+// ================= ESTADO: color/ícono/etiqueta según operationStatus =================
+
+class _StatusMeta {
+  final String label;
+  final String title;
+  final Color color;
+  final IconData icon;
+
+  const _StatusMeta(this.label, this.title, this.color, this.icon);
+}
+
+_StatusMeta _operationStatusMeta(String operationStatus, bool isCharging) {
+  switch (operationStatus) {
+    case 'STARTING':
+      return _StatusMeta(
+        'Iniciando',
+        'Preparando carga',
+        warningColor(),
+        Icons.hourglass_top_rounded,
+      );
+    case 'CHARGING':
+      return _StatusMeta(
+        'Cargando',
+        'Carga en progreso',
+        accentColor(),
+        Icons.bolt_rounded,
+      );
+    case 'STOPPING':
+      return _StatusMeta(
+        'Deteniendo',
+        'Finalizando sesión',
+        warningColor(),
+        Icons.hourglass_bottom_rounded,
+      );
+    case 'FINISHED':
+      return _StatusMeta(
+        'Finalizada',
+        'Carga finalizada',
+        successColor(),
+        Icons.check_circle_rounded,
+      );
+    case 'FAILED':
+      return _StatusMeta(
+        'Fallida',
+        'Carga fallida',
+        errorColor(),
+        Icons.error_rounded,
+      );
+    case 'CANCELLED':
+      return _StatusMeta(
+        'Cancelada',
+        'Carga cancelada',
+        errorColor(),
+        Icons.cancel_rounded,
+      );
+    case 'PENDING':
+    default:
+      return isCharging
+          ? _StatusMeta(
+            'Cargando',
+            'Carga en progreso',
+            accentColor(),
+            Icons.bolt_rounded,
+          )
+          : _StatusMeta(
+            'Pausada',
+            'Carga en pausa',
+            errorColor(),
+            Icons.pause_circle_rounded,
+          );
   }
+}
 
-  List<Widget> _telemetryRows(ModelOrder order) {
-    final rows = <MapEntry<String, String>>[];
+// ================= HEADER =================
 
-    if (order.connectorStatus != null) {
-      rows.add(MapEntry('Estado conector', order.connectorStatus!));
-    }
-    if (order.connectorErrorCode != null &&
-        order.connectorErrorCode != 'NoError') {
-      rows.add(MapEntry('Error conector', order.connectorErrorCode!));
-    }
-    if (order.meterReportedSoc != null) {
-      rows.add(
-        MapEntry(
-          'SoC (medidor)',
-          '${order.meterReportedSoc!.toStringAsFixed(0)}%',
-        ),
-      );
-    }
-    if (order.temperatureC != null) {
-      rows.add(
-        MapEntry(
-          'Temperatura',
-          '${order.temperatureC!.toStringAsFixed(1)} °C',
-        ),
-      );
-    }
-    if (order.frequencyHz != null) {
-      rows.add(
-        MapEntry('Frecuencia', '${order.frequencyHz!.toStringAsFixed(1)} Hz'),
-      );
-    }
-    if (order.voltageL1 != null ||
-        order.voltageL2 != null ||
-        order.voltageL3 != null) {
-      final parts = [order.voltageL1, order.voltageL2, order.voltageL3]
-          .where((v) => v != null)
-          .map((v) => v!.toStringAsFixed(0))
-          .join(' / ');
-      rows.add(MapEntry('Voltaje (L1/L2/L3)', '$parts V'));
-    }
-    if (order.currentL1 != null ||
-        order.currentL2 != null ||
-        order.currentL3 != null) {
-      final parts = [order.currentL1, order.currentL2, order.currentL3]
-          .where((v) => v != null)
-          .map((v) => v!.toStringAsFixed(1))
-          .join(' / ');
-      rows.add(MapEntry('Corriente (L1/L2/L3)', '$parts A'));
-    } else if (order.currentTotalA != null) {
-      rows.add(
-        MapEntry(
-          'Corriente total',
-          '${order.currentTotalA!.toStringAsFixed(1)} A',
-        ),
-      );
-    }
+class _Header extends StatelessWidget {
+  final _StatusMeta meta;
 
-    return [
-      for (int i = 0; i < rows.length; i++) ...[
-        if (i > 0) const SizedBox(height: 10),
-        LabelRowText(label: rows[i].key, value: rows[i].value, fontSize: 13),
+  const _Header({required this.meta});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Text(
+            meta.title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: whiteColor(),
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+          decoration: BoxDecoration(
+            color: meta.color.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: meta.color.withValues(alpha: 0.4)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(meta.icon, size: 14, color: meta.color),
+              const SizedBox(width: 6),
+              Text(
+                meta.label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: meta.color,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
-    ];
-  }
-
-  Widget _buildSectionContainer({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: const Color(0xFF181B22),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: accentColor().withValues(alpha: 0.08)),
-      ),
-      child: child,
     );
   }
+}
 
-  Widget _buildInfoCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
+// ================= ALERTAS =================
+
+class _AlertBanner extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String message;
+
+  const _AlertBanner({
+    required this.icon,
+    required this.color,
+    required this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
-        color: const Color(0xFF181B22),
-        borderRadius: BorderRadius.circular(22),
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: accentColor(), size: 18),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              color: whiteColor().withValues(alpha: 0.55),
+          Icon(icon, size: 17, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: color,
+                height: 1.3,
+              ),
             ),
           ),
         ],
@@ -679,474 +457,681 @@ class _PageChargerState extends State<PageCharger>
   }
 }
 
-// import 'dart:async';
-// import 'dart:math';
-// import 'package:ecored_app/src/core/theme/theme_index.dart';
-// import 'package:ecored_app/src/core/widgets/widget_index.dart';
-// import 'package:ecored_app/src/features/charger/presentation/provider/charger_provider.dart';
-// import 'package:flutter/material.dart';
-// import 'package:intl/intl.dart';
-// import 'package:provider/provider.dart';
+// ================= VALOR ANIMADO (fade+slide al cambiar) =================
 
-// class PageCharger extends StatefulWidget {
-//   const PageCharger({super.key});
+class _AnimatedValue extends StatelessWidget {
+  final String value;
+  final TextStyle style;
+  final TextAlign textAlign;
 
-//   @override
-//   State<PageCharger> createState() => _PageChargerState();
-// }
+  const _AnimatedValue({
+    required this.value,
+    required this.style,
+    this.textAlign = TextAlign.start,
+  });
 
-// class _PageChargerState extends State<PageCharger>
-//     with SingleTickerProviderStateMixin {
-//   Timer? _timer; //after remove for socket
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 260),
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.2),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        );
+      },
+      child: Text(
+        value,
+        key: ValueKey(value),
+        style: style,
+        textAlign: textAlign,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
 
-//   final ValueNotifier<bool> isChargingNotifier = ValueNotifier(true);
+// ================= ANILLO PROTAGONISTA + MÉTRICAS COMPACTAS =================
 
-//   late AnimationController _rotationController;
+class _RingSection extends StatelessWidget {
+  final ModelOrder order;
+  final bool isCharging;
+  final double level;
+  final _StatusMeta meta;
+  final AnimationController pulseController;
+  final String duration;
+  final String? remaining;
+  final NumberFormat currency;
 
-//   final double pricePerKwh = 0.28;
-//   final double tax = 2.57;
-//   final double subtotal = 17.17;
-//   final double total = 19.75;
+  const _RingSection({
+    required this.order,
+    required this.isCharging,
+    required this.level,
+    required this.meta,
+    required this.pulseController,
+    required this.duration,
+    required this.remaining,
+    required this.currency,
+  });
 
-//   final double kwhDelivered = 61.341;
-//   final double batteryCapacity = 100;
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: _RingMetricColumn(
+            alignment: CrossAxisAlignment.start,
+            items: [
+              _RingMetricItem(
+                'Energía entregada',
+                '${order.kWhDelivered.toStringAsFixed(2)} kWh',
+              ),
+              _RingMetricItem('Tiempo de carga', duration),
+              _RingMetricItem(
+                'Potencia actual',
+                '${order.currentPowerKw.toStringAsFixed(1)} kW',
+                valueColor: meta.color,
+              ),
+            ],
+          ),
+        ),
+        _ChargingRing(
+          level: level,
+          isCharging: isCharging,
+          meta: meta,
+          pulseController: pulseController,
+          kWhDelivered: order.kWhDelivered,
+        ),
+        Expanded(
+          child: _RingMetricColumn(
+            alignment: CrossAxisAlignment.end,
+            items: [
+              _RingMetricItem(
+                'Tiempo restante',
+                remaining ?? '—',
+                textAlign: TextAlign.end,
+              ),
+              _RingMetricItem(
+                'Precio actual',
+                '${currency.format(order.pricePerKwh)}/kWh',
+                textAlign: TextAlign.end,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
 
-//   final DateTime startedAt = DateTime.now().subtract(
-//     const Duration(hours: 2, minutes: 14),
-//   );
+class _RingMetricItem {
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final TextAlign textAlign;
 
-//   final int ocppTransactionId = 1778779048;
+  const _RingMetricItem(
+    this.label,
+    this.value, {
+    this.valueColor,
+    this.textAlign = TextAlign.start,
+  });
+}
 
-//   double get batteryLevel => kwhDelivered / batteryCapacity;
+class _RingMetricColumn extends StatelessWidget {
+  final CrossAxisAlignment alignment;
+  final List<_RingMetricItem> items;
 
-//   String get formattedDuration {
-//     final duration = DateTime.now().difference(startedAt);
-//     final hours = duration.inHours;
-//     final minutes = duration.inMinutes % 60;
-//     return "${hours}h ${minutes}m";
-//   }
+  const _RingMetricColumn({required this.alignment, required this.items});
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     startPolling();
-//     _rotationController = AnimationController(
-//       vsync: this,
-//       duration: const Duration(seconds: 6),
-//     )..repeat();
-//   }
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: alignment,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (int i = 0; i < items.length; i++) ...[
+          if (i > 0) const SizedBox(height: 20),
+          Text(
+            items[i].label,
+            style: TextStyle(fontSize: 11, color: grayInputColor()),
+            textAlign: items[i].textAlign,
+            maxLines: 2,
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment:
+                items[i].textAlign == TextAlign.end
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
+            child: _AnimatedValue(
+              value: items[i].value,
+              textAlign: items[i].textAlign,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: items[i].valueColor ?? whiteColor(),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
 
-//   @override
-//   void dispose() {
-//     _rotationController.dispose();
-//     isChargingNotifier.dispose();
-//     super.dispose();
-//   }
+// ================= MAIN RING =================
+// Diseño original: círculo sólido con glow, barrido giratorio de acento
+// mientras carga y anillo de progreso relleno — sin cambios respecto a
+// la versión previa (el usuario pidió mantenerlo tal cual).
+class _ChargingRing extends StatelessWidget {
+  final double level;
+  final bool isCharging;
+  final _StatusMeta meta;
+  final AnimationController pulseController;
+  final double kWhDelivered;
 
-//   void toggleCharging() {
-//     isChargingNotifier.value = !isChargingNotifier.value;
+  const _ChargingRing({
+    required this.level,
+    required this.isCharging,
+    required this.meta,
+    required this.pulseController,
+    required this.kWhDelivered,
+  });
 
-//     if (isChargingNotifier.value) {
-//       _rotationController.repeat();
-//     } else {
-//       _rotationController.stop();
-//     }
-//   }
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 160,
+      height: 160,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 600),
+            width: 118,
+            height: 118,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color:
+                      isCharging
+                          ? accentColor().withValues(alpha: 0.18)
+                          : errorColor().withValues(alpha: 0.12),
+                  blurRadius: 24,
+                  spreadRadius: 3,
+                ),
+              ],
+            ),
+          ),
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final currency = NumberFormat.currency(symbol: "\$", decimalDigits: 2);
-//     final provider = context.watch<ChargerProvider>();
-//     final order = provider.orderData;
+          if (isCharging)
+            AnimatedBuilder(
+              animation: pulseController,
+              builder: (_, child) {
+                return Transform.rotate(
+                  angle: pulseController.value * 2 * pi,
+                  child: child,
+                );
+              },
+              child: Container(
+                width: 132,
+                height: 132,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: SweepGradient(
+                    colors: [
+                      accentColor().withValues(alpha: 0.0),
+                      accentColor().withValues(alpha: 0.8),
+                      accentColor().withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
 
-//     if (order == null) {
-//       return const Center(child: CircularProgressIndicator());
-//     }
+          Container(
+            width: 115,
+            height: 115,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white12),
+            ),
+          ),
 
-//     return ValueListenableBuilder<bool>(
-//       valueListenable: isChargingNotifier,
-//       builder: (context, isCharging, _) {
-//         return Scaffold(
-//           backgroundColor: primaryColor(),
-//           body: SafeArea(
-//             child: SingleChildScrollView(
-//               padding: const EdgeInsets.all(18),
-//               child: Column(
-//                 children: [
-//                   const SizedBox(height: 10),
+          SizedBox(
+            width: 115,
+            height: 115,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: level),
+              duration: const Duration(seconds: 2),
+              builder: (_, value, __) {
+                return CircularProgressIndicator(
+                  value: value,
+                  strokeWidth: 6,
+                  backgroundColor: Colors.white10,
+                  valueColor: AlwaysStoppedAnimation(
+                    isCharging ? accentColor() : errorColor(),
+                  ),
+                );
+              },
+            ),
+          ),
 
-//                   /// HEADER
-//                   Row(
-//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                     children: [
-//                       const LabelTitle(
-//                         title: "Charging Session",
-//                         fontSize: 20,
-//                         fontWeight: FontWeight.w600,
-//                       ),
-//                       Container(
-//                         padding: const EdgeInsets.symmetric(
-//                           horizontal: 14,
-//                           vertical: 8,
-//                         ),
-//                         decoration: BoxDecoration(
-//                           color:
-//                               isCharging
-//                                   ? accentColor().withValues(alpha: 0.10)
-//                                   : errorColor().withValues(alpha: 0.10),
-//                           borderRadius: BorderRadius.circular(30),
-//                           border: Border.all(
-//                             color:
-//                                 isCharging
-//                                     ? accentColor().withValues(alpha: 0.25)
-//                                     : errorColor().withValues(alpha: 0.25),
-//                           ),
-//                         ),
-//                         child: LabelIconTitle(
-//                           icon: isCharging ? Icons.bolt : Icons.pause,
-//                           iconColor: isCharging ? accentColor() : errorColor(),
-//                           title: isCharging ? "Cargando" : "Pausado",
-//                           textColor: isCharging ? accentColor() : errorColor(),
-//                           fontWeight: FontWeight.w600,
-//                           fontSize: 11,
-//                         ),
-//                       ),
-//                     ],
-//                   ),
+          Container(
+            width: 96,
+            height: 96,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1A1D25), Color(0xFF111318)],
+              ),
+            ),
+          ),
 
-//                   const SizedBox(height: 18),
+          // CENTER TEXT
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.bolt_rounded,
+                color: isCharging ? accentColor() : errorColor(),
+                size: 18,
+              ),
+              const SizedBox(height: 3),
+              _AnimatedValue(
+                value: "${kWhDelivered.toStringAsFixed(1)} kWh",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w500,
+                  color: whiteColor(),
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                isCharging ? "Charging..." : "Paused",
+                style: TextStyle(
+                  fontSize: 9.5,
+                  color: whiteColor().withValues(alpha: 0.55),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-//                   /// 🔵 MAIN RING
-//                   SizedBox(
-//                     width: 230,
-//                     height: 230,
-//                     child: Stack(
-//                       alignment: Alignment.center,
-//                       children: [
-//                         AnimatedContainer(
-//                           duration: const Duration(milliseconds: 600),
-//                           width: 170,
-//                           height: 170,
-//                           decoration: BoxDecoration(
-//                             shape: BoxShape.circle,
-//                             boxShadow: [
-//                               BoxShadow(
-//                                 color:
-//                                     isCharging
-//                                         ? accentColor().withValues(alpha: 0.18)
-//                                         : errorColor().withValues(alpha: 0.12),
-//                                 blurRadius: 35,
-//                                 spreadRadius: 4,
-//                               ),
-//                             ],
-//                           ),
-//                         ),
+// ================= COSTO ESTIMADO (compacto, expandible) =================
 
-//                         if (isCharging)
-//                           AnimatedBuilder(
-//                             animation: _rotationController,
-//                             builder: (_, child) {
-//                               return Transform.rotate(
-//                                 angle: _rotationController.value * 2 * pi,
-//                                 child: child,
-//                               );
-//                             },
-//                             child: Container(
-//                               width: 190,
-//                               height: 190,
-//                               decoration: BoxDecoration(
-//                                 shape: BoxShape.circle,
-//                                 gradient: SweepGradient(
-//                                   colors: [
-//                                     accentColor().withValues(alpha: 0.0),
-//                                     accentColor().withValues(alpha: 0.8),
-//                                     accentColor().withValues(alpha: 0.0),
-//                                   ],
-//                                 ),
-//                               ),
-//                             ),
-//                           ),
+class _CostCard extends StatefulWidget {
+  final ModelOrder order;
+  final NumberFormat currency;
 
-//                         Container(
-//                           width: 165,
-//                           height: 165,
-//                           decoration: BoxDecoration(
-//                             shape: BoxShape.circle,
-//                             border: Border.all(color: Colors.white12),
-//                           ),
-//                         ),
+  const _CostCard({required this.order, required this.currency});
 
-//                         SizedBox(
-//                           width: 165,
-//                           height: 165,
-//                           child: TweenAnimationBuilder<double>(
-//                             tween: Tween(begin: 0, end: batteryLevel),
-//                             duration: const Duration(seconds: 2),
-//                             builder: (_, value, __) {
-//                               return CircularProgressIndicator(
-//                                 value: value,
-//                                 strokeWidth: 8,
-//                                 backgroundColor: Colors.white10,
-//                                 valueColor: AlwaysStoppedAnimation(
-//                                   isCharging ? accentColor() : errorColor(),
-//                                 ),
-//                               );
-//                             },
-//                           ),
-//                         ),
+  @override
+  State<_CostCard> createState() => _CostCardState();
+}
 
-//                         Container(
-//                           width: 140,
-//                           height: 140,
-//                           decoration: BoxDecoration(
-//                             shape: BoxShape.circle,
-//                             gradient: const LinearGradient(
-//                               colors: [Color(0xFF1A1D25), Color(0xFF111318)],
-//                             ),
-//                           ),
-//                         ),
+class _CostCardState extends State<_CostCard> {
+  bool _expanded = false;
 
-//                         /// CENTER TEXT
-//                         Column(
-//                           mainAxisAlignment: MainAxisAlignment.center,
-//                           children: [
-//                             Icon(
-//                               Icons.bolt_rounded,
-//                               color: isCharging ? accentColor() : errorColor(),
-//                               size: 26,
-//                             ),
-//                             const SizedBox(height: 6),
-//                             Text(
-//                               "${(batteryLevel * 100).toInt()}%",
-//                               style: TextStyle(
-//                                 fontSize: 34,
-//                                 fontWeight: FontWeight.bold,
-//                                 color:
-//                                     isCharging ? accentColor() : errorColor(),
-//                               ),
-//                             ),
-//                             const SizedBox(height: 4),
-//                             Text(
-//                               "${kwhDelivered.toStringAsFixed(1)} kWh",
-//                               style: TextStyle(
-//                                 fontSize: 12,
-//                                 fontWeight: FontWeight.w500,
-//                                 color: whiteColor(),
-//                               ),
-//                             ),
-//                             const SizedBox(height: 2),
-//                             Text(
-//                               isCharging ? "Charging..." : "Paused",
-//                               style: TextStyle(
-//                                 fontSize: 11,
-//                                 color: whiteColor().withValues(alpha: 0.55),
-//                               ),
-//                             ),
-//                           ],
-//                         ),
-//                       ],
-//                     ),
-//                   ),
+  @override
+  Widget build(BuildContext context) {
+    final order = widget.order;
+    final currency = widget.currency;
 
-//                   const SizedBox(height: 24),
+    return Container(
+      width: double.infinity,
+      decoration: cardDecoration(shadow: true),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Costo estimado',
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.bold,
+                            color: whiteColor(),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Precio incluye IVA',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: grayInputColor(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _AnimatedValue(
+                    value: currency.format(order.total),
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: accentColor(),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  AnimatedRotation(
+                    turns: _expanded ? 0.25 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      color: grayInputColor(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox(width: double.infinity),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+              child: Column(
+                children: [
+                  Divider(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    height: 1,
+                  ),
+                  const SizedBox(height: 10),
+                  LabelRowText(
+                    label: 'Energía',
+                    value: currency.format(order.subtotal),
+                    fontSize: 13,
+                    titleColor: grayInputColor(),
+                  ),
+                  LabelRowText(
+                    label: 'IVA',
+                    value: currency.format(order.tax),
+                    fontSize: 13,
+                    titleColor: grayInputColor(),
+                  ),
+                  LabelRowText(
+                    label: 'Total',
+                    value: currency.format(order.total),
+                    fontSize: 14,
+                    fontSizeValue: 16,
+                    subtitleColor: accentColor(),
+                  ),
+                ],
+              ),
+            ),
+            crossFadeState:
+                _expanded
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 220),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-//                   /// INFO GRID
-//                   Row(
-//                     children: [
-//                       Expanded(
-//                         child: _buildInfoCard(
-//                           icon: Icons.bolt,
-//                           title: "${kwhDelivered.toStringAsFixed(1)} kWh",
-//                           subtitle: "Energy Delivered",
-//                         ),
-//                       ),
-//                       const SizedBox(width: 16),
-//                       Expanded(
-//                         child: _buildInfoCard(
-//                           icon: Icons.attach_money,
-//                           title: currency.format(total),
-//                           subtitle: "Current Total",
-//                         ),
-//                       ),
-//                     ],
-//                   ),
+// ================= DETALLE DE LA SESIÓN (conector / estación / transacción) =================
 
-//                   const SizedBox(height: 16),
+class _SessionDetailCard extends StatelessWidget {
+  final ModelOrder order;
 
-//                   Row(
-//                     children: [
-//                       Expanded(
-//                         child: _buildInfoCard(
-//                           icon: Icons.schedule,
-//                           title: formattedDuration,
-//                           subtitle: "Charging Time",
-//                         ),
-//                       ),
-//                       const SizedBox(width: 16),
-//                       Expanded(
-//                         child: _buildInfoCard(
-//                           icon: Icons.local_gas_station,
-//                           title: "${currency.format(pricePerKwh)}/kWh",
-//                           subtitle: "Energy Price",
-//                         ),
-//                       ),
-//                     ],
-//                   ),
+  const _SessionDetailCard({required this.order});
 
-//                   const SizedBox(height: 24),
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: cardDecoration(shadow: true),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Detalle de la sesión',
+            style: TextStyle(
+              fontSize: 14.5,
+              fontWeight: FontWeight.bold,
+              color: whiteColor(),
+            ),
+          ),
+          const SizedBox(height: 18),
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: _SessionDetailItem(
+                    icon: Icons.ev_station_rounded,
+                    label: 'Conector',
+                    value: 'Conector ${order.connectorId}',
+                    subtitle: order.charger.typeConnection,
+                  ),
+                ),
+                _verticalDivider(),
+                Expanded(
+                  child: _SessionDetailItem(
+                    icon: Icons.location_on_rounded,
+                    label: 'Estación',
+                    value: order.stations.name,
+                    subtitle: order.stations.address,
+                  ),
+                ),
+                _verticalDivider(),
+                Expanded(
+                  child: _SessionDetailItem(
+                    icon: Icons.confirmation_number_rounded,
+                    label: 'Transacción',
+                    value: '#${order.ocppTransactionId}',
+                    subtitle: order.platformBuy,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-//                   /// BILLING
-//                   _buildSectionContainer(
-//                     child: Column(
-//                       crossAxisAlignment: CrossAxisAlignment.start,
-//                       children: [
-//                         const Text(
-//                           "Billing Summary",
-//                           style: TextStyle(
-//                             fontSize: 20,
-//                             fontWeight: FontWeight.w600,
-//                           ),
-//                         ),
-//                         const SizedBox(height: 16),
+  Widget _verticalDivider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: VerticalDivider(
+        color: Colors.white.withValues(alpha: 0.08),
+        width: 1,
+        thickness: 1,
+      ),
+    );
+  }
+}
 
-//                         LabelRowText(
-//                           label: 'Energia',
-//                           value: currency.format(subtotal),
-//                           fontSize: 14,
-//                         ),
-//                         LabelRowText(
-//                           label: 'IVA',
-//                           value: currency.format(tax),
-//                           fontSize: 14,
-//                         ),
+class _SessionDetailItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final String subtitle;
 
-//                         const Divider(color: Colors.white12, height: 28),
+  const _SessionDetailItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.subtitle,
+  });
 
-//                         LabelRowText(
-//                           label: 'Total',
-//                           value: currency.format(total),
-//                           fontSize: 16,
-//                           fontSizeValue: 22,
-//                           subtitleColor: accentColor(),
-//                         ),
-//                       ],
-//                     ),
-//                   ),
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: accentColor().withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: Icon(icon, size: 16, color: accentColor()),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 11, color: grayInputColor()),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: whiteColor(),
+          ),
+        ),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontSize: 10.5, color: grayInputColor()),
+        ),
+      ],
+    );
+  }
+}
 
-//                   const SizedBox(height: 18),
+// ================= TELEMETRÍA (bloque horizontal compacto) =================
+// Solo se muestra lo que el cargador efectivamente reporta por
+// MeterValues — nunca se inventan valores.
 
-//                   /// SESSION
-//                   _buildSectionContainer(
-//                     child: Column(
-//                       children: [
-//                         LabelRowText(
-//                           label: "Transacción",
-//                           value: "#$ocppTransactionId",
-//                           fontSize: 13,
-//                         ),
-//                         const SizedBox(height: 10),
-//                         LabelRowText(
-//                           label: "Connector",
-//                           value: "Connector 1",
-//                           fontSize: 13,
-//                         ),
-//                         const SizedBox(height: 10),
-//                         LabelRowText(
-//                           label: "Platform",
-//                           value: "APP",
-//                           fontSize: 13,
-//                         ),
-//                       ],
-//                     ),
-//                   ),
+bool _hasCompactTelemetry(ModelOrder order) {
+  return order.voltageL1 != null ||
+      order.voltageL2 != null ||
+      order.voltageL3 != null ||
+      order.currentL1 != null ||
+      order.currentTotalA != null ||
+      order.temperatureC != null;
+}
 
-//                   const SizedBox(height: 22),
+class _TelemetryStrip extends StatelessWidget {
+  final ModelOrder order;
 
-//                   /// BUTTON
-//                   /// BUTTON
-//                   CustomButtonAnimated(
-//                     isChargingNotifier: isChargingNotifier,
-//                     titleA: 'Detener Carga',
-//                     backgroundColorA: const Color(0xFF2A1616),
-//                     textColorA: Colors.redAccent,
-//                     shadowColorA: errorColor().withValues(alpha: 0.20),
-//                     borderColorA: errorColor().withValues(alpha: 0.4),
+  const _TelemetryStrip({required this.order});
 
-//                     titleB: 'Reanudar Carga',
-//                     backgroundColorB: accentColor(),
-//                     textColorB: primaryColor(),
-//                     shadowColorB: accentColor().withValues(alpha: 0.25),
-//                     borderColorB: accentColor().withValues(alpha: 0.5),
+  @override
+  Widget build(BuildContext context) {
+    final voltage = order.voltageL1 ?? order.voltageL2 ?? order.voltageL3;
+    final current = order.currentTotalA ?? order.currentL1;
 
-//                     onPressed: toggleCharging,
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//         );
-//       },
-//     );
-//   }
+    final items = <_TelemetryItem>[
+      if (voltage != null)
+        _TelemetryItem(
+          Icons.bolt_rounded,
+          '${voltage.toStringAsFixed(0)} V',
+          'Voltaje',
+        ),
+      if (current != null)
+        _TelemetryItem(
+          Icons.electric_bolt_rounded,
+          '${current.toStringAsFixed(1)} A',
+          'Corriente',
+        ),
+      _TelemetryItem(
+        Icons.speed_rounded,
+        '${order.currentPowerKw.toStringAsFixed(1)} kW',
+        'Potencia',
+      ),
+      if (order.temperatureC != null)
+        _TelemetryItem(
+          Icons.thermostat_rounded,
+          '${order.temperatureC!.toStringAsFixed(0)} °C',
+          'Temperatura',
+        ),
+    ];
 
-//   Widget _buildSectionContainer({required Widget child}) {
-//     return Container(
-//       width: double.infinity,
-//       padding: const EdgeInsets.all(22),
-//       decoration: BoxDecoration(
-//         color: const Color(0xFF181B22),
-//         borderRadius: BorderRadius.circular(24),
-//         border: Border.all(color: accentColor().withValues(alpha: 0.08)),
-//       ),
-//       child: child,
-//     );
-//   }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Telemetría en tiempo real',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: grayInputColor(),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            for (final item in items)
+              Expanded(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: accentColor().withValues(alpha: 0.10),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(item.icon, size: 17, color: accentColor()),
+                    ),
+                    const SizedBox(height: 8),
+                    _AnimatedValue(
+                      value: item.value,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                        color: whiteColor(),
+                      ),
+                    ),
+                    Text(
+                      item.label,
+                      style: TextStyle(fontSize: 10.5, color: grayInputColor()),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
 
-//   Widget _buildInfoCard({
-//     required IconData icon,
-//     required String title,
-//     required String subtitle,
-//   }) {
-//     return Container(
-//       padding: const EdgeInsets.all(16),
-//       decoration: BoxDecoration(
-//         color: const Color(0xFF181B22),
-//         borderRadius: BorderRadius.circular(22),
-//       ),
-//       child: Column(
-//         children: [
-//           Icon(icon, color: accentColor(), size: 18),
-//           const SizedBox(height: 10),
-//           Text(
-//             title,
-//             textAlign: TextAlign.center,
-//             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-//           ),
-//           Text(
-//             subtitle,
-//             textAlign: TextAlign.center,
-//             style: TextStyle(
-//               fontSize: 11,
-//               color: whiteColor().withValues(alpha: 0.55),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
+class _TelemetryItem {
+  final IconData icon;
+  final String value;
+  final String label;
 
-//   // Charger
-
-//   void startPolling() async {
-//     _timer = Timer.periodic(Duration(seconds: 5), (_) async {
-//       print('llega*******');
-//       final provider = context.read<ChargerProvider>(); // ✅ usa read aquí
-//       await provider.getOrderData({
-//         'status': "PENDING",
-//         "operationStatus": "CHARGING",
-//       });
-//     });
-//   }
-
-//   void stopPolling() => _timer?.cancel();
-// }
+  const _TelemetryItem(this.icon, this.value, this.label);
+}
