@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:ecored_app/src/core/adapter/adapter_http.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
+import 'package:ecored_app/src/features/maps/data/model/model_connector_type.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_station_preview.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:flutter/foundation.dart';
@@ -9,8 +10,10 @@ import 'package:flutter/foundation.dart';
 abstract class StationsRemoteDataSource {
   Future<List<ModelStation>> findAllStations(Map<String, dynamic> query);
   Future<List<ModelCharger>> findAllChargers(Map<String, dynamic> query);
-  Future<ModelStation> createStation(Map<String, dynamic> stationData);
-  Future<int> createCharger(Map<String, dynamic> chargerData);
+  Future<ModelStation> createStationWithChargers(
+    Map<String, dynamic> stationData,
+  );
+  Future<List<ModelConnectorType>> findConnectorTypes();
   Future<ModelStationPreview> getStationPreview(String stationId);
 }
 
@@ -65,19 +68,18 @@ class StationsRemoteDataSourceImpl implements StationsRemoteDataSource {
   }
 
   @override
-  Future<ModelStation> createStation(Map<String, dynamic> stationData) async {
-    final String endpoint = '$url/api/v1/station';
+  Future<ModelStation> createStationWithChargers(
+    Map<String, dynamic> stationData,
+  ) async {
+    final String endpoint = '$url/api/v1/station/with-chargers';
     final response = await httpAdapter.post(endpoint, data: stationData);
     switch (response.statusCode) {
       case 200:
       case 201:
-        // print('200/201 response data: ${response.data}');
         return ModelStation.fromJson(response.data['data']);
       case 400:
-        // print('400 response data: ${response.data}');
         throw Exception('Bad request: ${response.data['message']}');
       case 409:
-        // print('409 response data: ${response.data}');
         throw Exception('Conflict: ${response.data['message']}');
       default:
         throw Exception('Failed to create station: ${response.statusCode}');
@@ -85,10 +87,17 @@ class StationsRemoteDataSourceImpl implements StationsRemoteDataSource {
   }
 
   @override
-  Future<int> createCharger(Map<String, dynamic> chargerData) async {
-    final String endpoint = '$url/api/v1/charger';
-    final response = await httpAdapter.post(endpoint, data: chargerData);
-    return response.statusCode!;
+  Future<List<ModelConnectorType>> findConnectorTypes() async {
+    final String endpoint = '$url/api/v1/connector-types';
+    final response = await httpAdapter.get(endpoint);
+
+    if (response.statusCode == 200) {
+      return (response.data['data'] as List)
+          .map((json) => ModelConnectorType.fromJson(json))
+          .toList();
+    }
+
+    throw Exception('Failed to fetch connector types: ${response.statusCode}');
   }
 
   @override

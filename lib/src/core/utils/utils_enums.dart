@@ -27,19 +27,6 @@ const List<Map<String, String>> STATION_TYPE_POINTS_LIST = [
 ];
 
 // Charger types
-const List<Map<String, String>> CONECTORS_TYPE_LIST = [
-  {'key': 'CCS2', 'label': 'CCS2'},
-  {'key': 'CCS1', 'label': 'CCS1'},
-  {'key': 'TYPE_2', 'label': 'Type 2'},
-  {'key': 'SCHUKO', 'label': 'Schuko'},
-  {'key': 'CHADEMO', 'label': 'CHAdeMO'},
-  {'key': 'TYPE_E', 'label': 'Type E'},
-  {'key': 'TYPE_G', 'label': 'Type G'},
-  {'key': 'TYPE_H', 'label': 'Type H'},
-  {'key': 'TYPE3C', 'label': 'Type 3C'},
-  {'key': 'UNKNOWN', 'label': 'Unknown'},
-];
-
 const List<Map<String, String>> CHARGER_TYPE_LIST = [
   {'key': 'AC1', 'label': 'Monofásico (AC)'},
   {'key': 'AC3', 'label': 'Trifásico (AC)'},

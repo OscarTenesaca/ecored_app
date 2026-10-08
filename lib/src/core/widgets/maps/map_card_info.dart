@@ -12,23 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-const Map<String, IconData> _typePointIcons = {
-  'PUBLIC': Icons.public,
-  'PARKING': Icons.local_parking,
-  'AIRPORT': Icons.flight,
-  'CAMPING': Icons.park_outlined,
-  'HOTEL': Icons.hotel_outlined,
-  'PRIVATE': Icons.lock_outline,
-  'USER_PRIVATE': Icons.person_outline,
-  'RESTAURANT': Icons.restaurant,
-  'SHOP': Icons.storefront_outlined,
-  'WORKPLACE': Icons.business_outlined,
-  'STATION_SERVICE': Icons.local_gas_station_outlined,
-  'CONCESSIONAIRE': Icons.store_outlined,
-  'SHOPPING_CENTER': Icons.local_mall_outlined,
-  'OTHER': Icons.place_outlined,
-};
-
 class MapCardInfomation extends StatefulWidget {
   final ModelStation stationData;
   final LatLng? userMarker;
@@ -148,17 +131,9 @@ class _MapCardInfomationState extends State<MapCardInfomation>
   String? get _typePointLabel {
     final typePoint = _station.typePoint;
     if (typePoint == null || typePoint.isEmpty) return null;
-    for (final item in STATION_TYPE_POINTS_LIST) {
-      if (item['key'] == typePoint) {
-        // Las etiquetas traen un emoji al inicio ("✈️ Aeropuerto"); aquí
-        // va un ícono Material en su lugar.
-        final label = item['label']!;
-        final space = label.indexOf(' ');
-        return space == -1 ? label : label.substring(space + 1);
-      }
-    }
-    return null;
+    return stationTypePointLabel(typePoint);
   }
+
 
   String get _locationSummary {
     final parts = <String>[
@@ -330,7 +305,7 @@ class _MapCardInfomationState extends State<MapCardInfomation>
                 label: typeLabel,
                 color: grayInputColor(),
                 icon:
-                    _typePointIcons[_station.typePoint] ?? Icons.place_outlined,
+                    stationTypePointIcon(_station.typePoint!),
                 outlined: true,
               ),
               const SizedBox(width: 8),

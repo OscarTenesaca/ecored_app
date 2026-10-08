@@ -23,26 +23,23 @@ class ModelChargePoint {
     required this.connectors,
   });
 
-  factory ModelChargePoint.fromJson(Map<String, dynamic> json) =>
-      ModelChargePoint(
-        id: json["_id"] ?? '',
-        code: json["code"] ?? '',
-        station: json["station"]?.toString(),
-        administrator: json["administrator"]?.toString(),
-        connectionStatus: json["connectionStatus"],
-        createdAt:
-            json["createdAt"] != null
-                ? DateTime.tryParse(json["createdAt"])
-                : null,
-        updatedAt:
-            json["updatedAt"] != null
-                ? DateTime.tryParse(json["updatedAt"])
-                : null,
-        connectors:
-            (json["connectors"] as List? ?? [])
-                .map((c) => ModelCharger.fromJson(c))
-                .toList(),
-      );
+  factory ModelChargePoint.fromJson(
+    Map<String, dynamic> json,
+  ) => ModelChargePoint(
+    id: json["_id"] ?? '',
+    code: json["code"] ?? '',
+    station: json["station"]?.toString(),
+    administrator: json["administrator"]?.toString(),
+    connectionStatus: json["connectionStatus"],
+    createdAt:
+        json["createdAt"] != null ? DateTime.tryParse(json["createdAt"]) : null,
+    updatedAt:
+        json["updatedAt"] != null ? DateTime.tryParse(json["updatedAt"]) : null,
+    connectors:
+        (json["connectors"] as List? ?? [])
+            .map((c) => ModelCharger.fromJson(c))
+            .toList(),
+  );
 
   Map<String, dynamic> toJson() => {
     "_id": id,

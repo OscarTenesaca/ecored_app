@@ -36,6 +36,41 @@ String stationStatusLabel(String status) {
   return match['label']!;
 }
 
+const Map<String, IconData> _stationTypePointIcons = {
+  'PUBLIC': Icons.public,
+  'PARKING': Icons.local_parking,
+  'AIRPORT': Icons.flight,
+  'CAMPING': Icons.park_outlined,
+  'HOTEL': Icons.hotel_outlined,
+  'PRIVATE': Icons.lock_outline,
+  'USER_PRIVATE': Icons.person_outline,
+  'RESTAURANT': Icons.restaurant,
+  'SHOP': Icons.storefront_outlined,
+  'WORKPLACE': Icons.business_outlined,
+  'STATION_SERVICE': Icons.local_gas_station_outlined,
+  'CONCESSIONAIRE': Icons.store_outlined,
+  'SHOPPING_CENTER': Icons.local_mall_outlined,
+  'OTHER': Icons.place_outlined,
+};
+
+/// Ícono Material del tipo de lugar (`typePoint`) de una estación.
+IconData stationTypePointIcon(String typePoint) =>
+    _stationTypePointIcons[typePoint] ?? Icons.place_outlined;
+
+/// Etiqueta del tipo de lugar sin el emoji inicial de
+/// `STATION_TYPE_POINTS_LIST` ("✈️ Aeropuerto" → "Aeropuerto"), para usarla
+/// junto a [stationTypePointIcon]. Null si el tipo no existe en la lista.
+String? stationTypePointLabel(String typePoint) {
+  for (final item in STATION_TYPE_POINTS_LIST) {
+    if (item['key'] == typePoint) {
+      final label = item['label']!;
+      final space = label.indexOf(' ');
+      return space == -1 ? label : label.substring(space + 1);
+    }
+  }
+  return null;
+}
+
 class CustomMap extends StatefulWidget {
   final bool isMapReady;
   final LatLng initLatLng;

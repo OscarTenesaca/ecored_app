@@ -1,4 +1,5 @@
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
+import 'package:ecored_app/src/features/maps/data/model/model_connector_type.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_station_preview.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:ecored_app/src/features/maps/domain/usecases/station_services.dart';
@@ -11,6 +12,7 @@ class StationProvider extends ChangeNotifier {
   List<ModelStation>? stations;
   List<ModelCharger>? chargers;
   ModelStationPreview? stationPreview;
+  List<ModelConnectorType> connectorTypes = [];
   String? errorMessage;
 
   StationProvider(this.services);
@@ -43,35 +45,15 @@ class StationProvider extends ChangeNotifier {
     }
   }
 
-  // Future<ModelStation> createStation(Map<String, dynamic> stationData) async {
-  //   try {
-  //     isLoading = true;
-  //     errorMessage = null;
-  //     notifyListeners();
-
-  //     final ModelStation station = await services.createStation(stationData);
-  //     print('provider created station: ${station.toJson()}');
-  //     errorMessage = null;
-  //     return station;
-  //   } catch (e) {
-  //     print('provider createStation error: $e');
-  //     errorMessage = e.toString();
-  //     return Future.error(e);
-  //   } finally {
-  //     print('provider createStation finally');
-  //     isLoading = false;
-  //     notifyListeners();
-  //   }
-  // }
-
-  Future<ModelStation> createStation(Map<String, dynamic> stationData) async {
+  Future<ModelStation> createStationWithChargers(
+    Map<String, dynamic> stationData,
+  ) async {
     try {
       isLoading = true;
       errorMessage = null;
       notifyListeners();
 
-      final station = await services.createStation(stationData);
-      return station;
+      return await services.createStationWithChargers(stationData);
     } catch (e) {
       errorMessage = e.toString();
       rethrow;
@@ -81,19 +63,13 @@ class StationProvider extends ChangeNotifier {
     }
   }
 
-  Future<int> createCharger(Map<String, dynamic> chargerData) async {
+  Future<void> findConnectorTypes() async {
+    // Sin `isLoading` compartido, mismo motivo que findAllChargers.
     try {
-      isLoading = true;
-      errorMessage = null;
-      notifyListeners();
-
-      final statusCode = await services.createCharger(chargerData);
-      return statusCode;
+      connectorTypes = await services.findConnectorTypes();
     } catch (e) {
       errorMessage = e.toString();
-      return -1;
     } finally {
-      isLoading = false;
       notifyListeners();
     }
   }

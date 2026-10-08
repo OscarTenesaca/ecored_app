@@ -1,5 +1,6 @@
 import 'package:ecored_app/src/features/maps/data/datasources/stations_remote_data_source.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
+import 'package:ecored_app/src/features/maps/data/model/model_connector_type.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_station_preview.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:ecored_app/src/features/maps/domain/repositories/station_repository.dart';
@@ -20,13 +21,15 @@ class StationRepositoryImpl implements StationRepository {
   }
 
   @override
-  Future<ModelStation> createStation(Map<String, dynamic> stationData) {
-    return remoteDataSource.createStation(stationData);
+  Future<ModelStation> createStationWithChargers(
+    Map<String, dynamic> stationData,
+  ) {
+    return remoteDataSource.createStationWithChargers(stationData);
   }
 
   @override
-  Future<int> createCharger(Map<String, dynamic> chargerData) {
-    return remoteDataSource.createCharger(chargerData);
+  Future<List<ModelConnectorType>> findConnectorTypes() {
+    return remoteDataSource.findConnectorTypes();
   }
 
   @override

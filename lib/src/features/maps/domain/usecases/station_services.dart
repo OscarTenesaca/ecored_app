@@ -1,4 +1,5 @@
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
+import 'package:ecored_app/src/features/maps/data/model/model_connector_type.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_station_preview.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:ecored_app/src/features/maps/domain/repositories/station_repository.dart';
@@ -16,12 +17,14 @@ class StationServices {
     return repository.findAllChargers(query);
   }
 
-  Future<ModelStation> createStation(Map<String, dynamic> stationData) {
-    return repository.createStation(stationData);
+  Future<ModelStation> createStationWithChargers(
+    Map<String, dynamic> stationData,
+  ) {
+    return repository.createStationWithChargers(stationData);
   }
 
-  Future<int> createCharger(Map<String, dynamic> chargerData) {
-    return repository.createCharger(chargerData);
+  Future<List<ModelConnectorType>> findConnectorTypes() {
+    return repository.findConnectorTypes();
   }
 
   Future<ModelStationPreview> getStationPreview(String stationId) {
