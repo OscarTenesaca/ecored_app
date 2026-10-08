@@ -1,4 +1,5 @@
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
+import 'package:ecored_app/src/features/maps/data/model/model_station_preview.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:ecored_app/src/features/maps/domain/repositories/station_repository.dart';
 
@@ -23,7 +24,7 @@ class StationServices {
     return repository.createCharger(chargerData);
   }
 
-  Future<ModelCharger> findOneCharger(Map<String, dynamic> query) {
-    return repository.findOneCharger(query);
+  Future<ModelStationPreview> getStationPreview(String stationId) {
+    return repository.getStationPreview(stationId);
   }
 }

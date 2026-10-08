@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:ecored_app/src/core/theme/theme_index.dart';
@@ -32,6 +33,14 @@ class _PageChargerState extends State<PageCharger>
   // actualizaciones con estado terminal seguidas.
   bool _exitScheduled = false;
 
+  // `formattedDuration()` calcula el tiempo transcurrido con
+  // `DateTime.now()`, pero build() solo se dispara cuando llega un
+  // `orderUpdate` por socket (o cambia isChargingNotifier) — sin este
+  // timer, "Tiempo de carga" se queda congelado entre un MeterValues y el
+  // siguiente en vez de avanzar como un reloj. Este timer no pide nada al
+  // servidor, solo fuerza el rebuild para que el texto se recalcule.
+  Timer? _clockTimer;
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +49,10 @@ class _PageChargerState extends State<PageCharger>
       vsync: this,
       duration: const Duration(seconds: 6),
     )..repeat();
+
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<ChargerProvider>();
@@ -61,6 +74,7 @@ class _PageChargerState extends State<PageCharger>
     // listeners para no dejar fugas de memoria ni seguir recibiendo
     // eventos que ya nadie va a mostrar.
     context.read<ChargerProvider>().disconnectChargeSocket();
+    _clockTimer?.cancel();
     _rotationController.dispose();
     isChargingNotifier.dispose();
     super.dispose();
@@ -129,7 +143,15 @@ class _PageChargerState extends State<PageCharger>
     }
   }
 
+  /// Fracción (0-1) que llena el anillo. Si el cargador reporta SoC por el
+  /// medidor (`meterReportedSoc`, measurand "SoC" real, no estimado), se usa
+  /// ese valor directamente — es más preciso que el estimado por kWh/
+  /// capacidad. Si no lo reporta (queda null), se mantiene el cálculo de
+  /// siempre.
   double batteryLevel(ModelOrder order) {
+    if (order.meterReportedSoc != null) {
+      return (order.meterReportedSoc! / 100).clamp(0.0, 1.0);
+    }
     if (order.batteryCapacityKwh == 0) return 0;
     return order.kWhDelivered / order.batteryCapacityKwh;
   }
@@ -144,18 +166,49 @@ class _PageChargerState extends State<PageCharger>
     return "${hours}h ${minutes}m";
   }
 
-  /// Estimado a partir de la potencia actual reportada por el socket.
-  /// Devuelve null si no hay suficiente información para calcularlo
-  /// (potencia en 0 o batería ya llena) — no se muestra en ese caso.
+  /// Estimado del tiempo que falta para completar la carga.
+  ///
+  /// Prioriza el SoC real del medidor (`meterReportedSoc`) cuando está
+  /// disponible y ya hay progreso suficiente para que el cálculo sea
+  /// confiable (al menos 2 puntos de diferencia con `socStart`): deriva
+  /// cuánta energía cuesta cada punto de porcentaje en ESTA sesión real,
+  /// en vez de depender de `batteryCapacityKwh` (que puede venir con el
+  /// default de 100 kWh sin reflejar la batería real del vehículo).
+  ///
+  /// Si el cargador no reporta SoC (o recién arrancó y la muestra es muy
+  /// chica para confiar en ella), cae al cálculo anterior por capacidad/
+  /// kWh entregados — nunca se pierde la estimación existente, solo se
+  /// mejora cuando hay mejor dato disponible.
+  ///
+  /// Devuelve null si no hay suficiente información para ningún método
+  /// (potencia en 0, o batería/SoC ya al 100%) — no se muestra en ese caso.
   String? remainingTime(ModelOrder order) {
-    if (order.currentPowerKw <= 0 || order.batteryCapacityKwh <= 0) {
-      return null;
+    if (order.currentPowerKw <= 0) return null;
+
+    final meterSoc = order.meterReportedSoc;
+    if (meterSoc != null) {
+      final socProgress = meterSoc - order.socStart;
+      if (socProgress >= 2 && order.kWhDelivered > 0) {
+        final remainingPercent = 100 - meterSoc;
+        if (remainingPercent <= 0) return null;
+
+        final kWhPerPercent = order.kWhDelivered / socProgress;
+        final remainingKwh = kWhPerPercent * remainingPercent;
+        return _formatRemaining(
+          (remainingKwh / order.currentPowerKw * 60).round(),
+        );
+      }
     }
+
+    if (order.batteryCapacityKwh <= 0) return null;
 
     final remainingKwh = order.batteryCapacityKwh - order.kWhDelivered;
     if (remainingKwh <= 0) return null;
 
-    final totalMinutes = (remainingKwh / order.currentPowerKw * 60).round();
+    return _formatRemaining((remainingKwh / order.currentPowerKw * 60).round());
+  }
+
+  String _formatRemaining(int totalMinutes) {
     final hours = totalMinutes ~/ 60;
     final minutes = totalMinutes % 60;
     return "${hours}h ${minutes}m";
@@ -549,6 +602,7 @@ class _RingSection extends StatelessWidget {
           meta: meta,
           pulseController: pulseController,
           kWhDelivered: order.kWhDelivered,
+          meterReportedSoc: order.meterReportedSoc,
         ),
         Expanded(
           child: _RingMetricColumn(
@@ -639,6 +693,10 @@ class _ChargingRing extends StatelessWidget {
   final _StatusMeta meta;
   final AnimationController pulseController;
   final double kWhDelivered;
+  // SoC reportado directamente por el medidor del cargador — cuando el
+  // cargador no lo reporta (measurand "SoC" ausente), es null y se
+  // mantiene el texto anterior en kWh en vez de mostrar algo inventado.
+  final double? meterReportedSoc;
 
   const _ChargingRing({
     required this.level,
@@ -646,6 +704,7 @@ class _ChargingRing extends StatelessWidget {
     required this.meta,
     required this.pulseController,
     required this.kWhDelivered,
+    required this.meterReportedSoc,
   });
 
   @override
@@ -750,7 +809,13 @@ class _ChargingRing extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               _AnimatedValue(
-                value: "${kWhDelivered.toStringAsFixed(1)} kWh",
+                // Si el cargador reporta SoC por el medidor, se muestra como
+                // porcentaje; si no lo reporta (measurand ausente), se cae al
+                // texto original en kWh en vez de mostrar algo inventado.
+                value:
+                    meterReportedSoc != null
+                        ? "${meterReportedSoc!.round()}%"
+                        : "${kWhDelivered.toStringAsFixed(1)} kWh",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 10.5,

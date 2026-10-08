@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:ecored_app/src/core/services/socket_service.dart';
 import 'package:ecored_app/src/features/charger/domain/usecase/charger_services.dart';
 import 'package:ecored_app/src/features/finance/data/models/model_index.dart';
@@ -55,31 +57,73 @@ class ChargerProvider extends ChangeNotifier {
 
   /// Se conecta al socket de la orden activa y escucha su progreso en
   /// tiempo real (evento `orderUpdate` del gateway `orders.gateway.ts`).
-  /// No hace nada si no hay una orden activa o si ya está conectado.
+  /// No hace nada si no hay una orden activa o si ya se inició una
+  /// conexión.
+  ///
+  /// Se llama desde 2 lugares (`getOrderData()` acá abajo, y
+  /// `PageCharger.initState()`) que pueden disparar casi al mismo tiempo:
+  /// el primero fija `orderData` y llama esto; el segundo se monta apenas
+  /// `PageOptCharger` reacciona a ese cambio, en el siguiente frame. El
+  /// guard usaba `isConnected` (el handshake del WebSocket, que tarda) en
+  /// vez de "¿ya inicié una conexión?" — dejaba una ventana en la que la
+  /// segunda llamada pasaba el guard igual y volvía a registrar los
+  /// `listen*`, duplicando los listeners de `orderUpdate`/`orderClosed`.
+  /// `isActive` (¿ya existe el socket, conectado o no?) cierra esa ventana.
   void connectChargeSocket() {
     final order = orderData;
-    if (order == null || _socketService.isConnected) return;
+    if (order == null || _socketService.isActive) {
+      log(
+        '⏭️ connectChargeSocket() ignorado: '
+        'order=${order?.id} isActive=${_socketService.isActive}',
+        name: 'ChargerProvider',
+      );
+      return;
+    }
 
+    log('🔌 connectChargeSocket() → orderId=${order.id}', name: 'ChargerProvider');
     _socketService.connect(order.id);
 
-    _socketService.listenChargeProgress((json) {
-      final current = orderData;
-      if (current == null) return;
-
-      orderData = current.applyProgress(json);
-      notifyListeners();
-
-      // La carga terminó (finalizada, fallida o cancelada): ya no hace
-      // falta seguir escuchando, se cierra la conexión automáticamente.
-      if (_terminalOperationStatuses.contains(orderData!.operationStatus)) {
-        disconnectChargeSocket();
-      }
-    });
+    // `orderUpdate` llega mientras la orden sigue activa; `orderClosed` es
+    // el mensaje final que el gateway manda en su lugar apenas la orden
+    // llega a un operationStatus terminal — mismo payload, así que ambos
+    // se procesan igual.
+    _socketService.listenChargeProgress(_applyOrderPayload);
+    _socketService.listenOrderClosed(_applyOrderPayload);
 
     _socketService.listenErrors((message) {
       errorMessage = message;
       notifyListeners();
     });
+  }
+
+  void _applyOrderPayload(Map<String, dynamic> json) {
+    log('📡 socket orderUpdate/orderClosed ← $json', name: 'ChargerProvider');
+
+    final current = orderData;
+    if (current == null) {
+      log(
+        '⚠️ socket: llegó data pero orderData ya era null, se ignora',
+        name: 'ChargerProvider',
+      );
+      return;
+    }
+
+    orderData = current.applyProgress(json);
+    log(
+      '📡 socket → orderData actualizado: '
+      'total=${orderData!.total} subtotal=${orderData!.subtotal} '
+      'kWhDelivered=${orderData!.kWhDelivered} '
+      'currentPowerKw=${orderData!.currentPowerKw} '
+      'soc=${orderData!.soc} operationStatus=${orderData!.operationStatus}',
+      name: 'ChargerProvider',
+    );
+    notifyListeners();
+
+    // La carga terminó (finalizada, fallida o cancelada): ya no hace
+    // falta seguir escuchando, se cierra la conexión automáticamente.
+    if (_terminalOperationStatuses.contains(orderData!.operationStatus)) {
+      disconnectChargeSocket();
+    }
   }
 
   /// Cierra la conexión del socket y se desuscribe de la orden. Segura

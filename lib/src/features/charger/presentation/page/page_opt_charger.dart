@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:ecored_app/src/features/charger/presentation/page/page_charger.dart';
 import 'package:ecored_app/src/features/charger/presentation/provider/charger_provider.dart';
 import 'package:ecored_app/src/features/finance/presentation/page/page_scanqr.dart';
@@ -9,11 +11,7 @@ class PageOptCharger extends StatefulWidget {
   final ValueListenable<int>? tabIndexNotifier;
   final int? ownTabIndex;
 
-  const PageOptCharger({
-    super.key,
-    this.tabIndexNotifier,
-    this.ownTabIndex,
-  });
+  const PageOptCharger({super.key, this.tabIndexNotifier, this.ownTabIndex});
 
   @override
   State<PageOptCharger> createState() => _PageOptChargerState();
@@ -29,16 +27,15 @@ class _PageOptChargerState extends State<PageOptCharger> {
     // Esperamos a que el widget esté completamente montado
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<ChargerProvider>();
+      log('llega ');
 
-      provider
-          .getOrderData({'status': "PENDING", "operationStatus": "CHARGING"})
-          .then((_) {
-            if (mounted) {
-              setState(() {
-                _isLoading = false;
-              });
-            }
+      provider.getOrderData({'status': "PENDING"}).then((_) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
           });
+        }
+      });
     });
   }
 
@@ -70,14 +67,9 @@ class _PageOptChargerState extends State<PageOptCharger> {
             ElevatedButton(
               onPressed: () {
                 setState(() => _isLoading = true);
-                provider
-                    .getOrderData({
-                      'status': "PENDING",
-                      "operationStatus": "CHARGING",
-                    })
-                    .then((_) {
-                      if (mounted) setState(() => _isLoading = false);
-                    });
+                provider.getOrderData({'status': "PENDING"}).then((_) {
+                  if (mounted) setState(() => _isLoading = false);
+                });
               },
               child: const Text('Reintentar'),
             ),

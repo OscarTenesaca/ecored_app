@@ -2,16 +2,16 @@ import 'dart:developer';
 
 import 'package:ecored_app/src/core/adapter/adapter_http.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
+import 'package:ecored_app/src/features/maps/data/model/model_station_preview.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:flutter/foundation.dart';
 
 abstract class StationsRemoteDataSource {
   Future<List<ModelStation>> findAllStations(Map<String, dynamic> query);
   Future<List<ModelCharger>> findAllChargers(Map<String, dynamic> query);
-  Future<ModelCharger> findOneCharger(Map<String, dynamic> query);
   Future<ModelStation> createStation(Map<String, dynamic> stationData);
   Future<int> createCharger(Map<String, dynamic> chargerData);
-  // Future<ModelCharger
+  Future<ModelStationPreview> getStationPreview(String stationId);
 }
 
 class StationsRemoteDataSourceImpl implements StationsRemoteDataSource {
@@ -44,11 +44,12 @@ class StationsRemoteDataSourceImpl implements StationsRemoteDataSource {
   @override
   Future<List<ModelCharger>> findAllChargers(Map<String, dynamic> query) async {
     final String endpoint = '$url/api/v1/charger';
+    debugPrint('🔄 Response findAllChargers: ${query}');
 
     final response = await httpAdapter.get(endpoint, queryParams: query);
 
     if (response.statusCode == 200) {
-      debugPrint('🔄 Response findAllChargers: ${response.data['data']}');
+      log('🔄 Response findAllChargers: ${response.data['data']}');
       final responseChargers = response.data['data'];
 
       List<ModelCharger> chargers =
@@ -91,14 +92,14 @@ class StationsRemoteDataSourceImpl implements StationsRemoteDataSource {
   }
 
   @override
-  Future<ModelCharger> findOneCharger(Map<String, dynamic> query) async {
-    final String endpoint = '$url/api/v1/charger/${query['id']}';
+  Future<ModelStationPreview> getStationPreview(String stationId) async {
+    final String endpoint = '$url/api/v1/station/preview/$stationId';
     final response = await httpAdapter.get(endpoint);
+
     if (response.statusCode == 200) {
-      final Map<String, dynamic> responseCharger = response.data['data'];
-      return ModelCharger.fromJson(responseCharger);
-    } else {
-      throw Exception('Failed to fetch charger: ${response.statusCode}');
+      return ModelStationPreview.fromJson(response.data['data']);
     }
+
+    throw Exception('Failed to fetch station preview: ${response.statusCode}');
   }
 }

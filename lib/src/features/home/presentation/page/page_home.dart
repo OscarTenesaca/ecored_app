@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:ecored_app/src/core/adapter/adapter_launcher.dart';
 import 'package:ecored_app/src/core/theme/theme_colors.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
@@ -56,11 +58,7 @@ class PageHome extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Row(
                   children: [
-                    CustomButtonSquare(
-                      icon: Icons.person_outline,
-                      backgroundColor: accentColor(),
-                      iconColor: primaryColor(),
-                    ),
+                    _HomeUserAvatar(img: Preferences().getUser()?.img ?? ''),
 
                     const SizedBox(width: 14),
 
@@ -76,7 +74,7 @@ class PageHome extends StatelessWidget {
                             title:
                                 Preferences().getUser()?.name.toUpperCase() ??
                                 '',
-                            textColor: whiteColor(),
+                            textColor: accentColor(),
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                           ),
@@ -84,13 +82,13 @@ class PageHome extends StatelessWidget {
                       ),
                     ),
 
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.notifications,
-                        color: Colors.white70,
-                      ),
-                    ),
+                    // IconButton(
+                    //   onPressed: () {},
+                    //   icon: const Icon(
+                    //     Icons.notifications,
+                    //     color: Colors.white70,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -285,6 +283,56 @@ class PageHome extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Foto de perfil del usuario con la misma forma cuadrangular que
+/// [CustomButtonSquare] (mismo tamaño/borderRadius por defecto), pero
+/// mostrando la imagen real en vez de un ícono — igual que en
+/// `CustomHiveImg` (perfil), que distingue entre URL de red
+/// (`files/user/`) y base64.
+class _HomeUserAvatar extends StatelessWidget {
+  final String img;
+
+  const _HomeUserAvatar({required this.img});
+
+  static const double _size = 54;
+  static const double _borderRadius = 18;
+
+  @override
+  Widget build(BuildContext context) {
+    if (img.isEmpty) {
+      return CustomButtonSquare(
+        icon: Icons.person_outline,
+        backgroundColor: accentColor(),
+        iconColor: primaryColor(),
+      );
+    }
+
+    final isNetworkImage = img.contains('files/user/');
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(_borderRadius),
+      child: SizedBox(
+        width: _size,
+        height: _size,
+        child:
+            isNetworkImage
+                ? Image.network(
+                  img,
+                  fit: BoxFit.cover,
+                  errorBuilder:
+                      (_, __, ___) => Container(
+                        color: accentColor(),
+                        child: Icon(
+                          Icons.person_outline,
+                          color: primaryColor(),
+                        ),
+                      ),
+                )
+                : Image.memory(base64.decode(img), fit: BoxFit.cover),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
+import 'package:ecored_app/src/features/maps/data/model/model_station_preview.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:ecored_app/src/features/maps/domain/usecases/station_services.dart';
 import 'package:flutter/cupertino.dart';
@@ -9,6 +10,7 @@ class StationProvider extends ChangeNotifier {
   bool isLoading = false;
   List<ModelStation>? stations;
   List<ModelCharger>? chargers;
+  ModelStationPreview? stationPreview;
   String? errorMessage;
 
   StationProvider(this.services);
@@ -92,6 +94,20 @@ class StationProvider extends ChangeNotifier {
       return -1;
     } finally {
       isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> getStationPreview(String stationId) async {
+    // No usa el `isLoading` compartido: findAllStations también lo usa
+    // para el overlay de carga del mapa (mismo motivo que findAllChargers).
+    try {
+      errorMessage = null;
+      stationPreview = await services.getStationPreview(stationId);
+    } catch (e) {
+      errorMessage = e.toString();
+      stationPreview = null;
+    } finally {
       notifyListeners();
     }
   }

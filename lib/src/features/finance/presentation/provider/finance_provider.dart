@@ -11,7 +11,8 @@ class FinanceProvider extends ChangeNotifier {
 
   bool isLoading = false;
   ModelFinance? financeData;
-  ModelCharger? chargerData; // <-- para almacenar el charger
+  List<ModelCharger>?
+  chargerData; // <-- todos los conectores de la estación escaneada
   List<ModelTransaction>? transactionData;
   String? errorMessage;
 
@@ -101,8 +102,8 @@ class FinanceProvider extends ChangeNotifier {
     return -1;
   }
 
-  Future<int> postOrder(Map<String, dynamic> body) async {
-    if (isLoading) return -1;
+  Future<(int, String?)> postOrder(Map<String, dynamic> body) async {
+    if (isLoading) return (-1, null);
     try {
       isLoading = true;
       notifyListeners();
@@ -115,7 +116,7 @@ class FinanceProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
-    return -1;
+    return (-1, null);
   }
 
   Future<int> postOrderPayment(Map<String, dynamic> body) async {
@@ -135,11 +136,13 @@ class FinanceProvider extends ChangeNotifier {
     return -1;
   }
 
-  Future<void> findOneCharger(String chargerId) async {
+  Future<void> findChargersByCode(String chargerCode) async {
     isLoading = true;
     notifyListeners();
     try {
-      chargerData = await stationServices.findOneCharger({'id': chargerId});
+      chargerData = await stationServices.findAllChargers({
+        'code': chargerCode,
+      });
     } catch (e) {
       errorMessage = 'Error fetching charger: $e';
     } finally {

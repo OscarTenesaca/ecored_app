@@ -85,7 +85,6 @@ class _PageStationState extends State<PageStation> {
       // VALUE NOTIFIERS
       "typeConnection": ValueNotifier<Map<String, String>?>(null),
       "status": ValueNotifier<Map<String, String>?>(null),
-      "format": ValueNotifier<Map<String, String>?>(null),
       "typeCharger": ValueNotifier<Map<String, String>?>(null),
       "powerKw": TextEditingController(),
       "intensity": TextEditingController(),
@@ -161,7 +160,6 @@ class _PageStationState extends State<PageStation> {
       final typeConnection =
           (c["typeConnection"] as ValueNotifier<Map<String, String>?>).value;
       final status = (c["status"] as ValueNotifier<Map<String, String>?>).value;
-      final format = (c["format"] as ValueNotifier<Map<String, String>?>).value;
       final typeCharger =
           (c["typeCharger"] as ValueNotifier<Map<String, String>?>).value;
       final powerKw = (c["powerKw"] as TextEditingController).text;
@@ -172,7 +170,6 @@ class _PageStationState extends State<PageStation> {
       final isComplete =
           typeConnection != null &&
           status != null &&
-          format != null &&
           typeCharger != null &&
           powerKw.isNotEmpty &&
           intensity.isNotEmpty &&
@@ -243,7 +240,6 @@ class _PageStationState extends State<PageStation> {
             "station": station.id,
             "typeConnection": c["typeConnection"]!.value['key'],
             "status": c["status"]!.value['key'],
-            "format": c["format"]!.value['key'],
             "typeCharger": c["typeCharger"]!.value['key'],
             "powerKw": c["powerKw"]!.text,
             "intensity": c["intensity"]!.text,
@@ -724,32 +720,13 @@ class _PageStationState extends State<PageStation> {
                     ],
                   ),
 
-                  Row(
-                    children: [
-                      Flexible(
-                        child: CustomButtonSelect(
-                          title: 'Formato',
-                          selectNotifier:
-                              c["format"]
-                                  as ValueNotifier<Map<String, String>?>,
-                          optionsList: CHARGER_FORMAT_LIST,
-                          backgroundColor: deepForestGreen(),
-                          textColor: grayInputColor(),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: CustomButtonSelect(
-                          title: 'Tipo Charger',
-                          selectNotifier:
-                              c["typeCharger"]
-                                  as ValueNotifier<Map<String, String>?>,
-                          optionsList: CHARGER_TYPE_LIST,
-                          backgroundColor: deepForestGreen(),
-                          textColor: grayInputColor(),
-                        ),
-                      ),
-                    ],
+                  CustomButtonSelect(
+                    title: 'Tipo Charger',
+                    selectNotifier:
+                        c["typeCharger"] as ValueNotifier<Map<String, String>?>,
+                    optionsList: CHARGER_TYPE_LIST,
+                    backgroundColor: deepForestGreen(),
+                    textColor: grayInputColor(),
                   ),
                   Row(
                     spacing: 15,

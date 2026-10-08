@@ -42,7 +42,7 @@ class FinanceRepositoryImpl implements FinanceRepository {
   }
 
   @override
-  Future<int> postOrder(Map<String, dynamic> body) {
+  Future<(int, String?)> postOrder(Map<String, dynamic> body) {
     return remoteDataSource.postOrder(body);
   }
 

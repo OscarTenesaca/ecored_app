@@ -40,11 +40,6 @@ const List<Map<String, String>> CONECTORS_TYPE_LIST = [
   {'key': 'UNKNOWN', 'label': 'Unknown'},
 ];
 
-const List<Map<String, String>> CHARGER_FORMAT_LIST = [
-  {'key': 'CABLE', 'label': 'Cable'},
-  {'key': 'CONNECTOR', 'label': 'Conector'},
-];
-
 const List<Map<String, String>> CHARGER_TYPE_LIST = [
   {'key': 'AC1', 'label': 'Monofásico (AC)'},
   {'key': 'AC3', 'label': 'Trifásico (AC)'},

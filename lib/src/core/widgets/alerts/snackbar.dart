@@ -73,5 +73,17 @@ void showSnackbar(BuildContext context, String content, SnackbarStatus status) {
   // hasta que el usuario lo cierra a mano. Para garantizar el auto-cierre
   // siempre —con o sin acción visible— lo forzamos con nuestro propio
   // temporizador, independiente del gating interno de Flutter.
-  Future.delayed(duration, controller.close);
+  //
+  // Si el snackbar ya se cerró por otro camino antes de que se cumpla
+  // este timer (p. ej. el usuario tocó "OK", que llama
+  // removeCurrentSnackBar()), `closed` ya se completó y NO hay que volver
+  // a llamar controller.close(): hacerlo igual revienta con
+  // "Bad state: No element" dentro del propio ScaffoldMessengerState,
+  // porque ese snackbar ya salió de su cola interna por el otro lado.
+  bool alreadyClosed = false;
+  controller.closed.then((_) => alreadyClosed = true);
+
+  Future.delayed(duration, () {
+    if (!alreadyClosed) controller.close();
+  });
 }

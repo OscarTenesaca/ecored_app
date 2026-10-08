@@ -25,6 +25,9 @@ class _PageScanQrState extends State<PageScanQr> {
   int MIN_RECHARGE_AMOUNT = 1;
   final ValueNotifier<String> qrCodeNotifier = ValueNotifier<String>('');
 
+  int? _selectedConnectorId;
+  bool _showOccupied = false;
+
   @override
   void initState() {
     super.initState();
@@ -61,6 +64,8 @@ class _PageScanQrState extends State<PageScanQr> {
   void _resetScanState() {
     if (!mounted) return;
     qrCodeNotifier.value = '';
+    _selectedConnectorId = null;
+    _showOccupied = false;
     context.read<FinanceProvider>().clearChargerData();
   }
 
@@ -111,26 +116,38 @@ class _PageScanQrState extends State<PageScanQr> {
         return;
       }
 
-      final scannedId = scannedData.split('/scanner/').last.trim();
+      final chargeCode = scannedData.split('/scanner/').last.trim();
 
-      await financeProvider.findOneCharger(scannedId);
+      await financeProvider.findChargersByCode(chargeCode);
 
       if (!mounted) return;
 
-      final fetchedCharger = financeProvider.chargerData;
-      if (fetchedCharger == null) {
+      final fetchedChargers = financeProvider.chargerData;
+      if (fetchedChargers == null || fetchedChargers.isEmpty) {
         showSnackbar(
           context,
           financeProvider.errorMessage ??
               'No se pudo obtener la información del cargador.',
           SnackbarStatus.error,
         );
-      } else if (fetchedCharger.station == null) {
+      } else if (fetchedChargers.first.station == null) {
         showSnackbar(
           context,
           'La estación asociada a este cargador ya no está disponible.',
           SnackbarStatus.error,
         );
+      } else {
+        // Selección por defecto: el primer conector que no esté "Charging".
+        // Si todos están ocupados, igual se selecciona el primero de la
+        // lista (el usuario lo ve bloqueado y puede elegir otro si hay).
+        final defaultCharger = fetchedChargers.firstWhere(
+          (c) => c.connectorStatus != 'Charging',
+          orElse: () => fetchedChargers.first,
+        );
+        setState(() {
+          _selectedConnectorId = defaultCharger.connectorId;
+          _showOccupied = false;
+        });
       }
     }
   }
@@ -138,7 +155,7 @@ class _PageScanQrState extends State<PageScanQr> {
   @override
   Widget build(BuildContext context) {
     final financeProvider = context.watch<FinanceProvider>();
-    final ModelCharger? charger = financeProvider.chargerData;
+    final List<ModelCharger>? chargers = financeProvider.chargerData;
 
     return Scaffold(
       backgroundColor: primaryColor(),
@@ -157,10 +174,17 @@ class _PageScanQrState extends State<PageScanQr> {
               );
             }
 
-            if (charger == null || charger.station == null) {
+            if (chargers == null ||
+                chargers.isEmpty ||
+                chargers.first.station == null) {
               //mostrar la pantalla para escanear el QR
               return openScanner();
             }
+
+            final selectedCharger = chargers.firstWhere(
+              (c) => c.connectorId == _selectedConnectorId,
+              orElse: () => chargers.first,
+            );
 
             // 🟢 Mostrar resultado
             return TweenAnimationBuilder<double>(
@@ -176,51 +200,339 @@ class _PageScanQrState extends State<PageScanQr> {
                   ),
                 );
               },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                child: SingleChildScrollView(
-                  physics: BouncingScrollPhysics(),
-                  child: Column(
-                    spacing: 16,
-                    children: [
-                      const SizedBox(height: 4),
-
-                      // Momento "hero": lo primero que se ve es el cargador
-                      // escaneado, con su estado y precio como protagonistas.
-                      _heroSummary(charger),
-
-                      _stationStrip(charger),
-
-                      _specsSection(charger),
-
-                      Row(
-                        spacing: 12,
-                        children: [
-                          Flexible(
-                            child: CustomButton(
-                              textButton: 'REESCANEAR',
-                              buttonColor: grayInputColor(),
-                              textButtonColor: accentColor(),
-                              onPressed: () => _scanQr(),
-                            ),
-                          ),
-                          Flexible(
-                            child: CustomButton(
-                              textButton: 'INICIAR CARGA',
-                              buttonColor: accentColor(),
-                              textButtonColor: primaryColor(),
-                              onPressed: () => _createOrder(charger),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              child: _chargerView(chargers, selectedCharger),
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _chargerView(List<ModelCharger> chargers, ModelCharger selected) {
+    final bool selectedIsOccupied = selected.connectorStatus == 'Charging';
+
+    // "En línea" se calcula sobre TODOS los conectores de la estación (no
+    // solo el seleccionado): si al menos uno está CONNECTED, la estación
+    // está en línea. Si el backend no manda connectionStatus para ninguno,
+    // no se muestra el badge en vez de inventar un estado.
+    final knownConnections =
+        chargers.map((c) => c.connectionStatus).whereType<String>();
+    final bool? isOnline =
+        knownConnections.isEmpty
+            ? null
+            : knownConnections.any((s) => s == 'CONNECTED');
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: SingleChildScrollView(
+        physics: BouncingScrollPhysics(),
+        child: Column(
+          spacing: 16,
+          children: [
+            const SizedBox(height: 4),
+
+            _stationStrip(selected, isOnline: isOnline),
+
+            // Solo tiene sentido elegir cuando hay más de un conector.
+            if (chargers.length > 1) _connectorSelector(chargers, selected),
+
+            _specsSection(selected),
+
+            Row(
+              spacing: 12,
+              children: [
+                Flexible(
+                  child: CustomButton(
+                    textButton: 'REESCANEAR',
+                    buttonColor: grayInputColor(),
+                    textButtonColor: accentColor(),
+                    onPressed: () => _scanQr(),
+                  ),
+                ),
+                Flexible(
+                  child: CustomButton(
+                    textButton: 'INICIAR CARGA',
+                    buttonColor: accentColor(),
+                    textButtonColor: primaryColor(),
+                    onPressed:
+                        selectedIsOccupied
+                            ? null
+                            : () => _createOrder(selected),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ================= SELECCIÓN DE CONECTOR (pestañas + tarjetas) =================
+  Widget _connectorSelector(
+    List<ModelCharger> chargers,
+    ModelCharger selected,
+  ) {
+    final available =
+        chargers.where((c) => c.connectorStatus != 'Charging').toList();
+    final occupied =
+        chargers.where((c) => c.connectorStatus == 'Charging').toList();
+    final visible = _showOccupied ? occupied : available;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.ev_station_rounded, color: accentColor(), size: 18),
+            const SizedBox(width: 8),
+            LabelTitle(
+              title: 'Selecciona un conector',
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              textColor: whiteColor(),
+              padding: false,
+            ),
+          ],
+        ),
+        const SizedBox(height: 3),
+        LabelTitle(
+          title: 'Elige el conector que deseas usar para iniciar la carga.',
+          fontSize: 11,
+          textColor: grayInputColor(),
+          padding: false,
+        ),
+        const SizedBox(height: 10),
+        _connectorTabs(available.length, occupied.length),
+        const SizedBox(height: 10),
+        if (visible.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: LabelTitle(
+              title:
+                  _showOccupied
+                      ? 'No hay conectores ocupados.'
+                      : 'No hay conectores disponibles en este momento.',
+              fontSize: 12,
+              textColor: grayInputColor(),
+              alignment: Alignment.center,
+              padding: false,
+            ),
+          )
+        else
+          Column(
+            spacing: 10,
+            children: visible.map((c) => _connectorCard(c, selected)).toList(),
+          ),
+      ],
+    );
+  }
+
+  Widget _connectorTabs(int availableCount, int occupiedCount) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(50),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _tabButton(
+              icon: Icons.ev_station_rounded,
+              label: 'Disponibles',
+              count: availableCount,
+              color: accentColor(),
+              selected: !_showOccupied,
+              onTap: () => setState(() => _showOccupied = false),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: _tabButton(
+              icon: Icons.cancel_rounded,
+              label: 'Ocupados',
+              count: occupiedCount,
+              color: errorColor(),
+              selected: _showOccupied,
+              onTap: () => setState(() => _showOccupied = true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tabButton({
+    required IconData icon,
+    required String label,
+    required int count,
+    required Color color,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final Color fg = selected ? primaryColor() : grayInputColor();
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(50),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(50),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 15, color: fg),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: fg,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+              decoration: BoxDecoration(
+                color:
+                    selected
+                        ? primaryColor().withValues(alpha: 0.18)
+                        : Colors.white.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: fg,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _connectorCard(ModelCharger charger, ModelCharger selected) {
+    final bool isOccupied = charger.connectorStatus == 'Charging';
+    final bool isSelected =
+        !isOccupied && charger.connectorId == selected.connectorId;
+    final Color statusColor = isOccupied ? errorColor() : accentColor();
+
+    final card = Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xff111111),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isSelected ? accentColor() : const Color(0xff2A2A2A),
+          width: isSelected ? 1.6 : 1,
+        ),
+        boxShadow:
+            isSelected
+                ? [
+                  BoxShadow(
+                    color: accentColor().withValues(alpha: 0.22),
+                    blurRadius: 16,
+                    spreadRadius: 1,
+                  ),
+                ]
+                : null,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: statusColor.withValues(alpha: 0.14),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.electrical_services_rounded,
+              color: statusColor,
+              size: 19,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LabelTitle(
+                  title: 'Conector ${charger.connectorId}',
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  textColor: whiteColor(),
+                  padding: false,
+                ),
+                const SizedBox(height: 3),
+                LabelTitle(
+                  title: charger.typeConnection,
+                  fontSize: 11,
+                  textColor: grayInputColor(),
+                  padding: false,
+                  maxLines: 1,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          // El chevron era puramente decorativo (la tarjeta entera ya es
+          // tappeable) — en su lugar va el badge de disponibilidad.
+          _connectorStatusBadge(isOccupied),
+        ],
+      ),
+    );
+
+    // Única regla de bloqueo: "Charging". Todo lo demás es seleccionable.
+    if (isOccupied) {
+      return Opacity(opacity: 0.55, child: card);
+    }
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => setState(() => _selectedConnectorId = charger.connectorId),
+      child: card,
+    );
+  }
+
+  Widget _connectorStatusBadge(bool isOccupied) {
+    final color = isOccupied ? errorColor() : accentColor();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(50),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isOccupied ? Icons.cancel_rounded : Icons.circle,
+            size: isOccupied ? 12 : 8,
+            color: color,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            isOccupied ? 'Ocupado' : 'Disponible',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -309,141 +621,29 @@ class _PageScanQrState extends State<PageScanQr> {
     );
   }
 
-  // ================= HERO: cargador escaneado =================
-  // Tarjeta protagonista con degradado, ícono circular con glow, estado
-  // y precio en grande — el "momento" principal de la pantalla.
-  Widget _heroSummary(ModelCharger charger) {
-    final statusColor = stationStatusColor(charger.status);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [deepForestGreen(), primaryColor()],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accentColor().withValues(alpha: 0.22)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: accentColor().withValues(alpha: 0.14),
-              border: Border.all(color: accentColor(), width: 1.6),
-              boxShadow: [
-                BoxShadow(
-                  color: accentColor().withValues(alpha: 0.3),
-                  blurRadius: 14,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.ev_station_rounded,
-              color: accentColor(),
-              size: 26,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                LabelTitle(
-                  title: charger.code,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  textColor: whiteColor(),
-                  padding: false,
-                ),
-                const SizedBox(height: 6),
-                _statusPill(charger.status, statusColor),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              LabelTitle(
-                title: "\$${charger.priceWithTipeConnector.toStringAsFixed(2)}",
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                textColor: accentColor(),
-                padding: false,
-              ),
-              LabelTitle(
-                title: '/kWh',
-                fontSize: 11,
-                textColor: grayInputColor(),
-                padding: false,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _statusPill(String status, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(50),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.circle, size: 8, color: color),
-          const SizedBox(width: 6),
-          LabelTitle(
-            title: stationStatusLabel(status),
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            textColor: color,
-            padding: false,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ================= ESTACIÓN (franja compacta) =================
-  Widget _stationStrip(ModelCharger charger) {
+  // ================= ESTACIÓN (tarjeta destacada) =================
+  Widget _stationStrip(ModelCharger charger, {bool? isOnline}) {
     final station = charger.station!;
-    final phone = '${station.prefixCode} ${station.phone}'.trim();
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(10),
       decoration: cardDecoration(shadow: true),
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: accentColor().withValues(alpha: 0.14),
+              border: Border.all(color: accentColor().withValues(alpha: 0.4)),
             ),
             alignment: Alignment.center,
-            child: Icon(Icons.location_on, color: accentColor(), size: 20),
+            child: Icon(
+              Icons.location_on_rounded,
+              color: accentColor(),
+              size: 22,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -452,28 +652,64 @@ class _PageScanQrState extends State<PageScanQr> {
               children: [
                 LabelTitle(
                   title: station.name,
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   textColor: whiteColor(),
                   padding: false,
                 ),
-                const SizedBox(height: 2),
-                LabelTitle(
-                  title: station.address,
-                  fontSize: 12,
-                  textColor: grayInputColor(),
-                  padding: false,
+                const SizedBox(height: 3),
+                // station.address y el badge "En línea" van en la misma
+                // fila para ahorrar una línea de alto en la tarjeta.
+                Row(
+                  children: [
+                    Icon(
+                      Icons.place_rounded,
+                      size: 13,
+                      color: grayInputColor(),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: LabelTitle(
+                        title: station.address,
+                        fontSize: 12,
+                        textColor: grayInputColor(),
+                        padding: false,
+                        maxLines: 1,
+                      ),
+                    ),
+                    if (isOnline != null) ...[
+                      const SizedBox(width: 8),
+                      _onlineBadge(isOnline),
+                    ],
+                  ],
                 ),
-                if (station.phone.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  LabelTitle(
-                    title: phone,
-                    fontSize: 12,
-                    textColor: grayInputColor(),
-                    padding: false,
-                  ),
-                ],
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _onlineBadge(bool isOnline) {
+    final color = isOnline ? accentColor() : errorColor();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(50),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.circle, size: 7, color: color),
+          const SizedBox(width: 5),
+          Text(
+            isOnline ? 'En línea' : 'Fuera de línea',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
           ),
         ],
@@ -485,7 +721,7 @@ class _PageScanQrState extends State<PageScanQr> {
   Widget _specsSection(ModelCharger charger) {
     return Container(
       decoration: cardDecoration(shadow: true),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -493,20 +729,43 @@ class _PageScanQrState extends State<PageScanQr> {
             children: [
               Icon(Icons.receipt_long_rounded, color: accentColor(), size: 20),
               const SizedBox(width: 8),
-              LabelTitle(
-                title: 'Especificaciones',
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                textColor: whiteColor(),
-                padding: false,
+              Expanded(
+                child: LabelTitle(
+                  title: 'Especificaciones',
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  textColor: whiteColor(),
+                  padding: false,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: accentColor().withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                child: Text(
+                  'Conector ${charger.connectorId}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: accentColor(),
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
           Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
           const SizedBox(height: 6),
-          _specRow(Icons.power, 'Conector', '#${charger.connectorId}'),
-          _specRow(Icons.usb, 'Tipo de conexión', charger.typeConnection),
+          _specRow(
+            Icons.attach_money,
+            'Precio',
+            '\$${((charger.priceWithTipeConnector * 100).truncate() / 100).toStringAsFixed(2)}/kWh',
+          ),
+          // _specRow(Icons.usb, 'Tipo de conexión', charger.typeConnection),
           _specRow(Icons.bolt, 'Potencia', '${charger.powerKw} kW'),
           _specRow(
             Icons.battery_charging_full,
@@ -514,8 +773,12 @@ class _PageScanQrState extends State<PageScanQr> {
             '${charger.voltage} V',
           ),
           _specRow(Icons.speed, 'Intensidad', '${charger.intensity} A'),
-          _specRow(Icons.settings, 'Tipo de cargador', charger.typeCharger),
-          _specRow(Icons.cable, 'Formato', charger.format, isLast: true),
+          _specRow(
+            Icons.settings,
+            'Tipo de cargador',
+            charger.typeCharger,
+            isLast: true,
+          ),
         ],
       ),
     );
@@ -536,14 +799,15 @@ class _PageScanQrState extends State<PageScanQr> {
           Expanded(
             child: LabelTitle(
               title: label,
-              fontSize: 13,
+              fontSize: 11,
               textColor: grayInputColor(),
               padding: false,
             ),
           ),
+
           LabelTitle(
             title: value,
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: FontWeight.bold,
             textColor: whiteColor(),
             padding: false,
@@ -583,9 +847,9 @@ class _PageScanQrState extends State<PageScanQr> {
       "administrator": charger.station!.administrator,
     };
 
-    final response = await provider.postOrder(order);
+    final (statusCode, orderId) = await provider.postOrder(order);
 
-    if (response == 201) {
+    if (statusCode == 201) {
       if (!mounted) return;
       showPopUpWithChildren(
         context: context,
@@ -598,17 +862,27 @@ class _PageScanQrState extends State<PageScanQr> {
           // detecta y cambia automáticamente de PageScanQr a PageCharger
           // — el mismo mecanismo reactivo que ya se usa para volver a
           // PageScanQr cuando la carga finaliza.
-          context.read<ChargerProvider>().getOrderData({
-            'status': "PENDING",
-            "operationStatus": "CHARGING",
-          });
+          //
+          // Se usa directo el _id que ya devolvió el POST /orders (orderId)
+          // en vez de "adivinar" con status: PENDING — sin ninguna ventana
+          // de carrera posible (antes, si find/one llegaba a no encontrar
+          // nada todavía, se volvía en silencio al escáner sin conectar
+          // el socket). Si por algún motivo no vino orderId, se cae al
+          // comportamiento anterior como respaldo.
+          if (orderId != null) {
+            context.read<ChargerProvider>().getOrderData({'id': orderId});
+          } else {
+            context.read<ChargerProvider>().getOrderData({
+              'status': "PENDING",
+            });
+          }
         },
       );
     } else {
       if (!mounted) return;
       String errorMsj = '';
 
-      switch (response) {
+      switch (statusCode) {
         case -1:
           errorMsj = 'Ya se está procesando su solicitud, espere un momento.';
           break;

@@ -13,6 +13,15 @@ class ModelStation {
   final String administrator;
   final LocationModel country;
   final DateTime createdAt;
+  // Categoría del punto de carga (AIRPORT, HOTEL, ...) — ver
+  // `STATION_TYPE_POINTS_LIST` en utils_enums.dart para la etiqueta/ícono.
+  final String? typePoint;
+  final LocationModel? province;
+  final LocationModel? canton;
+  final double? parkingBaseFee;
+  final int? parkingBaseMinutes;
+  final double? parkingFeePerMinute;
+  final double? serviceFee;
 
   ModelStation({
     required this.id,
@@ -27,6 +36,13 @@ class ModelStation {
     required this.administrator,
     required this.country,
     required this.createdAt,
+    this.typePoint,
+    this.province,
+    this.canton,
+    this.parkingBaseFee,
+    this.parkingBaseMinutes,
+    this.parkingFeePerMinute,
+    this.serviceFee,
   });
 
   factory ModelStation.fromJson(Map<String, dynamic> json) {
@@ -64,6 +80,19 @@ class ModelStation {
           json["createdAt"] != null
               ? DateTime.parse(json["createdAt"])
               : DateTime.now(),
+      typePoint: json["typePoint"],
+      province:
+          json["province"] is Map<String, dynamic>
+              ? LocationModel.fromJson(json["province"])
+              : null,
+      canton:
+          json["canton"] is Map<String, dynamic>
+              ? LocationModel.fromJson(json["canton"])
+              : null,
+      parkingBaseFee: (json["parkingBaseFee"] as num?)?.toDouble(),
+      parkingBaseMinutes: (json["parkingBaseMinutes"] as num?)?.toInt(),
+      parkingFeePerMinute: (json["parkingFeePerMinute"] as num?)?.toDouble(),
+      serviceFee: (json["serviceFee"] as num?)?.toDouble(),
     );
   }
 
@@ -80,5 +109,12 @@ class ModelStation {
     "administrator": administrator,
     "country": country.toJson(),
     "createdAt": createdAt.toIso8601String(),
+    "typePoint": typePoint,
+    "province": province?.toJson(),
+    "canton": canton?.toJson(),
+    "parkingBaseFee": parkingBaseFee,
+    "parkingBaseMinutes": parkingBaseMinutes,
+    "parkingFeePerMinute": parkingFeePerMinute,
+    "serviceFee": serviceFee,
   };
 }

@@ -1,5 +1,6 @@
 import 'package:ecored_app/src/features/maps/data/datasources/stations_remote_data_source.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_charger.dart';
+import 'package:ecored_app/src/features/maps/data/model/model_station_preview.dart';
 import 'package:ecored_app/src/features/maps/data/model/model_stations.dart';
 import 'package:ecored_app/src/features/maps/domain/repositories/station_repository.dart';
 
@@ -29,7 +30,7 @@ class StationRepositoryImpl implements StationRepository {
   }
 
   @override
-  Future<ModelCharger> findOneCharger(Map<String, dynamic> query) {
-    return remoteDataSource.findOneCharger(query);
+  Future<ModelStationPreview> getStationPreview(String stationId) {
+    return remoteDataSource.getStationPreview(stationId);
   }
 }

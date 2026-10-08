@@ -306,6 +306,7 @@ class _PagePlanState extends State<PagePlan> {
   }
 
   static const double _minRechargeAmount = 1;
+  static const double _maxRechargeAmount = 300;
 
   void pagar(PaymentModel method) {
     final monto =
@@ -317,6 +318,15 @@ class _PagePlanState extends State<PagePlan> {
       showSnackbar(
         context,
         'Ingresa un monto válido (mínimo \$${_minRechargeAmount.toStringAsFixed(2)}).',
+        SnackbarStatus.error,
+      );
+      return;
+    }
+
+    if (selectedPlan == 0 && monto > _maxRechargeAmount) {
+      showSnackbar(
+        context,
+        'El monto personalizado no puede superar \$${_maxRechargeAmount.toStringAsFixed(0)}.',
         SnackbarStatus.error,
       );
       return;
@@ -466,7 +476,17 @@ class _PagePlanState extends State<PagePlan> {
                           borderSide: BorderSide(color: kAccentColor, width: 2),
                         ),
                       ),
-                      onChanged: (_) {
+                      onChanged: (value) {
+                        final parsed = double.tryParse(value);
+                        if (parsed != null && parsed > _maxRechargeAmount) {
+                          final capped = _maxRechargeAmount.toStringAsFixed(0);
+                          customAmountController.value = TextEditingValue(
+                            text: capped,
+                            selection: TextSelection.collapsed(
+                              offset: capped.length,
+                            ),
+                          );
+                        }
                         setState(() => selectedPlan = 0);
                       },
                     ),

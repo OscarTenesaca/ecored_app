@@ -13,7 +13,10 @@ abstract class FinanceRemoteDataSource {
   Future<ModelRecharge> getRechargeData(Map<String, dynamic> params);
   Future<Map> postNuveiData(ModelNuvei body);
   Future<int> postRecharge(Map<String, dynamic> body);
-  Future<int> postOrder(Map<String, dynamic> body);
+  // Devuelve (statusCode, orderId): orderId es el _id real de la orden recién
+  // creada (null si no fue 201) — evita tener que "adivinarlo" después con una
+  // consulta aparte que puede llegar antes de tiempo o no encontrar nada.
+  Future<(int, String?)> postOrder(Map<String, dynamic> body);
   Future<int> postOrderPayment(Map<String, dynamic> body);
 }
 
@@ -102,11 +105,14 @@ class FinanceRemoteDataSourceImpl implements FinanceRemoteDataSource {
   }
 
   @override
-  Future<int> postOrder(Map<String, dynamic> body) async {
+  Future<(int, String?)> postOrder(Map<String, dynamic> body) async {
     final String endpoint = '$url/api/v1/orders';
     print(body);
     final resp = await httpAdapter.post(endpoint, data: body);
-    return resp.statusCode!;
+    final statusCode = resp.statusCode!;
+    final orderId =
+        statusCode == 201 ? resp.data?['data']?['_id'] as String? : null;
+    return (statusCode, orderId);
   }
 
   // permite comprar por pasarela de pago para crear recarga y orden
