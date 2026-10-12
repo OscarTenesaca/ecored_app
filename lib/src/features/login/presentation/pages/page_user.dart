@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:ecored_app/src/core/adapter/adapter_load_img.dart';
 import 'package:ecored_app/src/core/models/location_model.dart';
 import 'package:ecored_app/src/core/services/location_service.dart';
@@ -7,68 +9,17 @@ import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/login/data/models/model_user.dart';
 import 'package:ecored_app/src/features/login/presentation/provider/login_provider.dart';
 import 'package:flutter/material.dart';
-// import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
-class PageUser extends StatelessWidget {
+class PageUser extends StatefulWidget {
   const PageUser({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: Colors.transparent,
-      //   elevation: 0,
-      //   leading: IconButton(
-      //     icon: Icon(Icons.arrow_back_ios, color: accentColor()),
-      //     onPressed: () => Navigator.pop(context),
-      //   ),
-      // ),
-      body: Container(
-        height: double.infinity,
-        width: double.infinity,
-        // padding: const EdgeInsets.symmetric(horizontal: 35.0),
-        decoration: globalDecoration(),
-        child: Consumer<LoginProvider>(
-          builder: (context, provider, _) {
-            if (provider.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  SizedBox(height: 30),
-                  Align(
-                    alignment: AlignmentGeometry.topLeft,
-                    child: IconButton(
-                      icon: Icon(Icons.arrow_back_ios, color: accentColor()),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 35.0),
-                    child: _Form(),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
+  State<PageUser> createState() => _PageUserState();
 }
 
-class _Form extends StatefulWidget {
-  const _Form({super.key});
-
-  @override
-  State<_Form> createState() => __FormState();
-}
-
-class __FormState extends State<_Form> {
+class _PageUserState extends State<PageUser> {
   final _formKey = GlobalKey<FormState>();
 
   String img = '';
@@ -82,31 +33,30 @@ class __FormState extends State<_Form> {
   final ValueNotifier<String> provinceNotifier = ValueNotifier<String>('');
   final ValueNotifier<String> birthdayNotifier = ValueNotifier<String>('');
 
-  List<LocationModel> countries = [];
-  List<LocationModel> provinces = [];
-
-  final ModelUser? user = Preferences().getUser();
+  // Se refresca tras guardar: si quedara la copia inicial, guardar dos veces
+  // lo mismo detectaría "cambios" que ya se enviaron.
+  ModelUser? _user = Preferences().getUser();
   final LocationServiceImpl locationService = LocationServiceImpl();
 
-  // Evita relanzar la petición de provincias en cada rebuild del
-  // formulario: solo se vuelve a pedir cuando el país realmente cambia.
+  late Future<List<LocationModel>> _countriesFuture;
+  // Evita relanzar la petición de provincias en cada rebuild: solo se vuelve
+  // a pedir cuando el país realmente cambia.
   String? _provincesCountry;
   Future<List<LocationModel>>? _provincesFuture;
 
   @override
   void initState() {
-    img = user?.img ?? '';
-    _ciController.text = user?.ci ?? '';
-    _nameController.text = user?.name ?? '';
-    _emailController.text = user?.email ?? '';
-    _phoneController.text = user?.phone ?? '';
-    final dateOnly = '${user?.birthdate}'.split(' ').first;
-    birthdayNotifier.value = dateOnly != 'null' ? dateOnly : '';
-    countryNotifier.value = user?.country?.id ?? '';
-    provinceNotifier.value = user?.province?.id ?? '';
-    _loadCountries();
-
     super.initState();
+    img = _user?.img ?? '';
+    _ciController.text = _user?.ci ?? '';
+    _nameController.text = _user?.name ?? '';
+    _emailController.text = _user?.email ?? '';
+    _phoneController.text = _user?.phone ?? '';
+    final dateOnly = '${_user?.birthdate}'.split(' ').first;
+    birthdayNotifier.value = dateOnly != 'null' ? dateOnly : '';
+    countryNotifier.value = _user?.country?.id ?? '';
+    provinceNotifier.value = _user?.province?.id ?? '';
+    _loadCountries();
   }
 
   @override
@@ -122,188 +72,410 @@ class __FormState extends State<_Form> {
     super.dispose();
   }
 
+  void _loadCountries() {
+    _countriesFuture = locationService.countries().then((countries) {
+      // Ecuador por defecto si el usuario aún no tiene país.
+      if (mounted && countryNotifier.value.isEmpty) {
+        for (final country in countries) {
+          if (country.name.toUpperCase() == 'ECUADOR') {
+            setState(() => countryNotifier.value = country.id);
+            break;
+          }
+        }
+      }
+      return countries;
+    });
+  }
+
+  Future<List<LocationModel>>? _provincesFor(String country) {
+    if (country.isEmpty) return null;
+    if (_provincesCountry != country) {
+      _provincesCountry = country;
+      _provincesFuture = locationService.provinces({'country': country});
+    }
+    return _provincesFuture;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        spacing: 15,
+    final isLoading = context.watch<LoginProvider>().isLoading;
+
+    return Scaffold(
+      backgroundColor: primaryColor(),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.chevron_left, color: accentColor(), size: 32),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Editar perfil',
+          style: TextStyle(
+            color: whiteColor(),
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      body: Stack(
         children: [
-          CustomHiveImg(
-            img: img,
-            size: 120,
-            alignment: Alignment.center,
-            onTap: _onChangeImg,
-          ),
+          Form(
+            key: _formKey,
+            child: ListView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+              children: [
+                Center(child: _ProfileAvatar(img: img, onTap: _onChangeImg)),
+                const SizedBox(height: 24),
 
-          CustomInput(
-            validator: (value) {
-              if (value!.isEmpty) {
-                return '* Ingrese su cédula!';
-              }
-              return null;
-            },
-            textInputType: TextInputType.number,
-            hintText: 'Cédula',
-            textEditingController: _ciController,
-            enabled: false,
-          ),
-          CustomInput(
-            validator: (value) {
-              if (value!.isEmpty) {
-                return '* Ingrese su nombre!';
-              }
-              return null;
-            },
-            hintText: 'Nombre',
-            textEditingController: _nameController,
-          ),
-          CustomInput(
-            validator: (value) {
-              if (value!.isEmpty) {
-                return '* Ingrese su correo electrónico!';
-              }
-              return null;
-            },
-            hintText: 'Correo electrónico',
-            textEditingController: _emailController,
-            enabled: false,
-          ),
+                LabeledField(
+                  label: 'Nombre completo',
+                  child: TextFormField(
+                    controller: _nameController,
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.done,
+                    cursorColor: accentColor(),
+                    style: formInputStyle(),
+                    decoration: formInputDecoration(hint: 'Tu nombre'),
+                    validator:
+                        (value) =>
+                            (value == null || value.trim().isEmpty)
+                                ? 'Ingresa tu nombre'
+                                : null,
+                  ),
+                ),
+                const SizedBox(height: 18),
 
-          IgnorePointer(
-            ignoring: true, // true = bloqueado, false = activo
-            child: CustomInputPhone(
-              controller: _phoneController,
-              notifier: prefixNotifier,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: LabeledField(
+                        label: 'Cédula',
+                        child: _readOnlyField(_ciController),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: LabeledField(
+                        label: 'Fecha de nacimiento',
+                        child: _birthdateField(),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+
+                LabeledField(
+                  label: 'Correo electrónico',
+                  child: _readOnlyField(_emailController),
+                ),
+                const SizedBox(height: 18),
+
+                // El teléfono no se edita desde aquí (no se envía al guardar).
+                // Va en su propio Form para que su validador no bloquee
+                // "Guardar cambios" con un número que el usuario no puede
+                // corregir en esta pantalla.
+                LabeledField(
+                  label: 'Teléfono',
+                  child: Form(
+                    child: IgnorePointer(
+                      child: CustomInputPhone(
+                        controller: _phoneController,
+                        notifier: prefixNotifier,
+                        fillColor: formFieldFill(),
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: LabeledField(
+                        label: 'País',
+                        child: _countryField(),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: LabeledField(
+                        label: 'Provincia',
+                        child: _provinceField(),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
 
-          InkWell(
-            onTap: _pickDate,
-            child: ValueListenableBuilder<String>(
-              valueListenable: birthdayNotifier,
-              builder: (context, value, child) {
-                return CustomInput(
-                  hintText: 'Fecha de Nacimiento',
-                  textEditingController: TextEditingController(text: value),
-                  textInputType: TextInputType.datetime,
-                  enabled: false,
-                  validator: (value) {
-                    return null;
-                  },
-                );
-              },
-            ),
-          ),
-
-          Row(
-            children: [
-              Flexible(
-                child: CustomInputLocation(
-                  locations: countries,
-                  locationNotifier: countryNotifier,
-                  title: 'Selecciona país',
-                  initialCountry: 'ECUADOR', // ✅ ID del país por defecto
+          // El formulario sigue montado mientras carga: antes se reemplazaba
+          // por un spinner y se perdían los cambios sin guardar (p. ej. al
+          // subir la foto después de editar el nombre).
+          if (isLoading)
+            Positioned.fill(
+              child: ColoredBox(
+                color: Colors.black.withValues(alpha: 0.45),
+                child: Center(
+                  child: CircularProgressIndicator(color: accentColor()),
                 ),
               ),
-              const SizedBox(width: 12),
-              ValueListenableBuilder<String>(
-                valueListenable: countryNotifier,
-                builder: (context, country, child) {
-                  if (_provincesCountry != country) {
-                    _provincesCountry = country;
-                    _provincesFuture = _loadProvinces(country);
-                  }
-                  return FutureBuilder<List<LocationModel>>(
-                    future: _provincesFuture,
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return const CircularProgressIndicator();
-                      }
-
-                      return Flexible(
-                        child: CustomInputLocation(
-                          locations: snapshot.data!,
-                          locationNotifier: provinceNotifier,
-                          title: user?.province?.name ?? '',
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
-
-          CustomButton(
-            textButton: 'Actualizar',
-            buttonColor: accentColor(),
-            textButtonColor: primaryColor(),
-            onPressed: () async {
-              if (_formKey.currentState!.validate()) {
-                //validar que la data sea distinto sino no actualiza nada
-                if (user != null) {
-                  final updates = {
-                    'img': img,
-                    'name': _nameController.text,
-                    'birthdate':
-                        DateTime.parse(
-                          birthdayNotifier.value,
-                        ).toIso8601String(),
-                    'country': countryNotifier.value,
-                    'province': provinceNotifier.value,
-                  };
-
-                  final String birthdateOnlyLocal =
-                      '${user!.birthdate}'.split(' ').first;
-                  final String birthdateOnlyUpdate =
-                      '${updates['birthdate']}'.split('T').first;
-
-                  if (user!.name != updates['name'] ||
-                      birthdateOnlyLocal != birthdateOnlyUpdate ||
-                      user!.country?.id != updates['country'] ||
-                      user!.province?.id != updates['province']) {
-                    final provider = context.read<LoginProvider>();
-                    await provider.updateUser(updates);
-
-                    if (!context.mounted) return;
-                    if (provider.user != null) {
-                      showSnackbar(
-                        context,
-                        'Usuario actualizado con éxito',
-                        SnackbarStatus.success,
-                      );
-                    } else if (provider.errorMessage != null) {
-                      showSnackbar(
-                        context,
-                        provider.errorMessage!,
-                        SnackbarStatus.error,
-                      );
-                    }
-                  } else {
-                    showPopUpWithChildren(
-                      context: context,
-                      title: 'Alerta',
-                      subTitle: 'No hay cambios para actualizar.',
-                      textButton: 'Aceptar',
-                    );
-                  }
-                }
-              }
-            },
-          ),
+            ),
         ],
+      ),
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          14,
+          20,
+          14 + MediaQuery.of(context).padding.bottom,
+        ),
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
+          ),
+        ),
+        child: SizedBox(
+          height: 56,
+          child: Material(
+            color: isLoading ? Colors.white12 : accentColor(),
+            shape: const StadiumBorder(),
+            child: InkWell(
+              customBorder: const StadiumBorder(),
+              onTap: isLoading ? null : _save,
+              child: Center(
+                child: Text(
+                  'Guardar cambios',
+                  style: TextStyle(
+                    color: isLoading ? grayInputColor() : primaryColor(),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  void _pickDate() {
-    showDatePickerModal(context: context, notifier: birthdayNotifier);
+  Widget _readOnlyField(TextEditingController controller) {
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      style: formInputStyle(muted: true),
+      decoration: formInputDecoration(),
+    );
+  }
+
+  Widget _birthdateField() {
+    return ValueListenableBuilder<String>(
+      valueListenable: birthdayNotifier,
+      builder: (context, value, _) {
+        final date = DateTime.tryParse(value);
+        return FormSelectField(
+          label:
+              date == null
+                  ? 'Seleccionar'
+                  : '${date.day.toString().padLeft(2, '0')}/'
+                      '${date.month.toString().padLeft(2, '0')}/'
+                      '${date.year}',
+          isPlaceholder: date == null,
+          trailingIcon: Icons.calendar_today_outlined,
+          onTap: () {
+            FocusScope.of(context).unfocus();
+            showDatePickerModal(context: context, notifier: birthdayNotifier);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _countryField() {
+    return FutureBuilder<List<LocationModel>>(
+      future: _countriesFuture,
+      builder: (context, snapshot) {
+        final countries = snapshot.data ?? const <LocationModel>[];
+        final selected = _findById(countries, countryNotifier.value);
+
+        return FormSelectField(
+          label:
+              snapshot.connectionState == ConnectionState.waiting
+                  ? 'Cargando…'
+                  : snapshot.hasError
+                  ? 'Toca para reintentar'
+                  : selected != null
+                  ? _titleCase(selected.name)
+                  : 'País',
+          leading:
+              (selected?.flag ?? '').isNotEmpty
+                  ? Text(selected!.flag, style: const TextStyle(fontSize: 20))
+                  : null,
+          isPlaceholder: selected == null,
+          onTap:
+              snapshot.hasError
+                  ? () => setState(_loadCountries)
+                  : countries.isEmpty
+                  ? null
+                  : () => showFormOptionsPicker(
+                    context: context,
+                    title: 'País',
+                    searchable: countries.length > 8,
+                    selectedId: countryNotifier.value,
+                    options:
+                        countries
+                            .map(
+                              (c) => FormPickerOption(
+                                id: c.id,
+                                label: _titleCase(c.name),
+                                leadingText: c.flag,
+                              ),
+                            )
+                            .toList(),
+                    onSelected: (id) {
+                      if (id == countryNotifier.value) return;
+                      // La provincia anterior pertenece a otro país.
+                      setState(() {
+                        countryNotifier.value = id;
+                        provinceNotifier.value = '';
+                      });
+                    },
+                  ),
+        );
+      },
+    );
+  }
+
+  Widget _provinceField() {
+    final future = _provincesFor(countryNotifier.value);
+
+    return FutureBuilder<List<LocationModel>>(
+      future: future,
+      builder: (context, snapshot) {
+        final provinces = snapshot.data ?? const <LocationModel>[];
+        final isLoadingList =
+            future != null &&
+            snapshot.connectionState == ConnectionState.waiting;
+
+        return FormField<String>(
+          validator:
+              (_) =>
+                  provinceNotifier.value.isEmpty
+                      ? 'Selecciona tu provincia'
+                      : null,
+          builder: (field) {
+            final selected = _findById(provinces, provinceNotifier.value);
+            // Mientras cargan las provincias se muestra la que ya tenía el
+            // usuario, para que el campo no parpadee vacío.
+            final fallbackName =
+                provinceNotifier.value == _user?.province?.id
+                    ? _user?.province?.name
+                    : null;
+            final name = selected?.name ?? fallbackName;
+
+            return FormSelectField(
+              label:
+                  name != null
+                      ? _titleCase(name)
+                      : isLoadingList
+                      ? 'Cargando…'
+                      : 'Provincia',
+              isPlaceholder: name == null,
+              errorText: field.errorText,
+              onTap:
+                  provinces.isEmpty
+                      ? null
+                      : () => showFormOptionsPicker(
+                        context: context,
+                        title: 'Provincia',
+                        searchable: provinces.length > 8,
+                        selectedId: provinceNotifier.value,
+                        options:
+                            provinces
+                                .map(
+                                  (p) => FormPickerOption(
+                                    id: p.id,
+                                    label: _titleCase(p.name),
+                                  ),
+                                )
+                                .toList(),
+                        onSelected: (id) {
+                          setState(() => provinceNotifier.value = id);
+                          field.didChange(id);
+                        },
+                      ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _save() async {
+    FocusScope.of(context).unfocus();
+    if (!_formKey.currentState!.validate()) return;
+
+    final user = _user;
+    if (user == null) return;
+
+    final updates = <String, dynamic>{
+      'img': img,
+      'name': _nameController.text.trim(),
+      'country': countryNotifier.value,
+      'province': provinceNotifier.value,
+      // Sin fecha elegida no se envía (antes DateTime.parse('') rompía).
+      if (birthdayNotifier.value.isNotEmpty)
+        'birthdate': DateTime.parse(birthdayNotifier.value).toIso8601String(),
+    };
+
+    final birthdateBefore = '${user.birthdate}'.split(' ').first;
+    final birthdateAfter =
+        birthdayNotifier.value.isEmpty
+            ? birthdateBefore
+            : birthdayNotifier.value;
+
+    final hasChanges =
+        user.name != updates['name'] ||
+        birthdateBefore != birthdateAfter ||
+        user.country?.id != updates['country'] ||
+        user.province?.id != updates['province'];
+
+    if (!hasChanges) {
+      showPopUpWithChildren(
+        context: context,
+        title: 'Alerta',
+        subTitle: 'No hay cambios para actualizar.',
+        textButton: 'Aceptar',
+      );
+      return;
+    }
+
+    final provider = context.read<LoginProvider>();
+    await provider.updateUser(updates);
+
+    if (!mounted) return;
+    if (provider.errorMessage == null) {
+      setState(() => _user = Preferences().getUser());
+      showSnackbar(
+        context,
+        'Usuario actualizado con éxito',
+        SnackbarStatus.success,
+      );
+    } else {
+      showSnackbar(context, provider.errorMessage!, SnackbarStatus.error);
+    }
   }
 
   void _onChangeImg() async {
     final adapter = AdapterLoadImg();
-    // final base64Img = await adapter.pickImageAndConvert  Base64();
     // 📌 1. Seleccionar imagen
     final String? imgPath = await adapter.pickImagePath();
 
@@ -340,14 +512,99 @@ class __FormState extends State<_Form> {
       showSnackbar(context, provider.errorMessage!, SnackbarStatus.error);
     }
   }
+}
 
-  Future<void> _loadCountries() async {
-    countries = await locationService.countries();
-    setState(() {});
+LocationModel? _findById(List<LocationModel> locations, String id) {
+  if (id.isEmpty) return null;
+  for (final location in locations) {
+    if (location.id == id) return location;
+  }
+  return null;
+}
+
+// "ECUADOR" → "Ecuador"
+String _titleCase(String value) => value
+    .toLowerCase()
+    .split(' ')
+    .map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1))
+    .join(' ');
+
+/// Foto de perfil circular con anillo de acento y botón de cámara.
+class _ProfileAvatar extends StatelessWidget {
+  final String img;
+  final VoidCallback onTap;
+
+  const _ProfileAvatar({required this.img, required this.onTap});
+
+  static const double _size = 116;
+
+  ImageProvider? get _image {
+    if (img.isEmpty) return null;
+    // URL (subida reciente o ruta del servidor) o base64 (formato antiguo).
+    if (img.startsWith('http') || img.contains('files/user/')) {
+      return NetworkImage(img);
+    }
+    try {
+      return MemoryImage(base64Decode(img));
+    } catch (_) {
+      return null;
+    }
   }
 
-  Future<List<LocationModel>> _loadProvinces(String country) async {
-    provinces = await locationService.provinces({'country': country});
-    return provinces;
+  @override
+  Widget build(BuildContext context) {
+    final image = _image;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: _size + 12,
+        height: _size + 12,
+        child: Stack(
+          children: [
+            Container(
+              width: _size,
+              height: _size,
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: accentColor(), width: 3),
+              ),
+              child: CircleAvatar(
+                backgroundColor: deepForestGreen(),
+                backgroundImage: image,
+                onBackgroundImageError: image == null ? null : (_, __) {},
+                child:
+                    image == null
+                        ? Icon(
+                          Icons.person_outline,
+                          color: grayInputColor(),
+                          size: 48,
+                        )
+                        : null,
+              ),
+            ),
+            Positioned(
+              right: 4,
+              bottom: 4,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: accentColor(),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: primaryColor(), width: 3),
+                ),
+                child: Icon(
+                  Icons.photo_camera_outlined,
+                  color: primaryColor(),
+                  size: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

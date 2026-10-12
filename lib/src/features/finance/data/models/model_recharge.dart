@@ -22,6 +22,17 @@ class ModelRecharge {
   String createdAt;
   String? reason;
   String? updatedAt;
+  // Snapshot de país/provincia del usuario al crear la recarga (ObjectId; el
+  // backend no los puebla en GET /recharges/:id).
+  String? country;
+  String? province;
+  // IVA incluido en `value` (porcentaje entero, ej. 15) y su desglose.
+  double? taxPercentage;
+  double? tax;
+  double? subtotal;
+  // Comisión de la pasarela de pago (porcentaje entero, ej. 8) en dinero.
+  double? paymentPercentage;
+  double? paymentValue;
 
   ModelRecharge({
     required this.id,
@@ -36,6 +47,13 @@ class ModelRecharge {
     required this.createdAt,
     this.reason,
     this.updatedAt,
+    this.country,
+    this.province,
+    this.taxPercentage,
+    this.tax,
+    this.subtotal,
+    this.paymentPercentage,
+    this.paymentValue,
   });
 
   factory ModelRecharge.fromJson(Map<String, dynamic> json) => ModelRecharge(
@@ -51,6 +69,13 @@ class ModelRecharge {
     createdAt: json["createdAt"],
     reason: json["reason"],
     updatedAt: json["updatedAt"],
+    country: _refId(json["country"]),
+    province: _refId(json["province"]),
+    taxPercentage: (json["taxPercentage"] as num?)?.toDouble(),
+    tax: (json["tax"] as num?)?.toDouble(),
+    subtotal: (json["subtotal"] as num?)?.toDouble(),
+    paymentPercentage: (json["paymentPercentage"] as num?)?.toDouble(),
+    paymentValue: (json["paymentValue"] as num?)?.toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -66,7 +91,21 @@ class ModelRecharge {
     "createdAt": createdAt,
     "reason": reason,
     "updatedAt": updatedAt,
+    "country": country,
+    "province": province,
+    "taxPercentage": taxPercentage,
+    "tax": tax,
+    "subtotal": subtotal,
+    "paymentPercentage": paymentPercentage,
+    "paymentValue": paymentValue,
   };
+}
+
+// Acepta tanto el ObjectId plano como un documento poblado ({_id, name}).
+String? _refId(dynamic value) {
+  if (value == null) return null;
+  if (value is Map) return value["_id"]?.toString();
+  return value.toString();
 }
 
 class Payments {
