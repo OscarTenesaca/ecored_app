@@ -45,6 +45,8 @@ class ModelCharger {
   String? displayLabel;
   // Catálogo del tipo de conector (nombre/ícono), poblado por el backend.
   ModelConnectorType? connectorType;
+  // Si el conector está habilitado por el administrador.
+  bool? active;
 
   ModelCharger({
     this.id,
@@ -70,6 +72,7 @@ class ModelCharger {
     this.updatedAt,
     this.displayLabel,
     this.connectorType,
+    this.active,
   });
 
   factory ModelCharger.fromJson(Map<String, dynamic> json) => ModelCharger(
@@ -114,6 +117,7 @@ class ModelCharger {
         json["connectorType"] is Map<String, dynamic>
             ? ModelConnectorType.fromJson(json["connectorType"])
             : null,
+    active: json["active"] as bool?,
   );
 
   Map<String, dynamic> toJson() => {
@@ -140,5 +144,6 @@ class ModelCharger {
     "updatedAt": updatedAt?.toIso8601String(),
     "displayLabel": displayLabel,
     "connectorType": connectorType?.toJson(),
+    "active": active,
   };
 }

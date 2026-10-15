@@ -83,6 +83,7 @@ class _PageScanQrState extends State<PageScanQr> {
     if (!mounted) return;
 
     qrCodeNotifier.value = '';
+    // qrCodeNotifier.value = 'http://159.223.127.104:3005/scanner/CHGN1J5LTP0HD';
 
     try {
       final result = await showPopUpWithChildren(
@@ -208,8 +209,27 @@ class _PageScanQrState extends State<PageScanQr> {
     );
   }
 
+  // Única regla de bloqueo: "Charging". Todo lo demás es seleccionable.
+  bool _isOccupied(ModelCharger charger) =>
+      charger.connectorStatus == 'Charging';
+
+  // `typeConnection` ya no viene en la respuesta: el nombre sale del
+  // catálogo (`connectorType`).
+  String _typeName(ModelCharger charger) =>
+      charger.connectorType?.name ?? charger.typeConnection;
+
+  // Texto visible: la etiqueta del conector ("A", "B"...) en vez del número
+  // OCPP. La selección y la orden siguen usando `connectorId`.
+  String _connectorLabel(ModelCharger charger) {
+    final label = charger.displayLabel?.trim() ?? '';
+    return 'Conector ${label.isNotEmpty ? label : charger.connectorId}';
+  }
+
+  String _price(ModelCharger charger) =>
+      '\$${((charger.priceWithTipeConnector * 100).truncate() / 100).toStringAsFixed(2)}';
+
   Widget _chargerView(List<ModelCharger> chargers, ModelCharger selected) {
-    final bool selectedIsOccupied = selected.connectorStatus == 'Charging';
+    final bool selectedIsOccupied = _isOccupied(selected);
 
     // "En línea" se calcula sobre TODOS los conectores de la estación (no
     // solo el seleccionado): si al menos uno está CONNECTED, la estación
@@ -222,197 +242,189 @@ class _PageScanQrState extends State<PageScanQr> {
             ? null
             : knownConnections.any((s) => s == 'CONNECTED');
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18),
-      child: SingleChildScrollView(
-        physics: BouncingScrollPhysics(),
-        child: Column(
-          spacing: 16,
-          children: [
-            const SizedBox(height: 4),
-
-            _stationStrip(selected, isOnline: isOnline),
-
-            // Solo tiene sentido elegir cuando hay más de un conector.
-            if (chargers.length > 1) _connectorSelector(chargers, selected),
-
-            _specsSection(selected),
-
-            Row(
-              spacing: 12,
-              children: [
-                Flexible(
-                  child: CustomButton(
-                    textButton: 'REESCANEAR',
-                    buttonColor: grayInputColor(),
-                    textButtonColor: accentColor(),
-                    onPressed: () => _scanQr(),
-                  ),
-                ),
-                Flexible(
-                  child: CustomButton(
-                    textButton: 'INICIAR CARGA',
-                    buttonColor: accentColor(),
-                    textButtonColor: primaryColor(),
-                    onPressed:
-                        selectedIsOccupied
-                            ? null
-                            : () => _createOrder(selected),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ================= SELECCIÓN DE CONECTOR (pestañas + tarjetas) =================
-  Widget _connectorSelector(
-    List<ModelCharger> chargers,
-    ModelCharger selected,
-  ) {
-    final available =
-        chargers.where((c) => c.connectorStatus != 'Charging').toList();
-    final occupied =
-        chargers.where((c) => c.connectorStatus == 'Charging').toList();
-    final visible = _showOccupied ? occupied : available;
+    final occupiedCount = chargers.where(_isOccupied).length;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.ev_station_rounded, color: accentColor(), size: 18),
-            const SizedBox(width: 8),
-            LabelTitle(
-              title: 'Selecciona un conector',
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              textColor: whiteColor(),
-              padding: false,
-            ),
-          ],
-        ),
-        const SizedBox(height: 3),
-        LabelTitle(
-          title: 'Elige el conector que deseas usar para iniciar la carga.',
-          fontSize: 11,
-          textColor: grayInputColor(),
-          padding: false,
-        ),
-        const SizedBox(height: 10),
-        _connectorTabs(available.length, occupied.length),
-        const SizedBox(height: 10),
-        if (visible.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            child: LabelTitle(
-              title:
-                  _showOccupied
-                      ? 'No hay conectores ocupados.'
-                      : 'No hay conectores disponibles en este momento.',
-              fontSize: 12,
-              textColor: grayInputColor(),
-              alignment: Alignment.center,
-              padding: false,
-            ),
-          )
-        else
-          Column(
-            spacing: 10,
-            children: visible.map((c) => _connectorCard(c, selected)).toList(),
+        Expanded(
+          child: ListView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+            children: [
+              _stationCard(
+                selected,
+                isOnline: isOnline,
+                total: chargers.length,
+                available: chargers.length - occupiedCount,
+                occupied: occupiedCount,
+              ),
+              const SizedBox(height: 28),
+              Text(
+                'Conectores',
+                style: TextStyle(
+                  color: whiteColor(),
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 14),
+              ...chargers.map(
+                (c) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _connectorCard(c, selected),
+                ),
+              ),
+            ],
           ),
+        ),
+        _actionsBar(selected, selectedIsOccupied),
       ],
     );
   }
 
-  Widget _connectorTabs(int availableCount, int occupiedCount) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(50),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _tabButton(
-              icon: Icons.ev_station_rounded,
-              label: 'Disponibles',
-              count: availableCount,
-              color: accentColor(),
-              selected: !_showOccupied,
-              onTap: () => setState(() => _showOccupied = false),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: _tabButton(
-              icon: Icons.cancel_rounded,
-              label: 'Ocupados',
-              count: occupiedCount,
-              color: errorColor(),
-              selected: _showOccupied,
-              onTap: () => setState(() => _showOccupied = true),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _tabButton({
-    required IconData icon,
-    required String label,
-    required int count,
-    required Color color,
-    required bool selected,
-    required VoidCallback onTap,
+  // ================= ESTACIÓN (tarjeta destacada) =================
+  Widget _stationCard(
+    ModelCharger charger, {
+    required bool? isOnline,
+    required int total,
+    required int available,
+    required int occupied,
   }) {
-    final Color fg = selected ? primaryColor() : grayInputColor();
+    final station = charger.station!;
+    final radius = BorderRadius.circular(28);
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(50),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(50),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(deepForestGreen(), accentColor(), 0.1)!,
+            deepForestGreen(),
+          ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        border: Border.all(color: accentColor().withValues(alpha: 0.25)),
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: Stack(
           children: [
-            Icon(icon, size: 15, color: fg),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: fg,
-              ),
+            Positioned.fill(
+              child: CustomPaint(painter: _ArcsPainter(color: accentColor())),
             ),
-            const SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
-              decoration: BoxDecoration(
-                color:
-                    selected
-                        ? primaryColor().withValues(alpha: 0.18)
-                        : Colors.white.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '$count',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: fg,
-                ),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 62,
+                        height: 62,
+                        decoration: BoxDecoration(
+                          color: accentColor(),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Icon(
+                          Icons.ev_station_outlined,
+                          color: primaryColor(),
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ESTACIÓN',
+                              style: TextStyle(
+                                color: accentColor(),
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              station.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: whiteColor(),
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on_outlined,
+                                  size: 16,
+                                  color: grayInputColor(),
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    station.address,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: grayInputColor(),
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isOnline != null) ...[
+                        const SizedBox(width: 8),
+                        _onlineBadge(isOnline),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _stationStat(
+                            '$total',
+                            total == 1 ? 'Conector' : 'Conectores',
+                            whiteColor(),
+                          ),
+                        ),
+                        _statDivider(),
+                        Expanded(
+                          child: _stationStat(
+                            '$available',
+                            available == 1 ? 'Disponible' : 'Disponibles',
+                            accentColor(),
+                          ),
+                        ),
+                        _statDivider(),
+                        Expanded(
+                          child: _stationStat(
+                            '$occupied',
+                            occupied == 1 ? 'Ocupado' : 'Ocupados',
+                            errorColor(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -421,118 +433,434 @@ class _PageScanQrState extends State<PageScanQr> {
     );
   }
 
-  Widget _connectorCard(ModelCharger charger, ModelCharger selected) {
-    final bool isOccupied = charger.connectorStatus == 'Charging';
-    final bool isSelected =
-        !isOccupied && charger.connectorId == selected.connectorId;
-    final Color statusColor = isOccupied ? errorColor() : accentColor();
-
-    final card = Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xff111111),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isSelected ? accentColor() : const Color(0xff2A2A2A),
-          width: isSelected ? 1.6 : 1,
+  Widget _stationStat(String value, String label, Color valueColor) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            color: valueColor,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        boxShadow:
-            isSelected
-                ? [
-                  BoxShadow(
-                    color: accentColor().withValues(alpha: 0.22),
-                    blurRadius: 16,
-                    spreadRadius: 1,
-                  ),
-                ]
-                : null,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: statusColor.withValues(alpha: 0.14),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.electrical_services_rounded,
-              color: statusColor,
-              size: 19,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                LabelTitle(
-                  title: 'Conector ${charger.connectorId}',
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  textColor: whiteColor(),
-                  padding: false,
-                ),
-                const SizedBox(height: 3),
-                LabelTitle(
-                  title: charger.typeConnection,
-                  fontSize: 11,
-                  textColor: grayInputColor(),
-                  padding: false,
-                  maxLines: 1,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          // El chevron era puramente decorativo (la tarjeta entera ya es
-          // tappeable) — en su lugar va el badge de disponibilidad.
-          _connectorStatusBadge(isOccupied),
-        ],
-      ),
-    );
-
-    // Única regla de bloqueo: "Charging". Todo lo demás es seleccionable.
-    if (isOccupied) {
-      return Opacity(opacity: 0.55, child: card);
-    }
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () => setState(() => _selectedConnectorId = charger.connectorId),
-      child: card,
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(color: grayInputColor(), fontSize: 13)),
+      ],
     );
   }
 
-  Widget _connectorStatusBadge(bool isOccupied) {
-    final color = isOccupied ? errorColor() : accentColor();
+  Widget _statDivider() =>
+      Container(width: 1, height: 34, color: Colors.white12);
+
+  Widget _onlineBadge(bool isOnline) {
+    final color = isOnline ? accentColor() : errorColor();
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
+        color: color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(50),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            isOccupied ? Icons.cancel_rounded : Icons.circle,
-            size: isOccupied ? 12 : 8,
-            color: color,
-          ),
-          const SizedBox(width: 5),
+          Icon(Icons.circle, size: 7, color: color),
+          const SizedBox(width: 6),
           Text(
-            isOccupied ? 'Ocupado' : 'Disponible',
+            isOnline ? 'En línea' : 'Fuera de línea',
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ================= CONECTORES =================
+  Widget _connectorCard(ModelCharger charger, ModelCharger selected) {
+    final bool isOccupied = _isOccupied(charger);
+    final bool isSelected =
+        !isOccupied && charger.connectorId == selected.connectorId;
+    final Color statusColor = isOccupied ? errorColor() : accentColor();
+    final radius = BorderRadius.circular(22);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        color:
+            isOccupied
+                ? errorColor().withValues(alpha: 0.08)
+                : isSelected
+                ? accentColor().withValues(alpha: 0.08)
+                : Colors.white.withValues(alpha: 0.03),
+        border: Border.all(
+          color:
+              isOccupied
+                  ? errorColor().withValues(alpha: 0.3)
+                  : isSelected
+                  ? accentColor()
+                  : Colors.white.withValues(alpha: 0.08),
+          width: isSelected ? 1.5 : 1,
+        ),
+        boxShadow:
+            isSelected
+                ? [
+                  BoxShadow(
+                    color: accentColor().withValues(alpha: 0.18),
+                    blurRadius: 18,
+                  ),
+                ]
+                : null,
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap:
+                isOccupied
+                    ? null
+                    : () => setState(
+                      () => _selectedConnectorId = charger.connectorId,
+                    ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color:
+                              isOccupied
+                                  ? errorColor().withValues(alpha: 0.15)
+                                  : Colors.black.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Center(
+                          child: ConnectorTypeIcon(
+                            icon: charger.connectorType?.icon,
+                            color: statusColor,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _connectorLabel(charger),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color:
+                                    isOccupied
+                                        ? Color.lerp(
+                                          whiteColor(),
+                                          errorColor(),
+                                          0.25,
+                                        )
+                                        : whiteColor(),
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    _typeName(charger),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: grayInputColor(),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            _price(charger),
+                            style: TextStyle(
+                              color:
+                                  isOccupied
+                                      ? errorColor().withValues(alpha: 0.6)
+                                      : accentColor(),
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '/ kWh',
+                            style: TextStyle(
+                              color: grayInputColor(),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 12),
+                      _connectorIndicator(
+                        isOccupied: isOccupied,
+                        isSelected: isSelected,
+                      ),
+                    ],
+                  ),
+
+                  // Ficha técnica solo del conector elegido.
+                  if (isSelected) ...[
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _specBox(
+                            'Potencia',
+                            '${charger.powerKw.toStringAsFixed(1)} kW',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _specBox(
+                            'Voltaje',
+                            '${charger.voltage.toStringAsFixed(1)} V',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _specBox(
+                            'Corriente',
+                            '${charger.intensity.toStringAsFixed(1)} A',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _specBox('Cargador', charger.typeCharger),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _connectorIndicator({
+    required bool isOccupied,
+    required bool isSelected,
+  }) {
+    if (isOccupied) {
+      return Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: errorColor().withValues(alpha: 0.18),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.lock_outline, color: errorColor(), size: 18),
+      );
+    }
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isSelected ? accentColor() : Colors.transparent,
+        border: Border.all(
+          color: isSelected ? accentColor() : Colors.white24,
+          width: 1.5,
+        ),
+      ),
+      child:
+          isSelected
+              ? Icon(Icons.check, color: primaryColor(), size: 18)
+              : null,
+    );
+  }
+
+  Widget _specBox(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: grayInputColor(), fontSize: 12),
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: whiteColor(),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================= ACCIONES =================
+  Widget _actionsBar(ModelCharger selected, bool selectedIsOccupied) {
+    final summaryColor = selectedIsOccupied ? errorColor() : grayInputColor();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                selectedIsOccupied ? Icons.lock_outline : Icons.bolt,
+                color: selectedIsOccupied ? errorColor() : accentColor(),
+                size: 18,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  selectedIsOccupied
+                      ? '${_connectorLabel(selected)} ocupado'
+                      : '${_connectorLabel(selected)} · '
+                          '${_typeName(selected)} · ${_price(selected)} / kWh',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: summaryColor, fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                flex: 4,
+                child: _actionPill(
+                  label: 'Reescanear',
+                  icon: Icons.qr_code_scanner,
+                  filled: false,
+                  onTap: () => _scanQr(),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 6,
+                child: _actionPill(
+                  label: 'Iniciar carga',
+                  icon: Icons.bolt,
+                  filled: true,
+                  onTap:
+                      selectedIsOccupied ? null : () => _createOrder(selected),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionPill({
+    required String label,
+    required IconData icon,
+    required bool filled,
+    required VoidCallback? onTap,
+  }) {
+    final enabled = onTap != null;
+    final Color background =
+        filled
+            ? (enabled ? accentColor() : Colors.white.withValues(alpha: 0.08))
+            : Colors.transparent;
+    final Color foreground =
+        filled ? (enabled ? primaryColor() : grayInputColor()) : whiteColor();
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(50),
+        boxShadow:
+            filled && enabled
+                ? [
+                  BoxShadow(
+                    color: accentColor().withValues(alpha: 0.3),
+                    blurRadius: 18,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+                : null,
+      ),
+      child: Material(
+        color: background,
+        shape: StadiumBorder(
+          side:
+              filled
+                  ? BorderSide.none
+                  : BorderSide(color: Colors.white.withValues(alpha: 0.18)),
+        ),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            height: 56,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  color: filled ? foreground : accentColor(),
+                  size: 22,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: foreground,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -621,202 +949,6 @@ class _PageScanQrState extends State<PageScanQr> {
     );
   }
 
-  // ================= ESTACIÓN (tarjeta destacada) =================
-  Widget _stationStrip(ModelCharger charger, {bool? isOnline}) {
-    final station = charger.station!;
-
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: cardDecoration(shadow: true),
-      child: Row(
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: accentColor().withValues(alpha: 0.14),
-              border: Border.all(color: accentColor().withValues(alpha: 0.4)),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.location_on_rounded,
-              color: accentColor(),
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                LabelTitle(
-                  title: station.name,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  textColor: whiteColor(),
-                  padding: false,
-                ),
-                const SizedBox(height: 3),
-                // station.address y el badge "En línea" van en la misma
-                // fila para ahorrar una línea de alto en la tarjeta.
-                Row(
-                  children: [
-                    Icon(
-                      Icons.place_rounded,
-                      size: 13,
-                      color: grayInputColor(),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: LabelTitle(
-                        title: station.address,
-                        fontSize: 12,
-                        textColor: grayInputColor(),
-                        padding: false,
-                        maxLines: 1,
-                      ),
-                    ),
-                    if (isOnline != null) ...[
-                      const SizedBox(width: 8),
-                      _onlineBadge(isOnline),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _onlineBadge(bool isOnline) {
-    final color = isOnline ? accentColor() : errorColor();
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(50),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.circle, size: 7, color: color),
-          const SizedBox(width: 5),
-          Text(
-            isOnline ? 'En línea' : 'Fuera de línea',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ================= ESPECIFICACIONES (ficha técnica) =================
-  Widget _specsSection(ModelCharger charger) {
-    return Container(
-      decoration: cardDecoration(shadow: true),
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.receipt_long_rounded, color: accentColor(), size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: LabelTitle(
-                  title: 'Especificaciones',
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  textColor: whiteColor(),
-                  padding: false,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: accentColor().withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(50),
-                ),
-                child: Text(
-                  'Conector ${charger.connectorId}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: accentColor(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
-          const SizedBox(height: 6),
-          _specRow(
-            Icons.attach_money,
-            'Precio',
-            '\$${((charger.priceWithTipeConnector * 100).truncate() / 100).toStringAsFixed(2)}/kWh',
-          ),
-          // _specRow(Icons.usb, 'Tipo de conexión', charger.typeConnection),
-          _specRow(Icons.bolt, 'Potencia', '${charger.powerKw} kW'),
-          _specRow(
-            Icons.battery_charging_full,
-            'Voltaje',
-            '${charger.voltage} V',
-          ),
-          _specRow(Icons.speed, 'Intensidad', '${charger.intensity} A'),
-          _specRow(
-            Icons.settings,
-            'Tipo de cargador',
-            charger.typeCharger,
-            isLast: true,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _specRow(
-    IconData icon,
-    String label,
-    String value, {
-    bool isLast = false,
-  }) {
-    return Padding(
-      padding: EdgeInsets.only(top: 10, bottom: isLast ? 0 : 0),
-      child: Row(
-        children: [
-          Icon(icon, color: accentColor(), size: 17),
-          const SizedBox(width: 10),
-          Expanded(
-            child: LabelTitle(
-              title: label,
-              fontSize: 11,
-              textColor: grayInputColor(),
-              padding: false,
-            ),
-          ),
-
-          LabelTitle(
-            title: value,
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            textColor: whiteColor(),
-            padding: false,
-          ),
-        ],
-      ),
-    );
-  }
-
   // ================= METHODS =================
   bool isValidMongoId(String id) {
     final regex = RegExp(r'^[a-fA-F0-9]{24}$');
@@ -872,9 +1004,7 @@ class _PageScanQrState extends State<PageScanQr> {
           if (orderId != null) {
             context.read<ChargerProvider>().getOrderData({'id': orderId});
           } else {
-            context.read<ChargerProvider>().getOrderData({
-              'status': "PENDING",
-            });
+            context.read<ChargerProvider>().getOrderData({'status': "PENDING"});
           }
         },
       );
@@ -997,4 +1127,28 @@ class _ScanFrame extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Arcos concéntricos decorativos desde la esquina inferior derecha.
+class _ArcsPainter extends CustomPainter {
+  final Color color;
+
+  const _ArcsPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.2
+          ..color = color.withValues(alpha: 0.12);
+
+    final center = Offset(size.width, size.height);
+    for (var i = 1; i <= 5; i++) {
+      canvas.drawCircle(center, size.height * 0.3 * i, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ArcsPainter oldDelegate) => oldDelegate.color != color;
 }

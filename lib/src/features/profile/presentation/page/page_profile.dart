@@ -1,9 +1,11 @@
 import 'dart:convert';
 
+import 'package:ecored_app/src/core/adapter/adapter_launcher.dart';
 import 'package:ecored_app/src/core/routes/routes_name.dart';
 import 'package:ecored_app/src/core/theme/theme_colors.dart';
 import 'package:ecored_app/src/core/utils/utils_index.dart';
 import 'package:ecored_app/src/core/utils/utils_preferences.dart';
+import 'package:ecored_app/src/core/widgets/widget_index.dart';
 import 'package:ecored_app/src/features/login/presentation/provider/login_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -70,21 +72,23 @@ class PageProfile extends StatelessWidget {
                     ),
 
                     const _SectionTitle('Ayuda'),
-                    const _OptionsGroup(
+                    // No es `const`: "Contactar soporte" tiene un onTap.
+                    _OptionsGroup(
                       children: [
                         _OptionRow(
                           icon: Icons.call_outlined,
                           title: 'Contactar soporte',
+                          onTap: () => _contactSupport(context),
                         ),
-                        _OptionRow(
+                        const _OptionRow(
                           icon: Icons.help_outline,
                           title: 'Preguntas frecuentes',
                         ),
-                        _OptionRow(
+                        const _OptionRow(
                           icon: Icons.info_outline,
                           title: 'Acerca de nosotros',
                         ),
-                        _OptionRow(
+                        const _OptionRow(
                           icon: Icons.phone_iphone,
                           title: 'Versión de la app',
                           trailing: _AppVersionText(),
@@ -130,6 +134,23 @@ class PageProfile extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+// Soporte por WhatsApp. wa.me solo acepta el número internacional en
+// dígitos: sin "+", espacios ni guiones.
+const String _supportWhatsApp = '593962961049';
+
+Future<void> _contactSupport(BuildContext context) async {
+  try {
+    await AdapterLauncher().launchWhatsApp(_supportWhatsApp);
+  } catch (_) {
+    if (!context.mounted) return;
+    showSnackbar(
+      context,
+      'No se pudo abrir WhatsApp. Escríbenos al +593 96 296 1049.',
+      SnackbarStatus.error,
     );
   }
 }

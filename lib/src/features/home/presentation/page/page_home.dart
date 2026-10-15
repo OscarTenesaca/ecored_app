@@ -14,35 +14,44 @@ class PageHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tips = [
-      {
-        "title": "Cuidado de batería",
-        "subtitle": "Maximiza su vida útil",
-        "popupTitle": "Mantén la batería entre 20% y 80%",
-        "popupText":
+    final tips = <TipSheetItem>[
+      const TipSheetItem(
+        category: "Cuidado de batería",
+        summary: "Maximiza su vida útil",
+        title: "Mantén la batería entre 20% y 80%",
+        description:
             "Evita cargar siempre al 100% o dejarla bajar de 10%. Mantenerla entre 20% y 80% alarga la vida útil, reduce el desgaste químico y ayuda a conservar la autonomía con el tiempo.",
-      },
-      {
-        "title": "Carga inteligente",
-        "subtitle": "Menos desgaste, más eficiencia",
-        "popupTitle": "Prefiere cargas lentas",
-        "popupText":
+        // Batería horizontal, como en el diseño.
+        icon: RotatedBox(
+          quarterTurns: 1,
+          child: Icon(Icons.battery_full_outlined),
+        ),
+        visual: TipRangeBar(start: 20, end: 80, label: "Zona recomendada"),
+      ),
+      const TipSheetItem(
+        category: "Carga inteligente",
+        summary: "Menos desgaste, más eficiencia",
+        title: "Prefiere cargas lentas",
+        description:
             "Las cargas rápidas son útiles en viajes o emergencias, pero generan mayor calor y desgaste. Cuando tengas tiempo, usa carga lenta o nivel 2 para un cuidado prolongado de la batería.",
-      },
-      {
-        "title": "Temperatura ideal",
-        "subtitle": "Protege el rendimiento",
-        "popupTitle": "Evita cargar con temperaturas extremas",
-        "popupText":
+        icon: Icon(Icons.bolt_outlined),
+      ),
+      const TipSheetItem(
+        category: "Temperatura ideal",
+        summary: "Protege el rendimiento",
+        title: "Evita cargar con temperaturas extremas",
+        description:
             "Si la batería está muy caliente por el sol o muy fría, espera unos minutos o deja que el vehículo regule la temperatura antes de cargar.",
-      },
-      {
-        "title": "Planifica tu ruta",
-        "subtitle": "Viajes más eficientes",
-        "popupTitle": "Planifica tu carga según la ruta",
-        "popupText":
+        icon: Icon(Icons.thermostat_outlined),
+      ),
+      const TipSheetItem(
+        category: "Planifica tu ruta",
+        summary: "Viajes más eficientes",
+        title: "Planifica tu carga según la ruta",
+        description:
             "No siempre es necesario llegar al 100%. Para trayectos diarios, entre 60% y 70% suele ser suficiente.",
-      },
+        icon: Icon(Icons.route_outlined),
+      ),
     ];
 
     return Scaffold(
@@ -175,58 +184,82 @@ class PageHome extends StatelessWidget {
                   itemBuilder: (_, index) {
                     final item = tips[index];
 
-                    return InkWell(
-                      borderRadius: BorderRadius.circular(28),
-                      onTap: () {
-                        showPopUpWithChildren(
-                          context: context,
-                          title: item["popupTitle"]!,
-                          subTitle: item["popupText"]!,
-                          sizeTitle: 21,
-                          sizeSubtitle: 14,
-                          textButton: 'Cerrar',
-                        );
-                      },
-                      child: Container(
-                        padding: EdgeInsets.all(18),
+                    return Material(
+                      color: Colors.transparent,
+                      child: Ink(
                         decoration: BoxDecoration(
                           color: deepForestGreen(),
-                          borderRadius: BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.05),
+                            color: Colors.white.withValues(alpha: 0.06),
                           ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            LabelTitle(
-                              padding: false,
-                              title: item["title"]!,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-
-                            const Spacer(),
-
-                            LabelTitle(
-                              padding: false,
-                              title: item["subtitle"]!,
-                              // fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              textColor: grayInputColor(),
-                              textAlign: TextAlign.left,
-                            ),
-
-                            const SizedBox(height: 8),
-                            const Align(
-                              alignment: Alignment.bottomRight,
-                              child: Icon(
-                                Icons.arrow_outward_rounded,
-                                color: Colors.white30,
-                                size: 18,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(24),
+                          onTap:
+                              () => showTipSheet(
+                                context,
+                                tips: tips,
+                                initialIndex: index,
                               ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: accentColor().withValues(
+                                          alpha: 0.14,
+                                        ),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: IconTheme(
+                                        data: IconThemeData(
+                                          color: accentColor(),
+                                          size: 22,
+                                        ),
+                                        child: Center(child: item.icon),
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Icon(
+                                      Icons.arrow_outward_rounded,
+                                      color: grayInputColor(),
+                                      size: 18,
+                                    ),
+                                  ],
+                                ),
+                                const Spacer(),
+                                Text(
+                                  item.category,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: whiteColor(),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  item.summary,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: grayInputColor(),
+                                    fontSize: 13,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     );

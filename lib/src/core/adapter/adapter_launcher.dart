@@ -12,9 +12,13 @@ class AdapterLauncher {
 
   //? OPEN WHATSAPP
   Future<void> launchWhatsApp(String phoneNumber) async {
-    final Uri uri = Uri.parse('https://wa.me/$phoneNumber');
+    // wa.me solo acepta dígitos: "+593 96-296-1049" → "593962961049".
+    final digits = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
+    final Uri uri = Uri.parse('https://wa.me/$digits');
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+      // externalApplication: abre la app de WhatsApp en lugar de la página
+      // web de wa.me dentro de un navegador embebido.
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       throw 'Could not launch $phoneNumber';
     }

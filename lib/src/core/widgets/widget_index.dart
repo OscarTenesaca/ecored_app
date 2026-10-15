@@ -1,5 +1,6 @@
 export 'alerts/popup.dart';
 export 'alerts/snackbar.dart';
+export 'alerts/tip_sheet.dart';
 export 'background/background.dart';
 export 'background/background_glass.dart';
 export 'blur/blur.dart';
@@ -17,6 +18,7 @@ export 'cards/card_transaction.dart';
 export 'images/custom_asset_img.dart';
 export 'images/custom_asset_svg.dart';
 export 'images/custom_hive_img.dart';
+export 'images/connector_type_icon.dart';
 export 'inputs/custom_input.dart';
 export 'inputs/custom_input_phone.dart';
 export 'inputs/custom_input_location.dart';
